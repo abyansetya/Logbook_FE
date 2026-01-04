@@ -1,13 +1,10 @@
-import type { Route } from "./+types/home";
-import { Welcome } from "../welcome/welcome";
+import { Navigate } from "react-router";
+import { useAuth } from "../provider/auth-context";
 
-export function meta({}: Route.MetaArgs) {
-  return [
-    { title: "New React Router App" },
-    { name: "description", content: "Welcome to React Router!" },
-  ];
-}
+export default function Index() {
+  const { isAuthenticated, isLoading } = useAuth();
 
-export default function Home() {
-  return <Welcome />;
+  if (isLoading) return null;
+
+  return <Navigate to={isAuthenticated ? "/dashboard" : "/sign-in"} replace />;
 }
