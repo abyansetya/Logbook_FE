@@ -1,6 +1,6 @@
 // src/layouts/dashboard-layout.tsx
 import React, { useState } from "react";
-import { Link, Outlet } from "react-router";
+import { Link, Outlet, useLocation } from "react-router";
 import { Button } from "../../components/ui/button";
 import {
   LayoutDashboard,
@@ -40,6 +40,7 @@ export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarMinimized, setSidebarMinimized] = useState(false);
   const { user, logout } = useAuth();
+  const location = useLocation();
 
   const getInitials = (name?: string) => {
     if (!name) return "??";
@@ -55,7 +56,7 @@ export default function DashboardLayout() {
     <div className="min-h-screen flex overflow-hidden">
       {/* Sidebar */}
       <aside
-        className={`flex-shrink-0 bg-white border-r border-gray-200 transition-all duration-300
+        className={`flex-shrink-0 bg-white border-r border-gray-300 transition-all duration-300
           ${sidebarMinimized ? "w-20" : "w-64"}
         `}
       >
@@ -63,17 +64,17 @@ export default function DashboardLayout() {
           {/* Logo & Minimize Button */}
           <div className="flex items-center justify-center h-16 ">
             {!sidebarMinimized && (
-              <h1 className="text-2xl font-bold text-blue-600">SIKMA</h1>
+              <h1 className="text-2xl font-bold text-gray-900">SIKMA</h1>
             )}
           </div>
           <button
             onClick={() => setSidebarMinimized(!sidebarMinimized)}
-            className="p-1.5 rounded-md hover:bg-blue-300 transition-colors cursor-pointer z-100 top-5 absolute right-0 bg-blue-500 translate-x-2.5"
+            className="p-1.5 rounded-md hover:bg-gray-700 transition-colors cursor-pointer z-100 top-5 absolute right-0 bg-gray-900 translate-x-2.5"
           >
             {sidebarMinimized ? (
-              <ChevronRight className="h-5 w-5 text-gray-600" />
+              <ChevronRight className="h-5 w-5 text-white" />
             ) : (
-              <ChevronLeft className="h-5 w-5 text-gray-600" />
+              <ChevronLeft className="h-5 w-5 text-white" />
             )}
           </button>
           {/* Navigation */}
@@ -89,8 +90,8 @@ export default function DashboardLayout() {
                   className={`flex items-center gap-x-3 rounded-md p-3 text-sm font-semibold transition-colors
                     ${
                       isActive
-                        ? "bg-blue-50 text-blue-600"
-                        : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                        ? "bg-gray-900 text-white"
+                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     }
                     ${sidebarMinimized ? "justify-center" : ""}
                   `}
@@ -106,9 +107,9 @@ export default function DashboardLayout() {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-gray-50">
         {/* Top Bar */}
-        <div className="sticky top-0 z-40 flex h-16 items-center justify-end border-b border-gray-200 bg-white px-4 shadow-sm">
+        <div className="sticky top-0 z-40 flex h-16 items-center justify-end border-b border-gray-300 bg-white px-4 shadow-sm">
           {/* Mobile Menu Button */}
           <div className="lg:hidden">
             <Button onClick={() => setSidebarOpen(true)} variant="ghost">
@@ -124,18 +125,14 @@ export default function DashboardLayout() {
                   variant="ghost"
                   className="relative h-10 w-10 rounded-full"
                 >
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-blue-600 text-white">
+                  <Avatar className="h-10 w-10 cursor-pointer">
+                    <AvatarFallback className="bg-gray-900 text-white">
                       {getInitials(user?.nama)}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-56 bg-black"
-                align="end"
-                forceMount
-              >
+              <DropdownMenuContent className="w-56 " align="end" forceMount>
                 <DropdownMenuLabel>
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium">{user?.nama}</p>
@@ -143,14 +140,16 @@ export default function DashboardLayout() {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-                </DropdownMenuItem>
+                <Link to="/profile">
+                  <DropdownMenuItem className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </DropdownMenuItem>
+                </Link>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={logout}
-                  className="cursor-pointer text-red-500"
+                  className="text-red-500 data-highlighted:text-red-500 "
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   Log out
@@ -174,8 +173,8 @@ export default function DashboardLayout() {
             onClick={() => setSidebarOpen(false)}
           />
           <div className="relative flex w-64 flex-col bg-white shadow-lg">
-            <div className="flex items-center justify-between h-16 px-4 border-b">
-              <h1 className="text-2xl font-bold text-blue-600">SIKMA</h1>
+            <div className="flex items-center justify-between h-16 px-4 border-b border-gray-300">
+              <h1 className="text-2xl font-bold text-gray-900">SIKMA</h1>
               <button
                 onClick={() => setSidebarOpen(false)}
                 className="p-1.5 rounded-md hover:bg-gray-100"
@@ -197,8 +196,8 @@ export default function DashboardLayout() {
                     className={`flex items-center gap-x-3 rounded-md p-3 text-sm font-semibold transition-colors
                       ${
                         isActive
-                          ? "bg-blue-50 text-blue-600"
-                          : "text-gray-700 hover:bg-gray-50 hover:text-blue-600"
+                          ? "bg-gray-900 text-white"
+                          : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                       }
                     `}
                   >
