@@ -17,9 +17,9 @@ api.interceptors.request.use((config) => {
 });
 
 api.interceptors.response.use(
-  (respones) => respones,
+  (response) => response,
   (error) => {
-    if (error.response && error.response.status === 401) {
+    if (error.response?.status === 401) {
       window.dispatchEvent(new Event("force-logout"));
     }
     return Promise.reject(error);
@@ -28,26 +28,27 @@ api.interceptors.response.use(
 
 const postData = async <T>(path: string, data: unknown): Promise<T> => {
   const response = await api.post(path, data);
-
   return response.data;
 };
 
 const fetchData = async <T>(path: string): Promise<T> => {
   const response = await api.get(path);
-
   return response.data;
 };
 
-const updateData = async <T>(path: string, data: unknown) => {
+const updateData = async <T>(path: string, data: unknown): Promise<T> => {
   const response = await api.put(path, data);
+  return response.data;
+};
 
+const patchData = async <T>(path: string, data: unknown): Promise<T> => {
+  const response = await api.patch(path, data);
   return response.data;
 };
 
 const deleteData = async <T>(path: string): Promise<T> => {
   const response = await api.delete(path);
-
   return response.data;
 };
 
-export { postData, fetchData, updateData, deleteData };
+export { api, postData, fetchData, updateData, deleteData, patchData };

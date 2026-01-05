@@ -8,10 +8,14 @@ export interface User {
   updated_at: string;
 }
 
-import React from "react";
+export interface Profile {
+  nama: string;
+  email: string;
+  nim_nip: string;
+}
 
-export interface NavItem {
-  name: string;
-  href: string;
-  icon: React.ElementType;
+export interface ChangePassword {
+  current_password: string;
+  new_password: string;
+  new_password_confirmation: string;
 }

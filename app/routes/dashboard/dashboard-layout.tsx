@@ -56,7 +56,7 @@ export default function DashboardLayout() {
     <div className="min-h-screen flex overflow-hidden">
       {/* Sidebar */}
       <aside
-        className={`flex-shrink-0 bg-white border-r border-gray-300 transition-all duration-300
+        className={`shrink-0 bg-white border-r border-gray-300 transition-all duration-300
           ${sidebarMinimized ? "w-20" : "w-64"}
         `}
       >

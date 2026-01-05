@@ -21,6 +21,7 @@ import {
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
 import { Separator } from "~/components/ui/separator";
+import { Link } from "react-router";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -71,9 +72,11 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
-            <Button variant="outline" size="sm">
-              <Edit className="mr-2 h-4 w-4" />
-              Edit
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/profile/edit">
+                <Edit className="mr-2 h-4 w-4" />
+                Edit
+              </Link>
             </Button>
           </div>
         </CardHeader>

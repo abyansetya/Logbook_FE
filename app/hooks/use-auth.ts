@@ -9,3 +9,13 @@ export const useLoginMutation = () => {
     mutationFn: (payload) => postData("/auth/login", payload),
   });
 };
+
+export const useChangePasswordMutation = () => {
+  return useMutation<
+    void,
+    any,
+    { current_password: string; new_password: string }
+  >({
+    mutationFn: (payload) => postData("/auth/changePassword", payload),
+  });
+};

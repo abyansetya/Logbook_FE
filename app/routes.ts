@@ -12,7 +12,7 @@ export default [
   ]),
   layout("routes/dashboard/dashboard-layout.tsx", [
     route("dashboard", "routes/dashboard/index.tsx"),
-    route("profile", "routes/profile.tsx"),
+    route("profile", "routes/profile/profile.tsx"),
+    route("profile/edit", "routes/profile/edit.tsx"),
   ]),
-  route("/profile", "routes/profile.tsx"),
 ] satisfies RouteConfig;
