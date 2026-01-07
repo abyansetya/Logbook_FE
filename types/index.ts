@@ -11,7 +11,7 @@ export interface User {
 export interface Profile {
   nama: string;
   email: string;
-  nim_nip: string;
+  nim_nip?: string;
 }
 
 export interface ChangePassword {

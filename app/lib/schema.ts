@@ -18,11 +18,7 @@ export const updateProfileSchema = z.object({
     .min(1, "Email wajib diisi")
     .email("Format email tidak valid"),
 
-  nim_nip: z
-    .string()
-    .max(50, "NIM/NIP maksimal 50 karakter")
-    .nullable()
-    .optional(),
+  nim_nip: z.string().max(50, "NIM/NIP maksimal 50 karakter").optional(),
 });
 
 export const changePasswordSchema = z
@@ -37,5 +33,5 @@ export const changePasswordSchema = z
   })
   .refine((data) => data.new_password === data.new_password_confirmation, {
     message: "Konfirmasi password tidak sama",
-    path: ["new_password_confirmation"], // 🔥 penting
+    path: ["new_password_confirmation"],
   });

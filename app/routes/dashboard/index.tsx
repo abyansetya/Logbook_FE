@@ -56,7 +56,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen  p-6 lg:p-10">
+    <div className="min-h-screen p-6 lg:p-10">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Welcome Section */}
         <header className="space-y-1">

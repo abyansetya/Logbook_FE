@@ -1,7 +1,7 @@
 // src/layouts/dashboard-layout.tsx
 import React, { useState } from "react";
 import { Link, Outlet, useLocation } from "react-router";
-import { Button } from "../../components/ui/button";
+import { Button } from "../components/ui/button";
 import {
   LayoutDashboard,
   BookOpen,
@@ -20,8 +20,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "../../components/ui/avatar";
+} from "../components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { useAuth } from "~/provider/auth-context";
 
 interface NavItem {
