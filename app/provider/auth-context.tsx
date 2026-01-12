@@ -5,6 +5,7 @@ import { publicRoutes } from "~/lib";
 import { queryClient } from "./react-query-provider";
 
 import type { LoginResponse } from "../../types/auth";
+import { fetchData, fetchMe } from "~/lib/fetch-util";
 
 interface AuthContextType {
   user: User | null;
@@ -30,15 +31,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkAuth = async () => {
       setIsLoading(true);
-      const userInfo = localStorage.getItem("user");
+      const token = localStorage.getItem("token");
 
-      if (userInfo) {
-        setUser(JSON.parse(userInfo));
-        setIsAuthenticated(true);
-      } else {
-        setIsAuthenticated(false);
+      if (!token) {
+        logout();
+        setIsLoading(false);
+        return;
       }
-      setIsLoading(false);
+
+      try {
+        const res = await fetchMe();
+
+        const user = res.data.data.user as User;
+        setUser(user);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     checkAuth();
@@ -50,7 +61,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         navigate("/sign-in");
       }
     }
-  }, [isLoading, isAuthenticated, currentPath]);
+  }, [isLoading, isAuthenticated, currentPath, isPublicRoute]);
 
   useEffect(() => {
     const handleLogout = () => {

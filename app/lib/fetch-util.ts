@@ -51,4 +51,8 @@ const deleteData = async <T>(path: string): Promise<T> => {
   return response.data;
 };
 
-export { api, postData, fetchData, updateData, deleteData, patchData };
+const fetchMe = async () => {
+  return api.get("auth/me");
+};
+
+export { api, postData, fetchData, updateData, deleteData, patchData, fetchMe };
