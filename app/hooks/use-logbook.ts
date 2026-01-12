@@ -1,21 +1,27 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { getLogbooks, getLogbookDetail } from "~/service/logbook-service";
+import type {
+  LogbooksResponse,
+  LogbookDetailResponse,
+} from "../../types/logbook";
 
-//hook to fetch logbooks with pagination
+// Hook untuk list logbook
 export const useLogbooks = (page: number) => {
-  return useQuery({
+  return useQuery<LogbooksResponse>({
     queryKey: ["logbooks", page],
     queryFn: () => getLogbooks(page),
-    placeholderData: (previousData) => previousData, // Menjaga UI tetap stabil saat loading page baru
+    // Di TanStack Query v5, gunakan placeholderData: keepPreviousData
+    placeholderData: keepPreviousData,
+    staleTime: 30000, // Data dianggap segar selama 30 detik
   });
 };
 
-//hook to fetch logbook detail by dokumen id
-export const useLogbookDetail = (id: number) => {
-  return useQuery({
+// Hook untuk detail logbook
+export const useLogbookDetail = (id: number | null) => {
+  return useQuery<LogbookDetailResponse>({
     queryKey: ["logbook-detail", id],
-    queryFn: () => getLogbookDetail(id),
-    enabled: !!id, // Hanya jalankan query jika id tersedia
-    staleTime: 5 * 60 * 1000, // Data dianggap segar selama 5 menit
+    queryFn: () => getLogbookDetail(id!),
+    enabled: !!id, // Hanya jalan jika id ada (bukan 0 atau null)
+    staleTime: 5 * 60 * 1000,
   });
 };

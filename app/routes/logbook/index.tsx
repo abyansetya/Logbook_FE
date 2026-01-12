@@ -8,7 +8,7 @@ import {
   Plus,
   Trash2,
   Edit,
-  Download,
+  Loader2,
   Search,
   Filter,
   X,
@@ -35,11 +35,132 @@ import {
   DropdownMenuTrigger,
 } from "../../components/ui/dropdown-menu";
 import { Label } from "../../components/ui/label";
-import { Textarea } from "../../components/ui/textarea";
 import { Badge } from "../../components/ui/badge";
 import TambahLog from "~/components/modal/TambahLog";
+import { useLogbooks, useLogbookDetail } from "~/hooks/use-logbook";
+import type { Document, LogEntry } from "../../../types/logbook";
+
+// Component untuk menampilkan detail log saat dokumen di-expand
+const DocumentLogDetails = ({
+  documentId,
+  onAddLog,
+}: {
+  documentId: number;
+  onAddLog: (docId: number) => void;
+}) => {
+  const { data: detailData, isLoading, isError } = useLogbookDetail(documentId);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="w-6 h-6 animate-spin mr-2" />
+        <span className="text-sm text-gray-600">Memuat detail log...</span>
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-sm text-red-600">Gagal memuat detail log</p>
+      </div>
+    );
+  }
+
+  const logs = detailData?.data?.logs || [];
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  return (
+    <div className="pl-12">
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="text-lg font-bold flex items-center gap-2">
+          <FileText className="w-5 h-5" />
+          Log Aktivitas Dokumen
+        </h3>
+        <Button
+          onClick={() => onAddLog(documentId)}
+          className="bg-black text-white hover:bg-gray-800 font-semibold"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Tambah Log
+        </Button>
+      </div>
+
+      <div className="space-y-4">
+        {logs.length > 0 ? (
+          logs.map((logEntry: LogEntry) => (
+            <div
+              key={logEntry.id}
+              className="relative pl-8 pb-6 border-l-2 border-black last:border-l-0 last:pb-0"
+            >
+              <div className="absolute -left-[9px] top-0 w-4 h-4 bg-black rounded-full border-4 border-gray-50"></div>
+
+              <div className="bg-white border-2 border-black rounded-lg p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    <span className="text-sm font-bold">
+                      {formatDate(logEntry.tanggal_log)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <User className="w-4 h-4" />
+                      <span className="font-semibold">
+                        {logEntry.admin.nama}
+                      </span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="h-6 w-6 border border-black cursor-pointer"
+                      onClick={() => {
+                        if (
+                          confirm("Apakah Anda yakin ingin menghapus log ini?")
+                        ) {
+                          console.log("Delete log", logEntry.id);
+                        }
+                      }}
+                      title="Hapus Log"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </div>
+
+                <p className="font-semibold mb-3">{logEntry.keterangan}</p>
+
+                <div className="flex items-center gap-2 text-sm bg-gray-100 px-3 py-2 rounded-lg border-2 border-black">
+                  <span className="font-bold">Contact Person:</span>
+                  <span>{logEntry.contact_person}</span>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="text-center text-gray-500 py-4">
+            Belum ada log aktivitas
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const Logbook = () => {
+  const [currentPage, setCurrentPage] = useState(1);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddDocModal, setShowAddDocModal] = useState(false);
@@ -48,90 +169,16 @@ const Logbook = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedDocType, setSelectedDocType] = useState<string>("all");
 
-  const [data, setData] = useState({
-    data: [
-      {
-        mitra: {
-          id: 1,
-          nama: "Bank Central Asia",
-        },
-        dokumen: [
-          {
-            id: 1,
-            jenis_dokumen: {
-              id: 1,
-              nama: "Memorandum of Understanding (MoU)",
-            },
-            judul_dokumen: "Kesepakatan Bersama Kerja Sama Pendidikan",
-            status: {
-              id: 3,
-              nama: "Terbit",
-            },
-            tanggal_masuk: "2025-12-10",
-            tanggal_terbit: "2025-12-20",
-            log: [
-              {
-                id: 1,
-                tanggal_log: "2025-12-10",
-                keterangan: "Inisiasi kerja sama oleh mitra",
-                contact_person: "Andi - Legal BCA",
-                user: {
-                  id: 1,
-                  nama: "Admin Undip",
-                },
-              },
-              {
-                id: 2,
-                tanggal_log: "2025-12-15",
-                keterangan: "Review naskah oleh unit hukum",
-                contact_person: "Budi - Unit Hukum",
-                user: {
-                  id: 1,
-                  nama: "Admin Undip",
-                },
-              },
-              {
-                id: 3,
-                tanggal_log: "2025-12-20",
-                keterangan: "Dokumen diterbitkan",
-                contact_person: "Sekretariat Rektor",
-                user: {
-                  id: 1,
-                  nama: "Admin Undip",
-                },
-              },
-            ],
-          },
-          {
-            id: 2,
-            jenis_dokumen: {
-              id: 2,
-              nama: "Memorandum of Agreement (MoA)",
-            },
-            judul_dokumen: "Perjanjian Kerja Sama Program Magang",
-            status: {
-              id: 2,
-              nama: "Naskah Dikirim",
-            },
-            tanggal_masuk: "2026-01-05",
-            tanggal_terbit: null,
-            log: [
-              {
-                id: 4,
-                tanggal_log: "2026-01-05",
-                keterangan: "Draft MoA dikirim ke mitra",
-                contact_person: "Rina - HR BCA",
-                user: {
-                  id: 1,
-                  nama: "Admin Undip",
-                },
-              },
-            ],
-          },
-        ],
-      },
-    ],
-  });
+  // Fetch data using TanStack Query
+  const {
+    data: response,
+    isLoading,
+    isError,
+    error,
+  } = useLogbooks(currentPage);
+
+  // Tambahkan ini untuk debug
+  console.log("Raw Response dari API:", response);
 
   const toggleRow = (docId: number) => {
     const newExpanded = new Set(expandedRows);
@@ -143,23 +190,9 @@ const Logbook = () => {
     setExpandedRows(newExpanded);
   };
 
-  const handleDeleteDocument = (mitraIndex: number, docIndex: number) => {
+  const handleDeleteDocument = (documentId: number) => {
     if (confirm("Apakah Anda yakin ingin menghapus dokumen ini?")) {
-      const newData = { ...data };
-      newData.data[mitraIndex].dokumen.splice(docIndex, 1);
-      setData(newData);
-    }
-  };
-
-  const handleDeleteLog = (
-    mitraIndex: number,
-    docIndex: number,
-    logIndex: number
-  ) => {
-    if (confirm("Apakah Anda yakin ingin menghapus log ini?")) {
-      const newData = { ...data };
-      newData.data[mitraIndex].dokumen[docIndex].log.splice(logIndex, 1);
-      setData(newData);
+      console.log("Delete document", documentId);
     }
   };
 
@@ -169,9 +202,8 @@ const Logbook = () => {
     contact_person: string;
   }) => {
     if (showAddLogModal === null) return;
-
-    const newData = { ...data };
-    let found = false;
+    console.log("Add log to document", showAddLogModal, logData);
+    setShowAddLogModal(null);
   };
 
   const formatDate = (dateString: string | null) => {
@@ -184,24 +216,23 @@ const Logbook = () => {
     });
   };
 
-  const filteredData = data.data
-    .map((mitraData) => ({
-      ...mitraData,
-      dokumen: mitraData.dokumen.filter((doc) => {
-        const matchesSearch =
-          doc.judul_dokumen.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          mitraData.mitra.nama.toLowerCase().includes(searchTerm.toLowerCase());
+  // Filter data client-side
+  const filteredData = React.useMemo(() => {
+    if (!response?.data?.data) return [];
 
-        const matchesStatus =
-          selectedStatus === "all" || doc.status.nama === selectedStatus;
-        const matchesDocType =
-          selectedDocType === "all" ||
-          doc.jenis_dokumen.nama === selectedDocType;
+    return response.data.data.filter((doc: Document) => {
+      const matchesSearch = doc.judul_dokumen
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
 
-        return matchesSearch && matchesStatus && matchesDocType;
-      }),
-    }))
-    .filter((mitraData) => mitraData.dokumen.length > 0);
+      const matchesStatus =
+        selectedStatus === "all" || doc.status === selectedStatus;
+      const matchesDocType =
+        selectedDocType === "all" || doc.jenis_dokumen === selectedDocType;
+
+      return matchesSearch && matchesStatus && matchesDocType;
+    });
+  }, [response, searchTerm, selectedStatus, selectedDocType]);
 
   const clearFilters = () => {
     setSelectedStatus("all");
@@ -218,10 +249,53 @@ const Logbook = () => {
     searchTerm !== "" ? 1 : 0,
   ].reduce((a, b) => a + b, 0);
 
+  // Handle pagination
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    const hasNext = response?.data?.links?.next !== null;
+    if (hasNext) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen p-6 lg:p-10 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4" />
+          <p className="text-lg font-semibold">Memuat data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (isError) {
+    return (
+      <div className="min-h-screen p-6 lg:p-10 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-lg font-semibold text-red-600 mb-2">
+            Terjadi kesalahan saat memuat data
+          </p>
+          <p className="text-sm text-gray-600">
+            {error instanceof Error ? error.message : "Unknown error"}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const meta = response?.data?.meta;
+  const links = response?.data?.links;
+
   return (
     <div className="min-h-screen p-6 lg:p-10">
-      {/* Header */}
-
       <div className="max-w-7xl mx-auto px-6 py-6 space-y-8">
         <div className="flex items-center justify-between">
           <header>
@@ -245,10 +319,10 @@ const Logbook = () => {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
               <Input
                 type="text"
-                placeholder="Cari dokumen atau mitra..."
+                placeholder="Cari dokumen..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-2  focus-visible:ring-black"
+                className="pl-10 border-2 focus-visible:ring-black"
               />
             </div>
             <DropdownMenu
@@ -258,7 +332,7 @@ const Logbook = () => {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="border-2  hover:bg-black hover:text-white font-semibold"
+                  className="border-2 hover:bg-black hover:text-white font-semibold"
                 >
                   <Filter className="w-5 h-5 mr-2" />
                   Filter
@@ -269,7 +343,7 @@ const Logbook = () => {
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-80 border-2 ">
+              <DropdownMenuContent className="w-80 border-2">
                 <div className="p-4">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-lg">Filter Dokumen</h3>
@@ -289,7 +363,7 @@ const Logbook = () => {
                         value={selectedStatus}
                         onValueChange={setSelectedStatus}
                       >
-                        <SelectTrigger className="border-2  mt-2">
+                        <SelectTrigger className="border-2 mt-2">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -299,7 +373,10 @@ const Logbook = () => {
                             Naskah Dikirim
                           </SelectItem>
                           <SelectItem value="Draft">Draft</SelectItem>
-                          <SelectItem value="Review">Review</SelectItem>
+                          <SelectItem value="Acc Rektor">Acc Rektor</SelectItem>
+                          <SelectItem value="Inisiasi & Proses">
+                            Inisiasi & Proses
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -315,8 +392,15 @@ const Logbook = () => {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">Semua Jenis</SelectItem>
-                          <SelectItem value="MoU">MoU</SelectItem>
-                          <SelectItem value="MoA">MoA</SelectItem>
+                          <SelectItem value="Memorandum of Understanding (MoU)">
+                            MoU
+                          </SelectItem>
+                          <SelectItem value="Memorandum of Agreement (MoA)">
+                            MoA
+                          </SelectItem>
+                          <SelectItem value="Implementation Arrangement (IA)">
+                            IA
+                          </SelectItem>
                           <SelectItem value="PKS">PKS</SelectItem>
                         </SelectContent>
                       </Select>
@@ -345,9 +429,6 @@ const Logbook = () => {
                 <tr className="bg-black text-white">
                   <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider w-12"></th>
                   <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
-                    Nama Mitra
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
                     Nomor Dokumen
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
@@ -358,6 +439,9 @@ const Logbook = () => {
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
                     Status
+                  </th>
+                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
+                    Tanggal Masuk
                   </th>
                   <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
                     Aksi
@@ -375,180 +459,95 @@ const Logbook = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredData.map((mitraData, mitraIndex) =>
-                    mitraData.dokumen.map((doc, docIndex) => (
-                      <React.Fragment key={doc.id}>
-                        <tr
-                          className="hover:bg-gray-100 transition-colors cursor-pointer"
-                          onClick={() => toggleRow(doc.id)}
-                        >
-                          <td className="px-6 py-4">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="text-gray-600 hover:text-black"
-                            >
-                              {expandedRows.has(doc.id) ? (
-                                <ChevronDown className="w-5 h-5" />
-                              ) : (
-                                <ChevronRight className="w-5 h-5" />
-                              )}
-                            </Button>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <span className="font-semibold text-gray-900">
-                                {mitraData.mitra.nama}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex flex-col gap-2">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-semibold">
-                                  DOC-{doc.id.toString().padStart(4, "0")}
-                                </span>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <span className="text-smfont-semibold">
-                                  MIT-{doc.id.toString().padStart(4, "0")}
-                                </span>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4 max-w-xs">
-                            <p className="text-sm font-semibold line-clamp-2">
-                              {doc.judul_dokumen}
-                            </p>
-                            <p className="text-xs text-gray-600 mt-1">
-                              Tanggal Masuk: {formatDate(doc.tanggal_masuk)}
-                            </p>
-                          </td>
-                          <td className="px-6 py-4">
-                            <Badge
-                              variant="outline"
-                              className="border-2 border-black"
-                            >
-                              {doc.jenis_dokumen.nama}
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-4">
-                            <Badge
-                              variant="outline"
-                              className="border-2 border-black"
-                            >
-                              {doc.status.nama}
-                            </Badge>
-                          </td>
-                          <td
-                            className="px-6 py-4"
-                            onClick={(e) => e.stopPropagation()}
+                  filteredData.map((doc: Document) => (
+                    <React.Fragment key={doc.id}>
+                      <tr
+                        className="hover:bg-gray-100 transition-colors cursor-pointer"
+                        onClick={() => toggleRow(doc.id)}
+                      >
+                        <td className="px-6 py-4">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-gray-600 hover:text-black"
                           >
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="border border-black cursor-pointer "
-                                title="Edit"
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
+                            {expandedRows.has(doc.id) ? (
+                              <ChevronDown className="w-5 h-5" />
+                            ) : (
+                              <ChevronRight className="w-5 h-5" />
+                            )}
+                          </Button>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm font-semibold">
+                            DOC-{doc.id.toString().padStart(4, "0")}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 max-w-xs">
+                          <p className="text-sm font-semibold line-clamp-2">
+                            {doc.judul_dokumen}
+                          </p>
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge
+                            variant="outline"
+                            className="border-2 border-black"
+                          >
+                            {doc.jenis_dokumen}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge
+                            variant="outline"
+                            className="border-2 border-black"
+                          >
+                            {doc.status}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-sm text-gray-600">
+                            {formatDate(doc.tanggal_masuk)}
+                          </span>
+                        </td>
+                        <td
+                          className="px-6 py-4"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="border border-black cursor-pointer"
+                              title="Edit"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
 
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                className="border border-black cursor-pointer"
-                                onClick={() =>
-                                  handleDeleteDocument(mitraIndex, docIndex)
-                                }
-                                title="Hapus"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="border border-black cursor-pointer"
+                              onClick={() => handleDeleteDocument(doc.id)}
+                              title="Hapus"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+
+                      {expandedRows.has(doc.id) && (
+                        <tr className="bg-gray-50">
+                          <td colSpan={7} className="px-6 py-6">
+                            <DocumentLogDetails
+                              documentId={doc.id}
+                              onAddLog={setShowAddLogModal}
+                            />
                           </td>
                         </tr>
-
-                        {expandedRows.has(doc.id) && (
-                          <tr className="bg-gray-50">
-                            <td colSpan={7} className="px-6 py-6">
-                              <div className="pl-12">
-                                <div className="flex items-center justify-between mb-5">
-                                  <h3 className="text-lg font-bold flex items-center gap-2">
-                                    <FileText className="w-5 h-5" />
-                                    Log Aktivitas Dokumen
-                                  </h3>
-                                  <Button
-                                    onClick={() => setShowAddLogModal(doc.id)}
-                                    className="bg-black text-white hover:bg-gray-800 font-semibold"
-                                  >
-                                    <Plus className="w-4 h-4 mr-2" />
-                                    Tambah Log
-                                  </Button>
-                                </div>
-
-                                <div className="space-y-4">
-                                  {doc.log.map((logEntry, logIndex) => (
-                                    <div
-                                      key={logEntry.id}
-                                      className="relative pl-8 pb-6 border-l-2 border-black last:border-l-0 last:pb-0"
-                                    >
-                                      <div className="absolute -left-[9px] top-0 w-4 h-4 bg-black rounded-full border-4 border-gray-50"></div>
-
-                                      <div className="bg-white border-2 border-black rounded-lg p-4">
-                                        <div className="flex items-start justify-between mb-3">
-                                          <div className="flex items-center gap-2">
-                                            <Calendar className="w-4 h-4" />
-                                            <span className="text-sm font-bold">
-                                              {formatDate(logEntry.tanggal_log)}
-                                            </span>
-                                          </div>
-                                          <div className="flex items-center gap-2">
-                                            <div className="flex items-center gap-2 text-sm">
-                                              <User className="w-4 h-4" />
-                                              <span className="font-semibold">
-                                                {logEntry.user.nama}
-                                              </span>
-                                            </div>
-                                            <Button
-                                              variant="outline"
-                                              size="icon"
-                                              className="h-6 w-6 border border-black cursor-pointer"
-                                              onClick={() =>
-                                                handleDeleteLog(
-                                                  mitraIndex,
-                                                  docIndex,
-                                                  logIndex
-                                                )
-                                              }
-                                              title="Hapus Log"
-                                            >
-                                              <Trash2 className="w-3 h-3" />
-                                            </Button>
-                                          </div>
-                                        </div>
-
-                                        <p className="font-semibold mb-3">
-                                          {logEntry.keterangan}
-                                        </p>
-
-                                        <div className="flex items-center gap-2 text-sm bg-gray-100 px-3 py-2 rounded-lg border-2 border-black">
-                                          <span className="font-bold">
-                                            Contact Person:
-                                          </span>
-                                          <span>{logEntry.contact_person}</span>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
-                    ))
-                  )
+                      )}
+                    </React.Fragment>
+                  ))
                 )}
               </tbody>
             </table>
@@ -558,28 +557,38 @@ const Logbook = () => {
         {/* Pagination */}
         <div className="mt-6 flex items-center justify-between">
           <p className="text-sm font-semibold">
-            Menampilkan{" "}
-            {filteredData.reduce((acc, m) => acc + m.dokumen.length, 0)} dokumen
+            Menampilkan {meta?.from || 0} - {meta?.to || 0} dari total{" "}
+            {meta?.total || 0} dokumen
           </p>
           <div className="flex gap-2">
             <Button
               variant="outline"
               className="border-2 border-black hover:bg-black hover:text-white font-semibold"
+              onClick={handlePreviousPage}
+              disabled={!links?.prev || isLoading}
             >
               Sebelumnya
             </Button>
-            <Button className="bg-black text-white hover:bg-gray-800 font-semibold">
-              1
-            </Button>
+            {meta?.links
+              ?.filter((link) => link.page !== null)
+              .map((link) => (
+                <Button
+                  key={link.page}
+                  className={
+                    link.active
+                      ? "bg-black text-white hover:bg-gray-800 font-semibold"
+                      : "bg-white text-black border-2 border-black hover:bg-black hover:text-white font-semibold"
+                  }
+                  onClick={() => link.page && setCurrentPage(link.page)}
+                >
+                  {link.label}
+                </Button>
+              ))}
             <Button
               variant="outline"
               className="border-2 border-black hover:bg-black hover:text-white font-semibold"
-            >
-              2
-            </Button>
-            <Button
-              variant="outline"
-              className="border-2 border-black hover:bg-black hover:text-white font-semibold"
+              onClick={handleNextPage}
+              disabled={!links?.next || isLoading}
             >
               Selanjutnya
             </Button>
@@ -597,13 +606,6 @@ const Logbook = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label className="font-bold">Nama Mitra</Label>
-              <Input
-                placeholder="Masukkan nama mitra"
-                className="border-2 border-black mt-2"
-              />
-            </div>
-            <div>
               <Label className="font-bold">Judul Dokumen</Label>
               <Input
                 placeholder="Masukkan judul dokumen"
@@ -620,6 +622,7 @@ const Logbook = () => {
                   <SelectContent>
                     <SelectItem value="mou">MoU</SelectItem>
                     <SelectItem value="moa">MoA</SelectItem>
+                    <SelectItem value="ia">IA</SelectItem>
                     <SelectItem value="pks">PKS</SelectItem>
                   </SelectContent>
                 </Select>
@@ -633,7 +636,8 @@ const Logbook = () => {
                   <SelectContent>
                     <SelectItem value="draft">Draft</SelectItem>
                     <SelectItem value="naskah">Naskah Dikirim</SelectItem>
-                    <SelectItem value="review">Review</SelectItem>
+                    <SelectItem value="acc">Acc Rektor</SelectItem>
+                    <SelectItem value="inisiasi">Inisiasi & Proses</SelectItem>
                     <SelectItem value="terbit">Terbit</SelectItem>
                   </SelectContent>
                 </Select>
