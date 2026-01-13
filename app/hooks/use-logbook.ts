@@ -1,9 +1,19 @@
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
-import { getLogbooks, getLogbookDetail } from "~/service/logbook-service";
+import {
+  useQuery,
+  keepPreviousData,
+  useQueryClient,
+  useMutation,
+} from "@tanstack/react-query";
+import {
+  getLogbooks,
+  getLogbookDetail,
+  addDokumen,
+} from "~/service/logbook-service";
 import type {
   LogbooksResponse,
   LogbookDetailResponse,
 } from "../../types/logbook";
+import { toast } from "sonner";
 
 // Hook untuk list logbook
 export const useLogbooks = (page: number) => {
@@ -23,5 +33,23 @@ export const useLogbookDetail = (id: number | null) => {
     queryFn: () => getLogbookDetail(id!),
     enabled: !!id, // Hanya jalan jika id ada (bukan 0 atau null)
     staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useAddDokumen = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: addDokumen,
+    onSuccess: () => {
+      // Refresh list logbook agar dokumen baru langsung muncul di tabel
+      queryClient.invalidateQueries({ queryKey: ["logbooks"] });
+      toast.success("Dokumen berhasil ditambahkan!");
+    },
+    onError: (error: any) => {
+      toast.error(
+        "Gagal menambah dokumen: " + (error.message || "Terjadi kesalahan")
+      );
+    },
   });
 };

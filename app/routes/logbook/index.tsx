@@ -23,13 +23,6 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "../../components/ui/dialog";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
@@ -37,8 +30,13 @@ import {
 import { Label } from "../../components/ui/label";
 import { Badge } from "../../components/ui/badge";
 import TambahLog from "~/components/modal/TambahLog";
-import { useLogbooks, useLogbookDetail } from "~/hooks/use-logbook";
+import {
+  useLogbooks,
+  useLogbookDetail,
+  useAddDokumen,
+} from "~/hooks/use-logbook";
 import type { Document, LogEntry } from "../../../types/logbook";
+import TambahDokumen from "~/components/modal/TambahDokumen";
 
 // Component untuk menampilkan detail log saat dokumen di-expand
 const DocumentLogDetails = ({
@@ -105,7 +103,7 @@ const DocumentLogDetails = ({
               key={logEntry.id}
               className="relative pl-8 pb-6 border-l-2 border-black last:border-l-0 last:pb-0"
             >
-              <div className="absolute -left-[9px] top-0 w-4 h-4 bg-black rounded-full border-4 border-gray-50"></div>
+              <div className="absolute -left-2.25 top-0 w-4 h-4 bg-black rounded-full border-4 border-gray-50"></div>
 
               <div className="bg-white border-2 border-black rounded-lg p-4">
                 <div className="flex items-start justify-between mb-3">
@@ -178,7 +176,19 @@ const Logbook = () => {
   } = useLogbooks(currentPage);
 
   // Tambahkan ini untuk debug
-  console.log("Raw Response dari API:", response);
+  //console.log("Raw Response dari API:", response);
+
+  //handle add dokumen
+  const addDocMutation = useAddDokumen();
+
+  //function handle add document
+  const handleAddDocumentSubmit = (formData: any) => {
+    addDocMutation.mutate(formData, {
+      onSuccess: () => {
+        setShowAddDocModal(false); // Tutup modal hanya jika berhasil
+      },
+    });
+  };
 
   const toggleRow = (docId: number) => {
     const newExpanded = new Set(expandedRows);
@@ -306,7 +316,10 @@ const Logbook = () => {
               Dokumen Kerja Sama
             </h1>
           </header>
-          <Button onClick={() => setShowAddDocModal(true)}>
+          <Button
+            onClick={() => setShowAddDocModal(true)}
+            className="cursor-pointer"
+          >
             <Plus className="w-5 h-5 mr-2" />
             Tambah Dokumen
           </Button>
@@ -597,71 +610,12 @@ const Logbook = () => {
       </div>
 
       {/* Modal Tambah Dokumen */}
-      <Dialog open={showAddDocModal} onOpenChange={setShowAddDocModal}>
-        <DialogContent className="max-w-2xl border-2 border-black">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">
-              Tambah Dokumen Baru
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label className="font-bold">Judul Dokumen</Label>
-              <Input
-                placeholder="Masukkan judul dokumen"
-                className="border-2 border-black mt-2"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="font-bold">Jenis Dokumen</Label>
-                <Select>
-                  <SelectTrigger className="border-2 border-black mt-2">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="mou">MoU</SelectItem>
-                    <SelectItem value="moa">MoA</SelectItem>
-                    <SelectItem value="ia">IA</SelectItem>
-                    <SelectItem value="pks">PKS</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="font-bold">Status</Label>
-                <Select>
-                  <SelectTrigger className="border-2 border-black mt-2">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="draft">Draft</SelectItem>
-                    <SelectItem value="naskah">Naskah Dikirim</SelectItem>
-                    <SelectItem value="acc">Acc Rektor</SelectItem>
-                    <SelectItem value="inisiasi">Inisiasi & Proses</SelectItem>
-                    <SelectItem value="terbit">Terbit</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div>
-              <Label className="font-bold">Tanggal Masuk</Label>
-              <Input type="date" className="border-2 border-black mt-2" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowAddDocModal(false)}
-              className="border-2 border-black font-bold"
-            >
-              Batal
-            </Button>
-            <Button className="bg-black text-white hover:bg-gray-800 font-bold">
-              Simpan
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <TambahDokumen
+        isOpen={showAddDocModal}
+        onClose={() => setShowAddDocModal(false)}
+        onSubmit={handleAddDocumentSubmit} // Kirim fungsi mutasi ke sini
+        isLoading={addDocMutation.isPending} // Berikan loading state ke modal
+      />
 
       {/* Modal Tambah Log */}
       <TambahLog
