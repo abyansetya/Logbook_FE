@@ -10,6 +10,7 @@ import {
   addDokumen,
   searchDocument,
   editDokumen,
+  deleteDokumen,
 } from "~/service/logbook-service";
 import type {
   LogbooksResponse,
@@ -86,6 +87,26 @@ export const useEditDokumen = () => {
     onError: (error: any) => {
       toast.error(
         "Gagal memperbarui dokumen: " + (error.message || "Terjadi kesalahan")
+      );
+    },
+  });
+};
+
+export const useDeleteDokumen = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    // Kita menerima parameter id di sini
+    mutationFn: (id: number) => deleteDokumen({ id }),
+    onSuccess: () => {
+      // Refresh list agar baris yang dihapus hilang dari tabel
+      queryClient.invalidateQueries({ queryKey: ["logbooks"] });
+
+      toast.success("Dokumen berhasil dihapus!");
+    },
+    onError: (error: any) => {
+      toast.error(
+        "Gagal menghapus dokumen: " + (error.message || "Terjadi kesalahan")
       );
     },
   });

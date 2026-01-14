@@ -22,51 +22,54 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  AreaChart,
-  Area,
+  Legend,
 } from "recharts";
-import {
-  dashboardStats,
-  documentStatus,
-  logbookChartData,
-  recentActivities,
-  getStatusLabel,
-} from "../../dummy/dashboard-data";
+import { recentActivities } from "../../dummy/dashboard-data";
+import { useDashboardStats } from "~/hooks/use-dashboard";
 
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { data: apiResponse, isLoading: statsLoading } = useDashboardStats();
 
-  if (isLoading) {
+  if (isLoading || statsLoading) {
     return (
       <div className="flex items-center justify-center h-full min-h-screen bg-white">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-[#1E3A8A] border-t-transparent rounded-full animate-spin" />
           <p className="text-sm text-neutral-500 tracking-wide">Loading...</p>
         </div>
       </div>
     );
   }
 
-  if (!isAuthenticated || !user) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-screen bg-white">
-        <p className="text-neutral-500">Unauthorized</p>
-      </div>
-    );
-  }
+  const stats = apiResponse?.data;
+  const statusNames = stats?.all_status_names || [];
+  const docDistribution = stats?.document_status || [];
+
+  // Definisi Palet Warna: Biru Tua, Biru Muda, Kuning (Solid & Kontras)
+  const dashboardColors = [
+    "#1E3A8A", // Biru Tua (Primary)
+    "#3B82F6", // Biru Muda (Secondary)
+    "#EAB308", // Kuning/Gold (Accent)
+    "#1D4ED8", // Biru Medium
+    "#60A5FA", // Biru Langit
+    "#CA8A04", // Kuning Gelap
+  ];
+
+  if (!isAuthenticated || !user) return null;
 
   return (
-    <div className="min-h-screen p-6 lg:p-10">
+    <div className="min-h-screen p-6 lg:p-10 bg-[#F8FAFC]">
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Welcome Section */}
         <header className="space-y-1">
-          <p className="text-sm font-medium text-neutral-400 uppercase tracking-widest">
-            Dashboard
+          <p className="text-sm font-bold uppercase tracking-widest">
+            Dashboard Overview
           </p>
-          <h1 className="text-4xl font-semibold tracking-tight text-black">
+          <h1 className="text-4xl font-semibold text-primary tracking-tight text-">
             Selamat datang, {user.nama}
           </h1>
-          <p className="text-neutral-500">
+          <p className="text-slate-500">
             Ringkasan aktivitas dan statistik sistem Anda
           </p>
         </header>
@@ -75,22 +78,28 @@ export default function Dashboard() {
         <div className="grid gap-4 md:grid-cols-3">
           {[
             {
-              title: "Total Mitra",
-              value: dashboardStats.totalMitra,
-              growth: dashboardStats.growth.mitra,
+              label: "Total Mitra",
+              val: stats?.totals.mitra,
+              growth: stats?.stats_periodic.mitra_bulan_ini,
               icon: Users,
+              desc: "Bulan ini",
+              color: "text-[#1E3A8A]",
             },
             {
-              title: "Total Dokumen",
-              value: dashboardStats.totalDokumen,
-              growth: dashboardStats.growth.dokumen,
+              label: "Total Dokumen",
+              val: stats?.totals.dokumen,
+              growth: stats?.stats_periodic.dokumen_minggu_ini,
               icon: FileText,
+              desc: "Minggu ini",
+              color: "text-[#1E3A8A]",
             },
             {
-              title: "Total Log",
-              value: dashboardStats.totalLog,
-              growth: dashboardStats.growth.log,
+              label: "Log Aktivitas",
+              val: stats?.totals.logs,
+              growth: stats?.stats_periodic.log_hari_ini,
               icon: BookOpen,
+              desc: "Hari ini",
+              color: "text-[#1E3A8A]",
             },
           ].map((stat, index) => (
             <Card
@@ -101,23 +110,29 @@ export default function Dashboard() {
                 <div className="flex items-start justify-between">
                   <div className="space-y-3">
                     <p className="text-sm font-medium text-neutral-400 uppercase tracking-wide">
-                      {stat.title}
+                      {stat.label}
                     </p>
-                    <p className="text-4xl font-bold text-black tracking-tight">
-                      {stat.value}
+                    <p
+                      className={`text-4xl font-bold tracking-tight ${stat.color}`}
+                    >
+                      {stat.val}
                     </p>
                     <div className="flex items-center gap-1.5 text-sm">
-                      <ArrowUpRight className="w-4 h-4 text-black" />
-                      <span className="text-neutral-600">{stat.growth}</span>
+                      <ArrowUpRight className="w-4 h-4 text-slate-400" />
+                      <span className="text-green-600 font-medium">
+                        +{stat.growth}
+                      </span>
+                      <span className="text-xs text-green-600">
+                        {stat.desc}
+                      </span>
                     </div>
                   </div>
-                  <div className="p-3 bg-black rounded-xl group-hover:scale-110 transition-transform duration-300">
+                  <div className="p-3 rounded-xl transition-transform duration-300 group-hover:scale-110 bg-[#1E3A8A]">
                     <stat.icon className="w-5 h-5 text-white" />
                   </div>
                 </div>
               </CardContent>
-              {/* Decorative element */}
-              <div className="absolute -bottom-8 -right-8 w-24 h-24 bg-neutral-100 rounded-full opacity-50" />
+              <div className="absolute -bottom-8 -right-8 w-24 h-24 bg-slate-50 rounded-full opacity-50" />
             </Card>
           ))}
         </div>
@@ -126,82 +141,65 @@ export default function Dashboard() {
           {/* Chart Section */}
           <Card className="lg:col-span-3 bg-white border-0 shadow-sm">
             <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg font-semibold text-black">
-                    Status Logbook
-                  </CardTitle>
-                  <CardDescription className="text-neutral-400">
-                    Perkembangan 6 bulan terakhir
-                  </CardDescription>
-                </div>
-                <div className="flex items-center gap-4 text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-black" />
-                    <span className="text-neutral-500">Selesai</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-neutral-400" />
-                    <span className="text-neutral-500">Proses</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-full bg-neutral-200" />
-                    <span className="text-neutral-500">Terbit</span>
-                  </div>
-                </div>
-              </div>
+              <CardTitle className="text-lg font-semibold text-slate-800">
+                Status Logbook
+              </CardTitle>
+              <CardDescription className="text-slate-400">
+                Data 6 bulan terakhir
+              </CardDescription>
             </CardHeader>
             <CardContent className="pt-4">
-              <ResponsiveContainer width="100%" height={320}>
-                <BarChart data={logbookChartData} barGap={4}>
+              <ResponsiveContainer width="100%" height={380}>
+                <BarChart data={stats?.chart_data || []}>
                   <CartesianGrid
                     strokeDasharray="3 3"
-                    stroke="#f0f0f0"
+                    stroke="#F1F5F9"
                     vertical={false}
                   />
                   <XAxis
                     dataKey="month"
-                    stroke="#a3a3a3"
-                    fontSize={12}
-                    tickLine={false}
                     axisLine={false}
+                    tickLine={false}
+                    fontSize={12}
+                    tick={{ fill: "#64748B" }}
                     dy={10}
                   />
                   <YAxis
-                    stroke="#a3a3a3"
-                    fontSize={12}
-                    tickLine={false}
                     axisLine={false}
-                    dx={-10}
+                    tickLine={false}
+                    fontSize={12}
+                    tick={{ fill: "#64748B" }}
                   />
                   <Tooltip
+                    cursor={{ fill: "#F8FAFC" }}
                     contentStyle={{
-                      backgroundColor: "#ffffff",
-                      border: "none",
                       borderRadius: "12px",
-                      boxShadow: "0 4px 20px rgba(0,0,0,0.1)",
-                      padding: "12px 16px",
+                      border: "none",
+                      boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
                     }}
-                    cursor={{ fill: "#fafafa" }}
                   />
-                  <Bar
-                    dataKey="selesai"
-                    fill="#171717"
-                    radius={[6, 6, 0, 0]}
-                    name="Selesai"
+                  <Legend
+                    verticalAlign="top"
+                    align="right"
+                    iconType="circle"
+                    wrapperStyle={{ paddingBottom: "20px", fontSize: "12px" }}
                   />
-                  <Bar
-                    dataKey="dalam_proses"
-                    fill="#a3a3a3"
-                    radius={[6, 6, 0, 0]}
-                    name="Dalam Proses"
-                  />
-                  <Bar
-                    dataKey="terbit"
-                    fill="#e5e5e5"
-                    radius={[6, 6, 0, 0]}
-                    name="Terbit"
-                  />
+
+                  {statusNames.map((name, index) => (
+                    <Bar
+                      key={name}
+                      dataKey={name}
+                      name={name}
+                      stackId="a"
+                      fill={dashboardColors[index % dashboardColors.length]}
+                      radius={
+                        index === statusNames.length - 1
+                          ? [4, 4, 0, 0]
+                          : [0, 0, 0, 0]
+                      }
+                      barSize={30}
+                    />
+                  ))}
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -210,46 +208,44 @@ export default function Dashboard() {
           {/* Document Status */}
           <Card className="lg:col-span-2 bg-white border-0 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-lg font-semibold text-black">
+              <CardTitle className="text-lg font-semibold text-slate-800">
                 Status Dokumen
               </CardTitle>
-              <CardDescription className="text-neutral-400">
+              <CardDescription className="text-slate-400">
                 Distribusi status saat ini
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {documentStatus.map((doc, index) => (
+              {docDistribution.map((doc, index) => (
                 <div key={doc.status} className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-neutral-700">
-                      {getStatusLabel(doc.status)}
+                    <span className="text-sm font-medium text-slate-600">
+                      {doc.status}
                     </span>
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-black">
+                      <span className="text-xl font-bold text-slate-900">
                         {doc.count}
                       </span>
-                      <span className="text-xs text-neutral-400 bg-neutral-100 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-bold text-blue-500 px-2 py-0.5 rounded-full uppercase">
                         {doc.percentage}%
                       </span>
                     </div>
                   </div>
-                  <div className="relative h-2 bg-neutral-100 rounded-full overflow-hidden">
+                  <div className="relative h-2.5 bg-slate-100 rounded-full overflow-hidden">
                     <div
-                      className={`absolute inset-y-0 left-0 rounded-full transition-all duration-500 ${
-                        index === 0
-                          ? "bg-black"
-                          : index === 1
-                            ? "bg-neutral-400"
-                            : "bg-neutral-300"
-                      }`}
-                      style={{ width: `${doc.percentage}%` }}
+                      className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+                      style={{
+                        width: `${doc.percentage}%`,
+                        backgroundColor:
+                          dashboardColors[index % dashboardColors.length],
+                      }}
                     />
                   </div>
                 </div>
               ))}
 
               {/* Summary Circle */}
-              <div className="pt-4 mt-4 border-t border-neutral-100">
+              <div className="pt-4 mt-4 border-t border-slate-50">
                 <div className="flex items-center justify-center">
                   <div className="relative w-32 h-32">
                     <svg
@@ -261,25 +257,27 @@ export default function Dashboard() {
                         cy="50"
                         r="40"
                         fill="none"
-                        stroke="#f5f5f5"
-                        strokeWidth="8"
+                        stroke="#F1F5F9"
+                        strokeWidth="10"
                       />
                       <circle
                         cx="50"
                         cy="50"
                         r="40"
                         fill="none"
-                        stroke="#171717"
-                        strokeWidth="8"
-                        strokeDasharray={`${documentStatus[0]?.percentage * 2.51} 251`}
+                        stroke="#1E3A8A"
+                        strokeWidth="10"
+                        strokeDasharray={`${(docDistribution[0]?.percentage || 0) * 2.51} 251`}
                         strokeLinecap="round"
                       />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-2xl font-bold text-black">
-                        {documentStatus.reduce((acc, d) => acc + d.count, 0)}
+                      <span className="text-2xl font-bold text-slate-900">
+                        {stats?.totals.dokumen || 0}
                       </span>
-                      <span className="text-xs text-neutral-400">Total</span>
+                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tighter">
+                        Total
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -290,33 +288,33 @@ export default function Dashboard() {
 
         {/* Recent Activity */}
         <Card className="bg-white border-0 shadow-sm">
-          <CardHeader className="border-b border-neutral-100">
+          <CardHeader className="border-b border-slate-50">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-semibold text-black">
+                <CardTitle className="text-lg font-semibold text-slate-800">
                   Aktivitas Terbaru
                 </CardTitle>
-                <CardDescription className="text-neutral-400">
-                  Log aktivitas terkini dari sistem
+                <CardDescription className="text-slate-400">
+                  Log aktivitas terkini
                 </CardDescription>
               </div>
-              <Activity className="w-5 h-5 text-neutral-300" />
+              <Activity className="w-5 h-5 text-slate-300" />
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-neutral-100">
-              {recentActivities.map((activity, index) => (
+            <div className="divide-y divide-slate-50">
+              {recentActivities.map((activity) => (
                 <div
                   key={activity.id}
-                  className="flex items-start gap-4 p-5 hover:bg-neutral-50 transition-colors cursor-pointer group"
+                  className="flex items-start gap-4 p-5 hover:bg-slate-50/50 transition-colors cursor-pointer group"
                 >
                   <div
-                    className={`mt-0.5 p-2.5 rounded-xl transition-colors ${
+                    className={`mt-0.5 p-2.5 rounded-xl text-white ${
                       activity.type === "logbook"
-                        ? "bg-black text-white"
+                        ? "bg-[#1E3A8A]"
                         : activity.type === "dokumen"
-                          ? "bg-neutral-200 text-neutral-700"
-                          : "bg-neutral-100 text-neutral-500"
+                          ? "bg-[#3B82F6]"
+                          : "bg-[#EAB308]"
                     }`}
                   >
                     {activity.type === "logbook" ? (
@@ -328,18 +326,18 @@ export default function Dashboard() {
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-black group-hover:underline">
+                    <p className="text-sm font-semibold text-slate-800 group-hover:text-[#1E3A8A]">
                       {activity.title}
                     </p>
-                    <p className="text-sm text-neutral-500 mt-0.5 truncate">
+                    <p className="text-sm text-slate-500 mt-0.5 truncate">
                       {activity.description}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <span className="text-xs text-neutral-400 whitespace-nowrap">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">
                       {activity.timestamp}
                     </span>
-                    <ArrowUpRight className="w-4 h-4 text-neutral-300 opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <ArrowUpRight className="w-4 h-4 text-slate-200 group-hover:text-[#1E3A8A] transition-colors" />
                   </div>
                 </div>
               ))}
@@ -348,9 +346,10 @@ export default function Dashboard() {
         </Card>
 
         {/* Footer */}
-        <footer className="text-center py-4">
-          <p className="text-xs text-neutral-400">
-            © 2025 Dashboard System. All rights reserved.
+        <footer className="text-center py-6">
+          <p className="text-xs font-medium text-slate-400">
+            © 2026 Dashboard System • Terakhir diperbarui:{" "}
+            {new Date().toLocaleDateString()}
           </p>
         </footer>
       </div>

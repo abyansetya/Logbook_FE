@@ -64,12 +64,12 @@ export default function DashboardLayout() {
           {/* Logo & Minimize Button */}
           <div className="flex items-center justify-center h-16 ">
             {!sidebarMinimized && (
-              <h1 className="text-2xl font-bold text-gray-900">SIKMA</h1>
+              <h1 className="text-2xl font-bold text-primary">SIKMA</h1>
             )}
           </div>
           <button
             onClick={() => setSidebarMinimized(!sidebarMinimized)}
-            className="p-1.5 rounded-md hover:bg-gray-700 transition-colors cursor-pointer z-100 top-5 absolute right-0 bg-gray-900 translate-x-2.5"
+            className="p-1.5 rounded-md hover:bg-gray-700 transition-colors cursor-pointer z-100 top-5 absolute right-0 bg-secondary translate-x-2.5"
           >
             {sidebarMinimized ? (
               <ChevronRight className="h-5 w-5 text-white" />
@@ -90,7 +90,7 @@ export default function DashboardLayout() {
                   className={`flex items-center gap-x-3 rounded-md p-3 text-sm font-semibold transition-colors
                     ${
                       isActive
-                        ? "bg-gray-900 text-white"
+                        ? "bg-primary text-white"
                         : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     }
                     ${sidebarMinimized ? "justify-center" : ""}

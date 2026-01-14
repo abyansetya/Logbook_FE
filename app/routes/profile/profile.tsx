@@ -65,14 +65,23 @@ export default function ProfilePage() {
                 </CardDescription>
                 <div className="flex gap-2">
                   {user?.roles?.map((role, index) => (
-                    <Badge key={index} variant="secondary">
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="bg-white border-2 border-black"
+                    >
                       {role}
                     </Badge>
                   ))}
                 </div>
               </div>
             </div>
-            <Button variant="outline" size="sm" asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              asChild
+              className="hover:bg-secondary hover:text-white"
+            >
               <Link to="/profile/edit">
                 <Edit className="mr-2 h-4 w-4" />
                 Edit

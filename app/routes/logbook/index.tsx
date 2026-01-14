@@ -36,12 +36,14 @@ import {
   useAddDokumen,
   useEditDokumen,
   useSearchDocument,
+  useDeleteDokumen,
 } from "~/hooks/use-logbook";
 import type { Document, LogEntry } from "../../../types/logbook";
 import TambahDokumen from "~/components/modal/TambahDokumen";
 import { useDebounce } from "~/hooks/use-debounce";
 import UpdateDokumen from "~/components/modal/UpdateDokumen";
 import type { TambahDokumenData } from "~/lib/schema";
+import ConfirmDeleteModal from "~/components/modal/KonfirmasiDelete";
 
 // --- Sub-Component: DocumentLogDetails ---
 const DocumentLogDetails = ({
@@ -153,14 +155,15 @@ const Logbook = () => {
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedDocType, setSelectedDocType] = useState<string>("all");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   const debouncedSearch = useDebounce(searchTerm, 500);
 
-  // 1. Fetch data pencarian (Hanya jalan jika search >= 3 char)
+  //Fetch data pencarian (Hanya jalan jika search >= 3 char)
   const { data: searchResponse, isLoading: isSearchLoading } =
     useSearchDocument(debouncedSearch);
 
-  // 2. Fetch data logbook reguler
+  // Fetch data logbook reguler
   const {
     data: response,
     isLoading: isMainLoading,
@@ -170,6 +173,18 @@ const Logbook = () => {
 
   const addDocMutation = useAddDokumen();
   const editDocMutation = useEditDokumen();
+  // Inisialisasi hook delete
+  const deleteDocMutation = useDeleteDokumen();
+
+  const handleConfirmDelete = () => {
+    if (deleteConfirmId) {
+      deleteDocMutation.mutate(deleteConfirmId, {
+        onSuccess: () => {
+          setDeleteConfirmId(null);
+        },
+      });
+    }
+  };
 
   // --- Logic Pemilihan Data ---
   const filteredData = useMemo(() => {
@@ -447,7 +462,11 @@ const Logbook = () => {
                           <Button
                             variant="outline"
                             size="icon"
-                            className="border-black"
+                            className="border-black hover:bg-red-50 hover:text-red-600 transition-colors"
+                            onClick={(e) => {
+                              e.stopPropagation(); // Agar baris tabel tidak ikut ter-expand
+                              setDeleteConfirmId(doc.id); // Memicu munculnya pop up
+                            }}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -523,6 +542,15 @@ const Logbook = () => {
         onClose={() => setShowAddLogModal(null)}
         onSubmit={() => {}}
         documentId={showAddLogModal}
+      />
+
+      {/* Modal Konfirmasi Hapus */}
+      {/* Modal Konfirmasi Hapus Tersendiri */}
+      <ConfirmDeleteModal
+        isOpen={deleteConfirmId !== null}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={handleConfirmDelete}
+        isLoading={deleteDocMutation.isPending}
       />
     </div>
   );

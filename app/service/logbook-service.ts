@@ -1,9 +1,10 @@
-import { fetchData, postData, updateData } from "~/lib/fetch-util";
+import { deleteData, fetchData, postData, updateData } from "~/lib/fetch-util";
 import {
   type LogbooksResponse,
   type LogbookDetailResponse,
   type AddDokumenResponse,
   type DocumentSearchResponse,
+  type DeleteDokumenResponse,
 } from "../../types/logbook";
 import type { TambahDokumenData } from "~/lib/schema";
 import type { MitraCreateResponse, MitraSearchResponse } from "types/mitra";
@@ -63,5 +64,15 @@ export const editDokumen = async ({
   return await updateData<AddDokumenResponse>(
     `/logbook/edit-dokumen/${id}`,
     data
+  );
+};
+
+export const deleteDokumen = async ({
+  id,
+}: {
+  id: number;
+}): Promise<DeleteDokumenResponse> => {
+  return await deleteData<DeleteDokumenResponse>(
+    `/logbook/delete-dokumen/${id}`
   );
 };

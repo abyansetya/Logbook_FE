@@ -109,3 +109,8 @@ export interface DocumentSearchResponse {
   success: boolean;
   data: DokumenData[];
 }
+
+export interface DeleteDokumenResponse {
+  success: boolean;
+  message: string;
+}
