@@ -18,9 +18,17 @@ export interface LogEntry {
 export interface Document {
   id: number;
   judul_dokumen: string;
-  jenis_dokumen: string;
-  status: string;
-  tanggal_masuk: string | null;
+  nomor_dokumen_mitra: string | null;
+  nomor_dokumen_undip: string | null;
+  tanggal_masuk: string; // ISO 8601 format
+  tanggal_terbit: string | null;
+  jenis_dokumen: string | null;
+  status: string | null;
+  jenis_dokumen_id: number;
+  status_id: number;
+  mitra_id: number;
+  mitra: MitraBrief;
+  created_at: string;
 }
 
 export interface LogbookDetailData {
@@ -95,4 +103,9 @@ export interface AddDokumenResponse {
   success: boolean;
   message: string;
   data: DokumenData;
+}
+
+export interface DocumentSearchResponse {
+  success: boolean;
+  data: DokumenData[];
 }

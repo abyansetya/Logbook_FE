@@ -1,5 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { searchMitra, addMitraQuick } from "~/service/logbook-service";
+import {
+  searchMitra,
+  addMitraQuick,
+  searchDocument,
+} from "~/service/logbook-service";
 
 export const useSearchMitra = (query: string) => {
   return useQuery({

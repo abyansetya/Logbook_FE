@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   ChevronDown,
   ChevronRight,
@@ -34,11 +34,16 @@ import {
   useLogbooks,
   useLogbookDetail,
   useAddDokumen,
+  useEditDokumen,
+  useSearchDocument,
 } from "~/hooks/use-logbook";
 import type { Document, LogEntry } from "../../../types/logbook";
 import TambahDokumen from "~/components/modal/TambahDokumen";
+import { useDebounce } from "~/hooks/use-debounce";
+import UpdateDokumen from "~/components/modal/UpdateDokumen";
+import type { TambahDokumenData } from "~/lib/schema";
 
-// Component untuk menampilkan detail log saat dokumen di-expand
+// --- Sub-Component: DocumentLogDetails ---
 const DocumentLogDetails = ({
   documentId,
   onAddLog,
@@ -104,7 +109,6 @@ const DocumentLogDetails = ({
               className="relative pl-8 pb-6 border-l-2 border-black last:border-l-0 last:pb-0"
             >
               <div className="absolute -left-2.25 top-0 w-4 h-4 bg-black rounded-full border-4 border-gray-50"></div>
-
               <div className="bg-white border-2 border-black rounded-lg p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
@@ -113,33 +117,12 @@ const DocumentLogDetails = ({
                       {formatDate(logEntry.tanggal_log)}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <User className="w-4 h-4" />
-                      <span className="font-semibold">
-                        {logEntry.admin.nama}
-                      </span>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-6 w-6 border border-black cursor-pointer"
-                      onClick={() => {
-                        if (
-                          confirm("Apakah Anda yakin ingin menghapus log ini?")
-                        ) {
-                          console.log("Delete log", logEntry.id);
-                        }
-                      }}
-                      title="Hapus Log"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
+                  <div className="flex items-center gap-2 text-sm">
+                    <User className="w-4 h-4" />
+                    <span className="font-semibold">{logEntry.admin.nama}</span>
                   </div>
                 </div>
-
                 <p className="font-semibold mb-3">{logEntry.keterangan}</p>
-
                 <div className="flex items-center gap-2 text-sm bg-gray-100 px-3 py-2 rounded-lg border-2 border-black">
                   <span className="font-bold">Contact Person:</span>
                   <span>{logEntry.contact_person}</span>
@@ -157,92 +140,105 @@ const DocumentLogDetails = ({
   );
 };
 
+// --- Main Component: Logbook ---
 const Logbook = () => {
+  // State
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddDocModal, setShowAddDocModal] = useState(false);
+  const [showUpdateDocModal, setShowUpdateDocModal] = useState(false);
+  const [editingDocument, setEditingDocument] = useState<Document | null>(null);
   const [showAddLogModal, setShowAddLogModal] = useState<number | null>(null);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedDocType, setSelectedDocType] = useState<string>("all");
 
-  // Fetch data using TanStack Query
+  const debouncedSearch = useDebounce(searchTerm, 500);
+
+  // 1. Fetch data pencarian (Hanya jalan jika search >= 3 char)
+  const { data: searchResponse, isLoading: isSearchLoading } =
+    useSearchDocument(debouncedSearch);
+
+  // 2. Fetch data logbook reguler
   const {
     data: response,
-    isLoading,
+    isLoading: isMainLoading,
     isError,
     error,
   } = useLogbooks(currentPage);
 
-  // Tambahkan ini untuk debug
-  //console.log("Raw Response dari API:", response);
-
-  //handle add dokumen
   const addDocMutation = useAddDokumen();
+  const editDocMutation = useEditDokumen();
 
-  //function handle add document
-  const handleAddDocumentSubmit = (formData: any) => {
-    addDocMutation.mutate(formData, {
-      onSuccess: () => {
-        setShowAddDocModal(false); // Tutup modal hanya jika berhasil
-      },
-    });
-  };
+  // --- Logic Pemilihan Data ---
+  const filteredData = useMemo(() => {
+    // Tentukan sumber data dasar
+    let baseData: Document[] = [];
 
-  const toggleRow = (docId: number) => {
-    const newExpanded = new Set(expandedRows);
-    if (newExpanded.has(docId)) {
-      newExpanded.delete(docId);
+    if (debouncedSearch.length >= 3 && searchResponse?.success) {
+      // Gunakan data dari hasil search server
+      baseData = searchResponse.data;
     } else {
-      newExpanded.add(docId);
+      // Gunakan data dari list reguler
+      baseData = response?.data?.data || [];
     }
-    setExpandedRows(newExpanded);
-  };
 
-  const handleDeleteDocument = (documentId: number) => {
-    if (confirm("Apakah Anda yakin ingin menghapus dokumen ini?")) {
-      console.log("Delete document", documentId);
-    }
-  };
-
-  const handleAddLog = (logData: {
-    tanggal_log: string;
-    keterangan: string;
-    contact_person: string;
-  }) => {
-    if (showAddLogModal === null) return;
-    console.log("Add log to document", showAddLogModal, logData);
-    setShowAddLogModal(null);
-  };
-
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "-";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
-  // Filter data client-side
-  const filteredData = React.useMemo(() => {
-    if (!response?.data?.data) return [];
-
-    return response.data.data.filter((doc: Document) => {
-      const matchesSearch = doc.judul_dokumen
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-
+    // Terapkan filter tambahan (Status & Jenis) secara client-side
+    return baseData.filter((doc: Document) => {
       const matchesStatus =
         selectedStatus === "all" || doc.status === selectedStatus;
       const matchesDocType =
         selectedDocType === "all" || doc.jenis_dokumen === selectedDocType;
-
-      return matchesSearch && matchesStatus && matchesDocType;
+      return matchesStatus && matchesDocType;
     });
-  }, [response, searchTerm, selectedStatus, selectedDocType]);
+  }, [
+    searchResponse,
+    response,
+    debouncedSearch,
+    selectedStatus,
+    selectedDocType,
+  ]);
+
+  // Handlers
+  const handleAddDocumentSubmit = (formData: any) => {
+    addDocMutation.mutate(formData, {
+      onSuccess: () => setShowAddDocModal(false),
+    });
+  };
+
+  const handleEditDocumentSubmit = (formData: TambahDokumenData) => {
+    if (editingDocument?.id) {
+      editDocMutation.mutate(
+        {
+          id: editingDocument.id,
+          data: formData,
+        },
+        {
+          onSuccess: () => {
+            setShowUpdateDocModal(false);
+            setEditingDocument(null);
+          },
+        }
+      );
+    }
+  };
+
+  const handleEditClick = (doc: Document) => {
+    setEditingDocument(doc);
+    setShowUpdateDocModal(true);
+  };
+
+  const handleCloseUpdateModal = () => {
+    setShowUpdateDocModal(false);
+    setEditingDocument(null);
+  };
+
+  const toggleRow = (docId: number) => {
+    const newExpanded = new Set(expandedRows);
+    newExpanded.has(docId) ? newExpanded.delete(docId) : newExpanded.add(docId);
+    setExpandedRows(newExpanded);
+  };
 
   const clearFilters = () => {
     setSelectedStatus("all");
@@ -250,63 +246,36 @@ const Logbook = () => {
     setSearchTerm("");
   };
 
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+  };
+
+  // Helper UI
+  const isLoading =
+    isMainLoading || (debouncedSearch.length >= 3 && isSearchLoading);
   const hasActiveFilters =
     selectedStatus !== "all" || selectedDocType !== "all" || searchTerm !== "";
-
-  const activeFilterCount = [
-    selectedStatus !== "all" ? 1 : 0,
-    selectedDocType !== "all" ? 1 : 0,
-    searchTerm !== "" ? 1 : 0,
-  ].reduce((a, b) => a + b, 0);
-
-  // Handle pagination
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    const hasNext = response?.data?.links?.next !== null;
-    if (hasNext) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="min-h-screen p-6 lg:p-10 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4" />
-          <p className="text-lg font-semibold">Memuat data...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (isError) {
-    return (
-      <div className="min-h-screen p-6 lg:p-10 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-lg font-semibold text-red-600 mb-2">
-            Terjadi kesalahan saat memuat data
-          </p>
-          <p className="text-sm text-gray-600">
-            {error instanceof Error ? error.message : "Unknown error"}
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   const meta = response?.data?.meta;
   const links = response?.data?.links;
 
+  if (isError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-red-600 font-bold">
+          Error: {(error as any)?.message}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen p-6 lg:p-10">
-      <div className="max-w-7xl mx-auto px-6 py-6 space-y-8">
+      <div className="max-w-8xl mx-auto px-6 py-6 space-y-8">
         <div className="flex items-center justify-between">
           <header>
             <p className="text-sm font-medium text-neutral-400 uppercase tracking-widest">
@@ -316,118 +285,69 @@ const Logbook = () => {
               Dokumen Kerja Sama
             </h1>
           </header>
-          <Button
-            onClick={() => setShowAddDocModal(true)}
-            className="cursor-pointer"
-          >
+          <Button onClick={() => setShowAddDocModal(true)}>
             <Plus className="w-5 h-5 mr-2" />
             Tambah Dokumen
           </Button>
         </div>
 
-        {/* Search and Filter Bar */}
+        {/* Search & Filter Bar */}
         <div className="bg-white rounded-lg border-2 p-4 mb-6">
           <div className="flex gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
               <Input
-                type="text"
-                placeholder="Cari dokumen..."
+                placeholder="Cari dokumen (min. 3 karakter)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 border-2 focus-visible:ring-black"
               />
+              {isLoading && (
+                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
+              )}
             </div>
+
             <DropdownMenu
               open={showFilterDropdown}
               onOpenChange={setShowFilterDropdown}
             >
               <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="border-2 hover:bg-black hover:text-white font-semibold"
-                >
+                <Button variant="outline" className="border-2 font-semibold">
                   <Filter className="w-5 h-5 mr-2" />
-                  Filter
+                  Filter{" "}
                   {hasActiveFilters && (
-                    <Badge className="ml-2 bg-black text-white">
-                      {activeFilterCount}
-                    </Badge>
+                    <Badge className="ml-2 bg-black">!</Badge>
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-80 border-2">
-                <div className="p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-bold text-lg">Filter Dokumen</h3>
-                    <Button
-                      variant="ghost"
-                      size="icon"
+              <DropdownMenuContent className="w-80 p-4 border-2">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-bold">Filter Dokumen</h3>
+                    <X
+                      className="w-4 h-4 cursor-pointer"
                       onClick={() => setShowFilterDropdown(false)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Status</Label>
+                    <Select
+                      value={selectedStatus}
+                      onValueChange={setSelectedStatus}
                     >
-                      <X className="w-5 h-5" />
-                    </Button>
+                      <SelectTrigger className="mt-2 border-2">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Semua Status</SelectItem>
+                        <SelectItem value="Terbit">Terbit</SelectItem>
+                        <SelectItem value="Draft">Draft</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-
-                  <div className="space-y-4">
-                    <div>
-                      <Label className="font-semibold">Status Dokumen</Label>
-                      <Select
-                        value={selectedStatus}
-                        onValueChange={setSelectedStatus}
-                      >
-                        <SelectTrigger className="border-2 mt-2">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Semua Status</SelectItem>
-                          <SelectItem value="Terbit">Terbit</SelectItem>
-                          <SelectItem value="Naskah Dikirim">
-                            Naskah Dikirim
-                          </SelectItem>
-                          <SelectItem value="Draft">Draft</SelectItem>
-                          <SelectItem value="Acc Rektor">Acc Rektor</SelectItem>
-                          <SelectItem value="Inisiasi & Proses">
-                            Inisiasi & Proses
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label className="font-semibold">Jenis Dokumen</Label>
-                      <Select
-                        value={selectedDocType}
-                        onValueChange={setSelectedDocType}
-                      >
-                        <SelectTrigger className="border-2 mt-2">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Semua Jenis</SelectItem>
-                          <SelectItem value="Memorandum of Understanding (MoU)">
-                            MoU
-                          </SelectItem>
-                          <SelectItem value="Memorandum of Agreement (MoA)">
-                            MoA
-                          </SelectItem>
-                          <SelectItem value="Implementation Arrangement (IA)">
-                            IA
-                          </SelectItem>
-                          <SelectItem value="PKS">PKS</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {hasActiveFilters && (
-                      <Button
-                        onClick={clearFilters}
-                        className="w-full bg-black text-white hover:bg-gray-800 font-semibold"
-                      >
-                        Reset Filter
-                      </Button>
-                    )}
-                  </div>
+                  <Button onClick={clearFilters} className="w-full bg-black">
+                    Reset Filter
+                  </Button>
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -436,192 +356,172 @@ const Logbook = () => {
 
         {/* Table */}
         <div className="bg-white rounded-lg border-2 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-black text-white">
-                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider w-12"></th>
-                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
-                    Nomor Dokumen
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
-                    Judul Dokumen
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
-                    Jenis Dokumen
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
-                    Tanggal Masuk
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider">
-                    Aksi
-                  </th>
+          <table className="w-full">
+            <thead>
+              <tr className="bg-black text-white">
+                <th className="px-6 py-4 w-12"></th>
+                <th className="px-6 py-4 text-left text-xs font-bold uppercase">
+                  Nomor Dokumen
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold uppercase">
+                  Judul Dokumen
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold uppercase">
+                  Jenis
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold uppercase">
+                  Status
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold uppercase">
+                  Tanggal
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold uppercase">
+                  Aksi
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y-2 divide-black">
+              {filteredData.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={7}
+                    className="px-6 py-12 text-center text-gray-500"
+                  >
+                    {isLoading ? "Memuat data..." : "Data tidak ditemukan"}
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y-2 divide-black">
-                {filteredData.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={7}
-                      className="px-6 py-12 text-center text-gray-500"
+              ) : (
+                filteredData.map((doc) => (
+                  <React.Fragment key={doc.id}>
+                    <tr
+                      className="hover:bg-gray-50 cursor-pointer"
+                      onClick={() => toggleRow(doc.id)}
                     >
-                      Tidak ada dokumen yang sesuai dengan filter
-                    </td>
-                  </tr>
-                ) : (
-                  filteredData.map((doc: Document) => (
-                    <React.Fragment key={doc.id}>
-                      <tr
-                        className="hover:bg-gray-100 transition-colors cursor-pointer"
-                        onClick={() => toggleRow(doc.id)}
+                      <td className="px-6 py-4">
+                        {expandedRows.has(doc.id) ? (
+                          <ChevronDown />
+                        ) : (
+                          <ChevronRight />
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-sm ">
+                        <div className="">{doc.nomor_dokumen_undip}</div>
+                        <div>{doc.nomor_dokumen_mitra}</div>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-semibold max-w-xs truncate">
+                        {doc.judul_dokumen}
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge variant="outline" className="border-black">
+                          {doc.jenis_dokumen}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4">
+                        <Badge variant="outline" className="border-black">
+                          {doc.status}
+                        </Badge>
+                      </td>
+                      <td className="px-6 py-4 text-sm">
+                        <div className="text-neutral-500 text-xs">
+                          Tanggal Masuk:
+                        </div>
+                        <div>{formatDate(doc.tanggal_masuk)}</div>
+                        <div className="text-neutral-500 text-xs">
+                          Tanggal Terbit:
+                        </div>
+                        <div>{formatDate(doc.tanggal_terbit)}</div>
+                      </td>
+                      <td
+                        className="px-6 py-4"
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        <td className="px-6 py-4">
+                        <div className="flex gap-2">
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="icon"
-                            className="text-gray-600 hover:text-black"
+                            className="border-black"
+                            onClick={() => handleEditClick(doc)}
                           >
-                            {expandedRows.has(doc.id) ? (
-                              <ChevronDown className="w-5 h-5" />
-                            ) : (
-                              <ChevronRight className="w-5 h-5" />
-                            )}
+                            <Edit className="w-4 h-4" />
                           </Button>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm font-semibold">
-                            DOC-{doc.id.toString().padStart(4, "0")}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 max-w-xs">
-                          <p className="text-sm font-semibold line-clamp-2">
-                            {doc.judul_dokumen}
-                          </p>
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge
+                          <Button
                             variant="outline"
-                            className="border-2 border-black"
+                            size="icon"
+                            className="border-black"
                           >
-                            {doc.jenis_dokumen}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4">
-                          <Badge
-                            variant="outline"
-                            className="border-2 border-black"
-                          >
-                            {doc.status}
-                          </Badge>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className="text-sm text-gray-600">
-                            {formatDate(doc.tanggal_masuk)}
-                          </span>
-                        </td>
-                        <td
-                          className="px-6 py-4"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="border border-black cursor-pointer"
-                              title="Edit"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="border border-black cursor-pointer"
-                              onClick={() => handleDeleteDocument(doc.id)}
-                              title="Hapus"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                    {expandedRows.has(doc.id) && (
+                      <tr className="bg-gray-50">
+                        <td colSpan={7} className="px-6 py-6">
+                          <DocumentLogDetails
+                            documentId={doc.id}
+                            onAddLog={setShowAddLogModal}
+                          />
                         </td>
                       </tr>
-
-                      {expandedRows.has(doc.id) && (
-                        <tr className="bg-gray-50">
-                          <td colSpan={7} className="px-6 py-6">
-                            <DocumentLogDetails
-                              documentId={doc.id}
-                              onAddLog={setShowAddLogModal}
-                            />
-                          </td>
-                        </tr>
-                      )}
-                    </React.Fragment>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                    )}
+                  </React.Fragment>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
 
-        {/* Pagination */}
-        <div className="mt-6 flex items-center justify-between">
-          <p className="text-sm font-semibold">
-            Menampilkan {meta?.from || 0} - {meta?.to || 0} dari total{" "}
-            {meta?.total || 0} dokumen
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="border-2 border-black hover:bg-black hover:text-white font-semibold"
-              onClick={handlePreviousPage}
-              disabled={!links?.prev || isLoading}
-            >
-              Sebelumnya
-            </Button>
-            {meta?.links
-              ?.filter((link) => link.page !== null)
-              .map((link) => (
-                <Button
-                  key={link.page}
-                  className={
-                    link.active
-                      ? "bg-black text-white hover:bg-gray-800 font-semibold"
-                      : "bg-white text-black border-2 border-black hover:bg-black hover:text-white font-semibold"
-                  }
-                  onClick={() => link.page && setCurrentPage(link.page)}
-                >
-                  {link.label}
-                </Button>
-              ))}
-            <Button
-              variant="outline"
-              className="border-2 border-black hover:bg-black hover:text-white font-semibold"
-              onClick={handleNextPage}
-              disabled={!links?.next || isLoading}
-            >
-              Selanjutnya
-            </Button>
+        {/* Pagination - Sembunyikan saat search aktif */}
+        {!debouncedSearch && (
+          <div className="mt-6 flex items-center justify-between">
+            <p className="text-sm font-semibold">
+              Menampilkan {meta?.from || 0} - {meta?.to || 0} dari{" "}
+              {meta?.total || 0}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                className="border-2 border-black"
+                disabled={!links?.prev}
+                onClick={() => setCurrentPage((prev) => prev - 1)}
+              >
+                Sebelumnya
+              </Button>
+              <Button
+                variant="outline"
+                className="border-2 border-black"
+                disabled={!links?.next}
+                onClick={() => setCurrentPage((prev) => prev + 1)}
+              >
+                Selanjutnya
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
+
+      {/* Modal Update Dokumen */}
+      <UpdateDokumen
+        isOpen={showUpdateDocModal}
+        onClose={handleCloseUpdateModal}
+        onSubmit={handleEditDocumentSubmit}
+        isLoading={editDocMutation.isPending}
+        initialData={editingDocument}
+      />
 
       {/* Modal Tambah Dokumen */}
       <TambahDokumen
         isOpen={showAddDocModal}
         onClose={() => setShowAddDocModal(false)}
-        onSubmit={handleAddDocumentSubmit} // Kirim fungsi mutasi ke sini
-        isLoading={addDocMutation.isPending} // Berikan loading state ke modal
+        onSubmit={handleAddDocumentSubmit}
+        isLoading={addDocMutation.isPending}
       />
 
       {/* Modal Tambah Log */}
       <TambahLog
         isOpen={showAddLogModal !== null}
         onClose={() => setShowAddLogModal(null)}
-        onSubmit={handleAddLog}
+        onSubmit={() => {}}
         documentId={showAddLogModal}
       />
     </div>

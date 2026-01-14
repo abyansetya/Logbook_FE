@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -32,26 +32,27 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { cn } from "~/lib/utils";
 import { tambahDokumenSchema, type TambahDokumenData } from "~/lib/schema";
 import MitraAutocomplete from "./MitraAutoComplete";
+import type { Document } from "../../../types/logbook";
 import { useStatuses } from "~/hooks/use-helper";
 import { JENIS_DOKUMEN } from "~/lib/constanst";
 
-interface TambahDokumenProps {
+interface UpdateDokumenProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: TambahDokumenData) => void;
   isLoading: boolean;
+  initialData?: Document | null; // Data awal untuk edit mode
 }
 
-const TambahDokumen: React.FC<TambahDokumenProps> = ({
+const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
   isOpen,
   onClose,
   onSubmit,
   isLoading,
+  initialData = null,
 }) => {
   const [selectedMitraNama, setSelectedMitraNama] = useState("");
   const [isCalendarOpen, setIsCalendarOpen] = React.useState(false);
-
-  //get status
   const { data: statusResponse, isLoading: isLoadingStatus } = useStatuses();
   const statuses = statusResponse?.data || [];
 
@@ -68,6 +69,37 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
       tanggal_terbit: "",
     },
   });
+
+  // Reset form dengan data awal saat initialData berubah
+  useEffect(() => {
+    if (initialData && isOpen && statuses.length > 0) {
+      // Mapping jenis dokumen (tetap hardcode jika belum ada API-nya)
+      const jenisMap: Record<string, number> = {
+        "Memorandum of Understanding (MoU)": 1,
+        "Memorandum of Agreement (MoA)": 2,
+        "Implementation Arrangement (IA)": 3,
+      };
+
+      // Mencari ID status berdasarkan nama yang datang dari initialData
+      // Contoh: initialData.status = "Terbit", kita cari di array statuses mana yang namanya "Terbit"
+      const currentStatus = statuses.find((s) => s.nama === initialData.status);
+
+      form.reset({
+        mitra_id: initialData.mitra?.id,
+        jenis_dokumen_id: jenisMap[initialData.jenis_dokumen || ""] || 0,
+        nomor_dokumen_mitra: initialData.nomor_dokumen_mitra || "",
+        nomor_dokumen_undip: initialData.nomor_dokumen_undip || "",
+        judul_dokumen: initialData.judul_dokumen || "",
+        status_id: currentStatus ? currentStatus.id : 0, // Gunakan ID dari database
+        tanggal_masuk:
+          initialData.tanggal_masuk || new Date().toISOString().split("T")[0],
+        tanggal_terbit: initialData.tanggal_terbit || "",
+      });
+
+      setSelectedMitraNama(initialData.mitra?.nama || "");
+    }
+    // Tambahkan statuses ke dependency agar saat data API datang, form ke-reset dengan ID yang benar
+  }, [initialData, isOpen, form, statuses]);
 
   const onHandleSubmit = (data: TambahDokumenData) => {
     console.log("Submitting data:", { ...data, mitra_nama: selectedMitraNama });
@@ -87,7 +119,7 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto border-2 border-black">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
-            Tambah Dokumen Baru
+            {initialData ? "Edit Dokumen" : "Tambah Dokumen Baru"}
           </DialogTitle>
         </DialogHeader>
 
@@ -130,6 +162,7 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                         setSelectedMitraNama(nama);
                       }}
                       placeholder="Cari atau tambah mitra (min. 3 karakter)..."
+                      initialDisplayValue={selectedMitraNama}
                     />
                   </FormControl>
                   <FormMessage />
@@ -177,11 +210,8 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                   <FormLabel className="font-bold">Status</FormLabel>
                   <Select
                     onValueChange={(val) => field.onChange(Number(val))}
-                    // Kita tidak menggunakan defaultValue agar placeholder muncul jika id=0
-                    value={
-                      field.value !== 0 ? field.value?.toString() : undefined
-                    }
-                    disabled={isLoadingStatus}
+                    value={field.value?.toString()}
+                    disabled={isLoadingStatus} // Disable jika sedang loading data API
                   >
                     <FormControl>
                       <SelectTrigger className="min-w-full border-2 border-black">
@@ -311,13 +341,11 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel className="font-bold">Tanggal Terbit</FormLabel>
-
-                    {/* 2. Hubungkan state ke Popover */}
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
-                            type="button" // Pastikan type button agar tidak trigger submit form
+                            type="button"
                             variant="outline"
                             className={cn(
                               "w-full pl-3 text-left font-normal border-2 border-black",
@@ -333,7 +361,6 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
@@ -341,12 +368,9 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                             field.value ? new Date(field.value) : undefined
                           }
                           onSelect={(date) => {
-                            // 3. Set value ke form
                             field.onChange(
                               date ? format(date, "yyyy-MM-dd") : null
                             );
-
-                            // 4. Paksa tutup popover setelah pilih
                             setIsCalendarOpen(false);
                           }}
                           initialFocus
@@ -370,6 +394,8 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Menyimpan...
                   </>
+                ) : initialData ? (
+                  "Update Dokumen"
                 ) : (
                   "Simpan Dokumen"
                 )}
@@ -382,4 +408,4 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
   );
 };
 
-export default TambahDokumen;
+export default UpdateDokumen;

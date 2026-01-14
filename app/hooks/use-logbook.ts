@@ -8,6 +8,8 @@ import {
   getLogbooks,
   getLogbookDetail,
   addDokumen,
+  searchDocument,
+  editDokumen,
 } from "~/service/logbook-service";
 import type {
   LogbooksResponse,
@@ -49,6 +51,41 @@ export const useAddDokumen = () => {
     onError: (error: any) => {
       toast.error(
         "Gagal menambah dokumen: " + (error.message || "Terjadi kesalahan")
+      );
+    },
+  });
+};
+
+export const useSearchDocument = (query: string) => {
+  return useQuery({
+    queryKey: ["document-search", query],
+    queryFn: () => searchDocument(query),
+    enabled: query.length >= 3,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+// Hook untuk edit dokumen
+export const useEditDokumen = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    // Sekarang mutationFn menerima objek yang berisi id dan data
+    mutationFn: editDokumen,
+    onSuccess: (response, variables) => {
+      // Invalidate list utama
+      queryClient.invalidateQueries({ queryKey: ["logbooks"] });
+
+      // Invalidate detail spesifik dokumen yang baru diedit
+      queryClient.invalidateQueries({
+        queryKey: ["logbook-detail", variables.id],
+      });
+
+      toast.success("Dokumen berhasil diperbarui!");
+    },
+    onError: (error: any) => {
+      toast.error(
+        "Gagal memperbarui dokumen: " + (error.message || "Terjadi kesalahan")
       );
     },
   });

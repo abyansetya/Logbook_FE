@@ -1,8 +1,9 @@
-import { fetchData, postData } from "~/lib/fetch-util";
-import type {
-  LogbooksResponse,
-  LogbookDetailResponse,
-  AddDokumenResponse,
+import { fetchData, postData, updateData } from "~/lib/fetch-util";
+import {
+  type LogbooksResponse,
+  type LogbookDetailResponse,
+  type AddDokumenResponse,
+  type DocumentSearchResponse,
 } from "../../types/logbook";
 import type { TambahDokumenData } from "~/lib/schema";
 import type { MitraCreateResponse, MitraSearchResponse } from "types/mitra";
@@ -33,12 +34,34 @@ export const searchMitra = async (
   return await fetchData<MitraSearchResponse>(`/mitra/search?q=${query}`);
 };
 
+export const searchDocument = async (
+  query: string
+): Promise<DocumentSearchResponse> => {
+  return await fetchData<DocumentSearchResponse>(
+    `/logbook/search-dokumen?q=${query}`
+  );
+};
+
 export const addMitraQuick = async (data: {
   nama: string;
   klasifikasi_mitra_id: number;
 }): Promise<MitraCreateResponse> => {
   return await postData<MitraCreateResponse>(
     "/mitra/addMitraWithoutClass",
+    data
+  );
+};
+
+export const editDokumen = async ({
+  id,
+  data,
+}: {
+  id: number;
+  data: TambahDokumenData;
+}): Promise<AddDokumenResponse> => {
+  // Mengarahkan ke endpoint /logbook/{id} sesuai route Laravel yang kita bahas
+  return await updateData<AddDokumenResponse>(
+    `/logbook/edit-dokumen/${id}`,
     data
   );
 };
