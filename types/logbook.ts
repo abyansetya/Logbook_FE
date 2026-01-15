@@ -12,6 +12,7 @@ export interface LogEntry {
   tanggal_log: string;
   keterangan: string;
   contact_person: string;
+  updated_at: string;
   admin: Admin;
 }
 
@@ -97,6 +98,22 @@ export interface DokumenData {
   mitra_id: number;
   mitra: MitraBrief;
   created_at: string;
+}
+
+export interface LogData {
+  id: number;
+  user_id: number;
+  mitra_id: number;
+  dokumen_id: number;
+  keterangan: string;
+  contact_person: string;
+  tanggal_log: string;
+}
+
+export interface addLogResponse {
+  success: boolean;
+  message: string;
+  data: LogData;
 }
 
 export interface AddDokumenResponse {

@@ -2,16 +2,13 @@ import React, { useState, useMemo } from "react";
 import {
   ChevronDown,
   ChevronRight,
-  Calendar,
-  User,
-  FileText,
-  Plus,
-  Trash2,
-  Edit,
   Loader2,
   Search,
   Filter,
   X,
+  Plus,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -32,115 +29,18 @@ import { Badge } from "../../components/ui/badge";
 import TambahLog from "~/components/modal/TambahLog";
 import {
   useLogbooks,
-  useLogbookDetail,
   useAddDokumen,
   useEditDokumen,
   useSearchDocument,
   useDeleteDokumen,
 } from "~/hooks/use-logbook";
-import type { Document, LogEntry } from "../../../types/logbook";
+import type { Document } from "../../../types/logbook";
 import TambahDokumen from "~/components/modal/TambahDokumen";
 import { useDebounce } from "~/hooks/use-debounce";
 import UpdateDokumen from "~/components/modal/UpdateDokumen";
 import type { TambahDokumenData } from "~/lib/schema";
 import ConfirmDeleteModal from "~/components/modal/KonfirmasiDelete";
-
-// --- Sub-Component: DocumentLogDetails ---
-const DocumentLogDetails = ({
-  documentId,
-  onAddLog,
-}: {
-  documentId: number;
-  onAddLog: (docId: number) => void;
-}) => {
-  const { data: detailData, isLoading, isError } = useLogbookDetail(documentId);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-6 h-6 animate-spin mr-2" />
-        <span className="text-sm text-gray-600">Memuat detail log...</span>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-sm text-red-600">Gagal memuat detail log</p>
-      </div>
-    );
-  }
-
-  const logs = detailData?.data?.logs || [];
-
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      });
-    } catch {
-      return dateString;
-    }
-  };
-
-  return (
-    <div className="pl-12">
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="text-lg font-bold flex items-center gap-2">
-          <FileText className="w-5 h-5" />
-          Log Aktivitas Dokumen
-        </h3>
-        <Button
-          onClick={() => onAddLog(documentId)}
-          className="bg-black text-white hover:bg-gray-800 font-semibold"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Tambah Log
-        </Button>
-      </div>
-
-      <div className="space-y-4">
-        {logs.length > 0 ? (
-          logs.map((logEntry: LogEntry) => (
-            <div
-              key={logEntry.id}
-              className="relative pl-8 pb-6 border-l-2 border-black last:border-l-0 last:pb-0"
-            >
-              <div className="absolute -left-2.25 top-0 w-4 h-4 bg-black rounded-full border-4 border-gray-50"></div>
-              <div className="bg-white border-2 border-black rounded-lg p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
-                    <span className="text-sm font-bold">
-                      {formatDate(logEntry.tanggal_log)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <User className="w-4 h-4" />
-                    <span className="font-semibold">{logEntry.admin.nama}</span>
-                  </div>
-                </div>
-                <p className="font-semibold mb-3">{logEntry.keterangan}</p>
-                <div className="flex items-center gap-2 text-sm bg-gray-100 px-3 py-2 rounded-lg border-2 border-black">
-                  <span className="font-bold">Contact Person:</span>
-                  <span>{logEntry.contact_person}</span>
-                </div>
-              </div>
-            </div>
-          ))
-        ) : (
-          <p className="text-center text-gray-500 py-4">
-            Belum ada log aktivitas
-          </p>
-        )}
-      </div>
-    </div>
-  );
-};
+import DocumentLogDetails from "./logbook-details";
 
 // --- Main Component: Logbook ---
 const Logbook = () => {
@@ -151,6 +51,7 @@ const Logbook = () => {
   const [showAddDocModal, setShowAddDocModal] = useState(false);
   const [showUpdateDocModal, setShowUpdateDocModal] = useState(false);
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
+  const [selectedMitraId, setSelectedMitraId] = useState<number | null>(null);
   const [showAddLogModal, setShowAddLogModal] = useState<number | null>(null);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
@@ -220,6 +121,15 @@ const Logbook = () => {
     addDocMutation.mutate(formData, {
       onSuccess: () => setShowAddDocModal(false),
     });
+  };
+
+  // Handler untuk membuka modal log dan menangkap mitra_id
+  const handleOpenAddLog = (docId: number) => {
+    const doc = filteredData.find((d) => d.id === docId);
+    if (doc) {
+      setSelectedMitraId(doc.mitra_id);
+      setShowAddLogModal(docId);
+    }
   };
 
   const handleEditDocumentSubmit = (formData: TambahDokumenData) => {
@@ -464,8 +374,8 @@ const Logbook = () => {
                             size="icon"
                             className="border-black hover:bg-red-50 hover:text-red-600 transition-colors"
                             onClick={(e) => {
-                              e.stopPropagation(); // Agar baris tabel tidak ikut ter-expand
-                              setDeleteConfirmId(doc.id); // Memicu munculnya pop up
+                              e.stopPropagation();
+                              setDeleteConfirmId(doc.id);
                             }}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -478,7 +388,8 @@ const Logbook = () => {
                         <td colSpan={7} className="px-6 py-6">
                           <DocumentLogDetails
                             documentId={doc.id}
-                            onAddLog={setShowAddLogModal}
+                            // Ubah bagian ini:
+                            onAddLog={() => handleOpenAddLog(doc.id)}
                           />
                         </td>
                       </tr>
@@ -539,13 +450,16 @@ const Logbook = () => {
       {/* Modal Tambah Log */}
       <TambahLog
         isOpen={showAddLogModal !== null}
-        onClose={() => setShowAddLogModal(null)}
-        onSubmit={() => {}}
+        onClose={() => {
+          setShowAddLogModal(null);
+          setSelectedMitraId(null);
+        }}
         documentId={showAddLogModal}
+        mitraId={selectedMitraId ?? 0}
+        userId={1} // Ganti dengan ID user dari context/session auth Anda
       />
 
       {/* Modal Konfirmasi Hapus */}
-      {/* Modal Konfirmasi Hapus Tersendiri */}
       <ConfirmDeleteModal
         isOpen={deleteConfirmId !== null}
         onClose={() => setDeleteConfirmId(null)}

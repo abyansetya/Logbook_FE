@@ -1,4 +1,7 @@
 import React, { useState } from "react";
+import { format } from "date-fns";
+import { id } from "date-fns/locale";
+import { Calendar as CalendarIcon, CalendarDays, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,106 +13,158 @@ import { Label } from "../../components/ui/label";
 import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { Button } from "../../components/ui/button";
-import { JENIS_DOKUMEN } from "~/lib/constanst";
+import { Calendar } from "../../components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "../../components/ui/popover";
+import { cn } from "../../lib/utils";
+import { useAddLog } from "../../hooks/use-logbook"; // Sesuaikan path hook Anda
+import { toast } from "sonner";
 
 interface TambahLogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (logData: {
-    tanggal_log: string;
-    keterangan: string;
-    contact_person: string;
-  }) => void;
   documentId: number | null;
+  userId: number; // Diperlukan untuk payload
+  mitraId: number; // Diperlukan untuk payload
 }
 
 const TambahLog: React.FC<TambahLogProps> = ({
   isOpen,
   onClose,
-  onSubmit,
   documentId,
+  userId,
+  mitraId,
 }) => {
-  const [tanggalLog, setTanggalLog] = useState("");
+  const [date, setDate] = useState<Date | undefined>(new Date());
   const [keterangan, setKeterangan] = useState("");
   const [contactPerson, setContactPerson] = useState("");
 
-  const handleSubmit = () => {
-    if (!tanggalLog || !keterangan || !contactPerson) {
-      alert("Mohon lengkapi semua field");
-      return;
-    }
-
-    onSubmit({
-      tanggal_log: tanggalLog,
-      keterangan: keterangan,
-      contact_person: contactPerson,
-    });
-
-    // Reset form
-    setTanggalLog("");
-    setKeterangan("");
-    setContactPerson("");
-  };
+  // Integrasi Hook useAddLog
+  const { mutate: addLogMutation, isPending } = useAddLog();
 
   const handleClose = () => {
-    // Reset form when closing
-    setTanggalLog("");
+    setDate(new Date());
     setKeterangan("");
     setContactPerson("");
     onClose();
   };
 
+  const handleSubmit = () => {
+    if (!date || !keterangan || !contactPerson) {
+      toast.error("Mohon lengkapi semua field");
+      return;
+    }
+
+    if (!documentId) {
+      toast.error("ID Dokumen tidak ditemukan");
+      return;
+    }
+
+    // Eksekusi mutation
+    addLogMutation(
+      {
+        user_id: userId,
+        mitra_id: mitraId,
+        dokumen_id: documentId,
+        keterangan: keterangan,
+        contact_person: contactPerson,
+        tanggal_log: format(date, "yyyy-MM-dd"),
+      },
+      {
+        onSuccess: () => {
+          handleClose();
+        },
+      }
+    );
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl border-2 border-black">
+      <DialogContent className="max-w-md border-2 border-black">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">
+          <DialogTitle className="text-2xl font-black flex items-center gap-2">
+            <CalendarDays className="w-6 h-6" />
             Tambah Log Aktivitas
           </DialogTitle>
         </DialogHeader>
+
         <div className="space-y-4">
-          <div>
-            <Label className="font-bold">Tanggal Log</Label>
-            <Input
-              type="date"
-              value={tanggalLog}
-              onChange={(e) => setTanggalLog(e.target.value)}
-              className="border-2 border-black mt-2"
-            />
+          <div className="flex flex-col gap-2">
+            <Label className="font-bold text-sm">Tanggal Aktivitas</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  disabled={isPending}
+                  className={cn(
+                    "w-full pl-3 text-left font-normal border-2 border-black",
+                    !date && "text-muted-foreground"
+                  )}
+                >
+                  {date ? (
+                    format(new Date(date), "dd MMMM yyyy", { locale: id })
+                  ) : (
+                    <span>Pilih tanggal</span>
+                  )}
+                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="w-auto p-0 border-2 border-black"
+                align="start"
+              >
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={setDate}
+                  initialFocus
+                  locale={id}
+                />
+              </PopoverContent>
+            </Popover>
           </div>
-          <div>
-            <Label className="font-bold">Keterangan</Label>
+
+          <div className="flex flex-col gap-2">
+            <Label className="font-bold text-sm">Keterangan</Label>
             <Textarea
-              placeholder="Masukkan keterangan aktivitas"
+              placeholder="Apa yang dilakukan pada dokumen ini?"
               value={keterangan}
               onChange={(e) => setKeterangan(e.target.value)}
-              rows={4}
-              className="border-2 border-black mt-2"
+              disabled={isPending}
+              rows={3}
+              className="border-2 border-black resize-none focus-visible:ring-0"
             />
           </div>
-          <div>
-            <Label className="font-bold">Contact Person</Label>
+
+          <div className="flex flex-col gap-2">
+            <Label className="font-bold text-sm">Contact Person</Label>
             <Input
-              placeholder="Nama - Jabatan"
+              placeholder="Contoh: Budi - Staff IT"
               value={contactPerson}
               onChange={(e) => setContactPerson(e.target.value)}
-              className="border-2 border-black mt-2"
+              disabled={isPending}
+              className="border-2 border-black h-11 focus-visible:ring-0"
             />
           </div>
         </div>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={handleClose}
-            className="border-2 border-black font-bold cursor-pointer"
-          >
-            Batal
-          </Button>
+
+        <DialogFooter className="gap-2 sm:gap-0">
           <Button
             onClick={handleSubmit}
-            className="bg-black text-white hover:bg-gray-800 font-bold cursor-pointer"
+            disabled={isPending}
+            className="bg-black text-white hover:bg-gray-800 font-bold px-8 min-w-[140px]"
           >
-            Simpan
+            {isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Menyimpan...
+              </>
+            ) : (
+              "Simpan Log"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

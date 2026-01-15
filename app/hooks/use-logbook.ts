@@ -11,6 +11,7 @@ import {
   searchDocument,
   editDokumen,
   deleteDokumen,
+  addLog,
 } from "~/service/logbook-service";
 import type {
   LogbooksResponse,
@@ -52,6 +53,30 @@ export const useAddDokumen = () => {
     onError: (error: any) => {
       toast.error(
         "Gagal menambah dokumen: " + (error.message || "Terjadi kesalahan")
+      );
+    },
+  });
+};
+
+export const useAddLog = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: addLog,
+    onSuccess: (response, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["logbooks"] });
+      queryClient.invalidateQueries({
+        queryKey: ["logbook-detail", variables.dokumen_id],
+      });
+
+      toast.success("Log aktivitas berhasil ditambahkan!");
+    },
+    onError: (error: any) => {
+      toast.error(
+        "Gagal menambah log: " +
+          (error.response?.data?.message ||
+            error.message ||
+            "Terjadi kesalahan")
       );
     },
   });

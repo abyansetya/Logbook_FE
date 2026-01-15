@@ -2,6 +2,26 @@ import { z } from "zod";
 
 export type SignInFormData = z.infer<typeof signInSchema>;
 export type TambahDokumenData = z.infer<typeof tambahDokumenSchema>;
+export type TambahLogData = z.infer<typeof tambahLogSchema>;
+
+export const tambahLogSchema = z.object({
+  user_id: z.number({ message: "User ID wajib diisi" }),
+  mitra_id: z.number({ message: "Mitra ID wajib diisi" }),
+  dokumen_id: z.number({ message: "Dokumen ID wajib diisi" }),
+  keterangan: z
+    .string()
+    .min(5, "Keterangan minimal berisi 5 karakter")
+    .max(500, "Keterangan terlalu panjang"),
+  contact_person: z
+    .string()
+    .min(1, "Contact person wajib diisi")
+    .max(255, "Contact person maksimal 255 karakter"),
+  tanggal_log: z
+    .string()
+    .min(1, "Tanggal log wajib diisi")
+    // Pastikan format string tanggal valid (YYYY-MM-DD)
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal tidak valid"),
+});
 
 export const tambahDokumenSchema = z.object({
   mitra_id: z.number({ message: "Mitra wajib diisi" }),

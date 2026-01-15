@@ -84,7 +84,7 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleCloseModal}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto border-2 border-black">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto border-2 border-black">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold">
             Tambah Dokumen Baru
@@ -295,7 +295,6 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                               date ? format(date, "yyyy-MM-dd") : ""
                             );
                           }}
-                          initialFocus
                         />
                       </PopoverContent>
                     </Popover>

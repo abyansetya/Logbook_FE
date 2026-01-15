@@ -5,8 +5,9 @@ import {
   type AddDokumenResponse,
   type DocumentSearchResponse,
   type DeleteDokumenResponse,
+  type addLogResponse,
 } from "../../types/logbook";
-import type { TambahDokumenData } from "~/lib/schema";
+import type { TambahDokumenData, TambahLogData } from "~/lib/schema";
 import type { MitraCreateResponse, MitraSearchResponse } from "types/mitra";
 
 export const getLogbooks = async (
@@ -75,4 +76,8 @@ export const deleteDokumen = async ({
   return await deleteData<DeleteDokumenResponse>(
     `/logbook/delete-dokumen/${id}`
   );
+};
+
+export const addLog = async (data: TambahLogData): Promise<addLogResponse> => {
+  return await postData<addLogResponse>(`/logbook/add-log`, data);
 };
