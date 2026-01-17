@@ -12,12 +12,16 @@ import {
   editDokumen,
   deleteDokumen,
   addLog,
+  editLog,
+  deleteLog,
 } from "~/service/logbook-service";
 import type {
   LogbooksResponse,
   LogbookDetailResponse,
 } from "../../types/logbook";
 import { toast } from "sonner";
+import { Variable } from "lucide-react";
+import type { updateLogData } from "~/lib/schema";
 
 // Hook untuk list logbook
 export const useLogbooks = (page: number) => {
@@ -117,6 +121,46 @@ export const useEditDokumen = () => {
   });
 };
 
+export const useEditLog = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    /**
+     * mutationFn:
+     * Menyesuaikan dengan fungsi editLog di service yang menerima
+     * satu objek tunggal berisi { id, data }.
+     */
+    mutationFn: (variables: {
+      id: number;
+      dokumen_id: number;
+      data: updateLogData;
+    }) => editLog({ id: variables.id, data: variables.data }),
+
+    onSuccess: (response, variables) => {
+      // 1. Refresh list logbook utama (Tabel besar)
+      queryClient.invalidateQueries({ queryKey: ["logbooks"] });
+
+      // 2. Refresh detail dokumen spesifik agar log terbaru muncul
+      // 'dokumen_id' dikirim melalui mutate() untuk kebutuhan cache invalidation di frontend
+      if (variables.dokumen_id) {
+        queryClient.invalidateQueries({
+          queryKey: ["logbook-detail", variables.dokumen_id],
+        });
+      }
+
+      toast.success("Log aktivitas berhasil diperbarui!");
+    },
+    onError: (error: any) => {
+      toast.error(
+        "Gagal memperbarui log: " +
+          (error.response?.data?.message ||
+            error.message ||
+            "Terjadi kesalahan")
+      );
+    },
+  });
+};
+
 export const useDeleteDokumen = () => {
   const queryClient = useQueryClient();
 
@@ -133,6 +177,21 @@ export const useDeleteDokumen = () => {
       toast.error(
         "Gagal menghapus dokumen: " + (error.message || "Terjadi kesalahan")
       );
+    },
+  });
+};
+
+export const useDeleteLog = (documentId: number) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => deleteLog({ id }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["logbooks"] });
+      // Sekarang documentId sudah tersedia karena dikirim saat inisialisasi hook
+      queryClient.invalidateQueries({
+        queryKey: ["logbook-detail", documentId],
+      });
+      toast.success("Log berhasil dihapus!");
     },
   });
 };

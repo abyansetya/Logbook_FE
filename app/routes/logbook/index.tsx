@@ -9,6 +9,8 @@ import {
   Plus,
   Edit,
   Trash2,
+  MoreHorizontal,
+  ChevronLeft,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -188,6 +190,18 @@ const Logbook = () => {
   const meta = response?.data?.meta;
   const links = response?.data?.links;
 
+  // Helper untuk styling badge status mirip gambar
+  const getStatusStyle = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "terbit":
+        return "bg-green-50 text-green-600 border-none";
+      case "draft":
+        return "bg-orange-50 text-orange-600 border-none";
+      default:
+        return "bg-gray-50 text-gray-600 border-none";
+    }
+  };
+
   if (isError) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -199,36 +213,40 @@ const Logbook = () => {
   }
 
   return (
-    <div className="min-h-screen p-6 lg:p-10">
-      <div className="max-w-8xl mx-auto px-6 py-6 space-y-8">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-[#F9FAFB] p-6 lg:p-10">
+      <div className="max-w-8xl mx-auto space-y-6">
+        {/* Header Section */}
+        <div className="flex items-center justify-between mb-8">
           <header>
-            <p className="text-sm font-medium text-neutral-400 uppercase tracking-widest">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">
               Logbook
             </p>
-            <h1 className="text-4xl font-semibold tracking-tight text-black">
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
               Dokumen Kerja Sama
             </h1>
           </header>
-          <Button onClick={() => setShowAddDocModal(true)}>
+          <Button
+            onClick={() => setShowAddDocModal(true)}
+            className="bg-black hover:bg-gray-800 text-white rounded-xl px-6 py-6 transition-all shadow-sm"
+          >
             <Plus className="w-5 h-5 mr-2" />
             Tambah Dokumen
           </Button>
         </div>
 
-        {/* Search & Filter Bar */}
-        <div className="bg-white rounded-lg border-2 p-4 mb-6">
-          <div className="flex gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5" />
+        {/* Search & Filter Bar - Style diperhalus */}
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 relative min-w-[300px]">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
                 placeholder="Cari dokumen (min. 3 karakter)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 border-2 focus-visible:ring-black"
+                className="pl-12 py-6 bg-gray-50 border-gray-100 rounded-xl focus-visible:ring-1 focus-visible:ring-gray-300"
               />
               {isLoading && (
-                <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
+                <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
               )}
             </div>
 
@@ -237,40 +255,46 @@ const Logbook = () => {
               onOpenChange={setShowFilterDropdown}
             >
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="border-2 font-semibold">
-                  <Filter className="w-5 h-5 mr-2" />
-                  Filter{" "}
+                <Button
+                  variant="outline"
+                  className="rounded-xl px-6 py-6 border-gray-100 text-gray-600 font-semibold gap-2"
+                >
+                  <Filter className="w-4 h-4" />
+                  Filter
                   {hasActiveFilters && (
-                    <Badge className="ml-2 bg-black">!</Badge>
+                    <span className="w-2 h-2 bg-black rounded-full" />
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-80 p-4 border-2">
+              <DropdownMenuContent className="w-80 p-5 rounded-2xl border-gray-100 shadow-xl mt-2">
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <h3 className="font-bold">Filter Dokumen</h3>
+                    <h3 className="font-bold text-gray-900">Filter Dokumen</h3>
                     <X
-                      className="w-4 h-4 cursor-pointer"
+                      className="w-4 h-4 cursor-pointer text-gray-400"
                       onClick={() => setShowFilterDropdown(false)}
                     />
                   </div>
-                  <div>
-                    <Label>Status</Label>
+                  <div className="space-y-2">
+                    <Label className="text-gray-500">Status</Label>
                     <Select
                       value={selectedStatus}
                       onValueChange={setSelectedStatus}
                     >
-                      <SelectTrigger className="mt-2 border-2">
+                      <SelectTrigger className="rounded-xl border-gray-100 bg-gray-50">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="rounded-xl">
                         <SelectItem value="all">Semua Status</SelectItem>
                         <SelectItem value="Terbit">Terbit</SelectItem>
                         <SelectItem value="Draft">Draft</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button onClick={clearFilters} className="w-full bg-black">
+                  <Button
+                    onClick={clearFilters}
+                    className="w-full bg-black rounded-xl py-6 mt-2"
+                  >
                     Reset Filter
                   </Button>
                 </div>
@@ -279,155 +303,241 @@ const Logbook = () => {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-lg border-2 overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-black text-white">
-                <th className="px-6 py-4 w-12"></th>
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase">
-                  Nomor Dokumen
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase">
-                  Judul Dokumen
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase">
-                  Jenis
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase">
-                  Tanggal
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase">
-                  Aksi
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y-2 divide-black">
-              {filteredData.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-6 py-12 text-center text-gray-500"
-                  >
-                    {isLoading ? "Memuat data..." : "Data tidak ditemukan"}
-                  </td>
+        {/* Table Section - Desain Modern */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gray-50/50 border-b border-gray-100">
+                  <th className="px-6 py-5 w-12"></th>
+                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                    Nomor Dokumen
+                  </th>
+                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                    Judul Dokumen
+                  </th>
+                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                    Jenis
+                  </th>
+                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                    Tanggal
+                  </th>
+                  <th className="px-6 py-5 text-right text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                    Action
+                  </th>
                 </tr>
-              ) : (
-                filteredData.map((doc) => (
-                  <React.Fragment key={doc.id}>
-                    <tr
-                      className="hover:bg-gray-50 cursor-pointer"
-                      onClick={() => toggleRow(doc.id)}
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filteredData.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-6 py-20 text-center text-gray-400 font-medium"
                     >
-                      <td className="px-6 py-4">
-                        {expandedRows.has(doc.id) ? (
-                          <ChevronDown />
-                        ) : (
-                          <ChevronRight />
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm ">
-                        <div className="">{doc.nomor_dokumen_undip}</div>
-                        <div>{doc.nomor_dokumen_mitra}</div>
-                      </td>
-                      <td className="px-6 py-4 text-sm font-semibold max-w-xs truncate">
-                        {doc.judul_dokumen}
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge variant="outline" className="border-black">
-                          {doc.jenis_dokumen}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge variant="outline" className="border-black">
-                          {doc.status}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-sm">
-                        <div className="text-neutral-500 text-xs">
-                          Tanggal Masuk:
+                      {isLoading ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <Loader2 className="w-6 h-6 animate-spin" />
+                          <span>Memuat data...</span>
                         </div>
-                        <div>{formatDate(doc.tanggal_masuk)}</div>
-                        <div className="text-neutral-500 text-xs">
-                          Tanggal Terbit:
-                        </div>
-                        <div>{formatDate(doc.tanggal_terbit)}</div>
-                      </td>
-                      <td
-                        className="px-6 py-4"
-                        onClick={(e) => e.stopPropagation()}
+                      ) : (
+                        "Data tidak ditemukan"
+                      )}
+                    </td>
+                  </tr>
+                ) : (
+                  filteredData.map((doc) => (
+                    <React.Fragment key={doc.id}>
+                      <tr
+                        className="hover:bg-gray-50/80 transition-colors cursor-pointer group"
+                        onClick={() => toggleRow(doc.id)}
                       >
-                        <div className="flex gap-2">
-                          <Button
+                        <td className="px-6 py-4">
+                          {expandedRows.has(doc.id) ? (
+                            <ChevronDown className="w-4 h-4 text-gray-400" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4 text-gray-400" />
+                          )}
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <div className="font-semibold text-gray-700">
+                            {doc.nomor_dokumen_undip}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            {doc.nomor_dokumen_mitra}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm font-semibold text-gray-700 max-w-xs truncate">
+                            {doc.judul_dokumen}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge
                             variant="outline"
-                            size="icon"
-                            className="border-black"
-                            onClick={() => handleEditClick(doc)}
+                            className="rounded-lg border-gray-100 text-gray-500 font-medium px-3 py-1 bg-gray-50"
                           >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="border-black hover:bg-red-50 hover:text-red-600 transition-colors"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeleteConfirmId(doc.id);
-                            }}
+                            {doc.jenis_dokumen}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4">
+                          <Badge
+                            className={`rounded-lg px-3 py-1 font-semibold ${getStatusStyle(doc.status ?? "-")}`}
                           >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                    {expandedRows.has(doc.id) && (
-                      <tr className="bg-gray-50">
-                        <td colSpan={7} className="px-6 py-6">
-                          <DocumentLogDetails
-                            documentId={doc.id}
-                            // Ubah bagian ini:
-                            onAddLog={() => handleOpenAddLog(doc.id)}
-                          />
+                            {doc.status}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <div className="text-gray-700 font-medium">
+                            {formatDate(doc.tanggal_masuk)}
+                          </div>
+                          <div className="text-[11px] text-gray-400">
+                            Tanggal terbit: {formatDate(doc.tanggal_terbit)}
+                          </div>
+                        </td>
+                        <td
+                          className="px-6 py-4 text-right"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              variant="abu"
+                              size="icon"
+                              className="w-8 h-8 text-gray-400 hover:text-gray-900"
+                              onClick={() => handleEditClick(doc)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="abu"
+                              size="icon"
+                              className=" w-8 h-8 text-gray-400 hover:text-red-500 cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteConfirmId(doc.id);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500 " />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Pagination - Sembunyikan saat search aktif */}
-        {!debouncedSearch && (
-          <div className="mt-6 flex items-center justify-between">
-            <p className="text-sm font-semibold">
-              Menampilkan {meta?.from || 0} - {meta?.to || 0} dari{" "}
-              {meta?.total || 0}
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                className="border-2 border-black"
-                disabled={!links?.prev}
-                onClick={() => setCurrentPage((prev) => prev - 1)}
-              >
-                Sebelumnya
-              </Button>
-              <Button
-                variant="outline"
-                className="border-2 border-black"
-                disabled={!links?.next}
-                onClick={() => setCurrentPage((prev) => prev + 1)}
-              >
-                Selanjutnya
-              </Button>
-            </div>
+                      {expandedRows.has(doc.id) && (
+                        <tr className="bg-gray-50/50">
+                          <td
+                            colSpan={7}
+                            className="px-8 py-8 border-l-2 border-black ml-4"
+                          >
+                            <DocumentLogDetails
+                              documentId={doc.id}
+                              onAddLog={() => handleOpenAddLog(doc.id)}
+                            />
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
-        )}
+
+          {/* Pagination - Style diperbarui */}
+          {!debouncedSearch && meta && links && (
+            <div className="px-4 py-4 sm:px-6 border-t border-gray-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-4 text-[13px]">
+              {/* Sisi Kiri: Info Total Data */}
+              <div className="text-gray-500 font-medium">
+                Total{" "}
+                <span className="font-bold text-gray-900 ml-1">
+                  {meta.total}
+                </span>
+              </div>
+
+              {/* Sisi Kanan: Lines per page & Navigation */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
+                {/* Lines per page (Dropdown style) - Sesuai meta.per_page */}
+                <div className="hidden sm:flex items-center gap-3">
+                  <span className="text-gray-500 font-medium">
+                    Lines per page
+                  </span>
+                  <div className="flex items-center border border-gray-200 rounded-lg px-3 py-1.5 gap-2 bg-white">
+                    <span className="font-bold text-gray-900">
+                      {meta.per_page}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
+                  </div>
+                </div>
+
+                {/* Kontrol Navigasi Angka */}
+                <div className="flex items-center gap-1">
+                  {/* Tombol Sebelumnya: Mengambil dari links.prev di luar meta */}
+                  <button
+                    disabled={!links.prev}
+                    onClick={() => setCurrentPage(meta.current_page - 1)}
+                    className="p-2 text-gray-400 hover:text-gray-900 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+
+                  {/* Mapping Angka Halaman dari meta.links */}
+                  {meta.links.map((link, index) => {
+                    // Laravel menyertakan label "Previous" dan "Next" di dalam array ini
+                    // Kita lewati (return null) karena sudah pakai icon Chevron di luar loop
+                    const isPrevNext =
+                      link.label.toLowerCase().includes("previous") ||
+                      link.label.toLowerCase().includes("next");
+                    if (isPrevNext) return null;
+
+                    const isEllipsis = link.label === "...";
+                    const isActive = link.active;
+
+                    // Render Simbol Titik-titik
+                    if (isEllipsis) {
+                      return (
+                        <span
+                          key={index}
+                          className="w-8 h-8 flex items-center justify-center text-gray-400"
+                        >
+                          ...
+                        </span>
+                      );
+                    }
+
+                    // Render Tombol Angka Halaman
+                    return (
+                      <button
+                        key={index}
+                        disabled={isActive}
+                        onClick={() => {
+                          // Gunakan link.page dari JSON untuk keamanan tipe data
+                          if (link.page) setCurrentPage(Number(link.page));
+                        }}
+                        className={`w-8 h-8 flex items-center justify-center rounded-full transition-all text-[12px] font-bold ${
+                          isActive
+                            ? "bg-[#0F172A] text-white shadow-sm" // Desain lingkaran gelap aktif
+                            : "text-gray-500 hover:bg-gray-100"
+                        }`}
+                      >
+                        {link.label}
+                      </button>
+                    );
+                  })}
+
+                  {/* Tombol Selanjutnya: Mengambil dari links.next di luar meta */}
+                  <button
+                    disabled={!links.next}
+                    onClick={() => setCurrentPage(meta.current_page + 1)}
+                    className="p-2 text-gray-400 hover:text-gray-900 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Modal Update Dokumen */}
@@ -461,6 +571,7 @@ const Logbook = () => {
 
       {/* Modal Konfirmasi Hapus */}
       <ConfirmDeleteModal
+        label="dokumen"
         isOpen={deleteConfirmId !== null}
         onClose={() => setDeleteConfirmId(null)}
         onConfirm={handleConfirmDelete}

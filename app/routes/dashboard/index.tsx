@@ -13,6 +13,10 @@ import {
   BookOpen,
   ArrowUpRight,
   Activity,
+  Info,
+  Filter,
+  ArrowUpDown,
+  MoreHorizontal,
 } from "lucide-react";
 import {
   BarChart,
@@ -26,26 +30,38 @@ import {
 } from "recharts";
 import { recentActivities } from "../../dummy/dashboard-data";
 import { useDashboardStats } from "~/hooks/use-dashboard";
+import { Button } from "~/components/ui/button";
+import DashboardSkeleton from "~/components/skeleton/dashboard-skeleton";
+import { useEffect, useState } from "react";
 
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { data: apiResponse, isLoading: statsLoading } = useDashboardStats();
-
+  const modernColors = [
+    "#1E3A8A", // Biru Tua (Navy)
+    "#06B6D4", // Cyan (Turquoise/Teal-ish)
+    "#7DD3FC", // Biru Muda (Sky Light)
+    "#3B82F6", // Biru Biasa (Standard/Brand Blue)
+    "#2563EB", // Biru Royal (Deep Blue)
+  ];
+  // Tampilkan skeleton saat loading
   if (isLoading || statsLoading) {
-    return (
-      <div className="flex items-center justify-center h-full min-h-screen bg-white">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-8 h-8 border-2 border-[#1E3A8A] border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-neutral-500 tracking-wide">Loading...</p>
-        </div>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
+
+  // State untuk menyimpan status yang aktif di chart
+  const [activeStatuses, setActiveStatuses] = useState<string[]>([]);
 
   const stats = apiResponse?.data;
   const statusNames = stats?.all_status_names || [];
   const docDistribution = stats?.document_status || [];
 
+  // Sinkronisasi status aktif saat data pertama kali dimuat
+  useEffect(() => {
+    if (statusNames.length > 0) {
+      setActiveStatuses(statusNames);
+    }
+  }, [statusNames]);
   // Definisi Palet Warna: Biru Tua, Biru Muda, Kuning (Solid & Kontras)
   const dashboardColors = [
     "#1E3A8A", // Biru Tua (Primary)
@@ -56,11 +72,21 @@ export default function Dashboard() {
     "#CA8A04", // Kuning Gelap
   ];
 
+  // Handler untuk toggle checkbox
+  const toggleStatus = (status: string) => {
+    setActiveStatuses(
+      (prev) =>
+        prev.includes(status)
+          ? prev.filter((s) => s !== status) // Nonaktifkan
+          : [...prev, status] // Aktifkan
+    );
+  };
+
   if (!isAuthenticated || !user) return null;
 
   return (
     <div className="min-h-screen p-6 lg:p-10 bg-[#F8FAFC]">
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className=" mx-auto space-y-8">
         {/* Welcome Section */}
         <header className="space-y-1">
           <p className="text-sm font-bold uppercase tracking-widest">
@@ -104,104 +130,156 @@ export default function Dashboard() {
           ].map((stat, index) => (
             <Card
               key={index}
-              className="relative overflow-hidden bg-white border-0 shadow-sm hover:shadow-md transition-all duration-300 group"
+              className="relative overflow-hidden bg-white border border-gray-100 shadow-sm rounded-2xl transition-all duration-300 hover:shadow-md group"
             >
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-3">
-                    <p className="text-sm font-medium text-neutral-400 uppercase tracking-wide">
+              <CardContent className="py-2 px-6">
+                {/* Baris Atas: Ikon + Label dan Ikon Info */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1.5 bg-gray-50 rounded-md border border-gray-100">
+                      <stat.icon className="w-4 h-4 text-gray-400" />
+                    </div>
+                    <p className="text-sm font-medium text-gray-600">
                       {stat.label}
                     </p>
-                    <p
-                      className={`text-4xl font-bold tracking-tight ${stat.color}`}
+                  </div>
+
+                  <Info className="w-5 h-5 text-gray-300 cursor-help" />
+                </div>
+
+                {/* Baris Bawah: Nilai Utama + Badge Pertumbuhan */}
+                <div className="flex items-center gap-3 px-2">
+                  <p className="text-3xl font-bold tracking-tight text-gray-900">
+                    {stat.val}
+                  </p>
+                  {stat.growth !== 0 && (
+                    <div
+                      className={`flex items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-bold ${
+                        typeof stat?.growth === "number" && stat.growth > 0
+                          ? "bg-[#E8F8F0] text-[#34C759]"
+                          : "bg-[#FEEBF0] text-[#FF3B30]"
+                      }`}
                     >
-                      {stat.val}
-                    </p>
-                    <div className="flex items-center gap-1.5 text-sm">
-                      <ArrowUpRight className="w-4 h-4 text-slate-400" />
-                      <span className="text-green-600 font-medium">
-                        +{stat.growth}
-                      </span>
-                      <span className="text-xs text-green-600">
-                        {stat.desc}
-                      </span>
+                      {typeof stat?.growth === "number" && stat.growth > 0
+                        ? "+"
+                        : ""}
+                      {stat.growth} {stat.desc}
                     </div>
-                  </div>
-                  <div className="p-3 rounded-xl transition-transform duration-300 group-hover:scale-110 bg-[#1E3A8A]">
-                    <stat.icon className="w-5 h-5 text-white" />
-                  </div>
+                  )}
                 </div>
               </CardContent>
-              <div className="absolute -bottom-8 -right-8 w-24 h-24 bg-slate-50 rounded-full opacity-50" />
             </Card>
           ))}
         </div>
 
         <div className="grid gap-6 lg:grid-cols-5">
           {/* Chart Section */}
-          <Card className="lg:col-span-3 bg-white border-0 shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg font-semibold text-slate-800">
-                Status Logbook
-              </CardTitle>
-              <CardDescription className="text-slate-400">
-                Data 6 bulan terakhir
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <ResponsiveContainer width="100%" height={380}>
-                <BarChart data={stats?.chart_data || []}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="#F1F5F9"
-                    vertical={false}
-                  />
-                  <XAxis
-                    dataKey="month"
-                    axisLine={false}
-                    tickLine={false}
-                    fontSize={12}
-                    tick={{ fill: "#64748B" }}
-                    dy={10}
-                  />
-                  <YAxis
-                    axisLine={false}
-                    tickLine={false}
-                    fontSize={12}
-                    tick={{ fill: "#64748B" }}
-                  />
-                  <Tooltip
-                    cursor={{ fill: "#F8FAFC" }}
-                    contentStyle={{
-                      borderRadius: "12px",
-                      border: "none",
-                      boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
-                    }}
-                  />
-                  <Legend
-                    verticalAlign="top"
-                    align="right"
-                    iconType="circle"
-                    wrapperStyle={{ paddingBottom: "20px", fontSize: "12px" }}
-                  />
+          <Card className="lg:col-span-3 bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
+            <div className="p-6 pb-0">
+              <div className="flex flex-row items-start justify-between">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-col">
+                    <CardTitle className="text-lg font-semibold text-slate-800">
+                      Status Logbook
+                    </CardTitle>
+                    <CardDescription className="text-slate-400">
+                      Data 6 bulan terakhir
+                    </CardDescription>
+                  </div>
+                </div>
 
-                  {statusNames.map((name, index) => (
-                    <Bar
-                      key={name}
-                      dataKey={name}
-                      name={name}
-                      stackId="a"
-                      fill={dashboardColors[index % dashboardColors.length]}
-                      radius={
-                        index === statusNames.length - 1
-                          ? [4, 4, 0, 0]
-                          : [0, 0, 0, 0]
-                      }
-                      barSize={30}
+                {/* Action Buttons ala Modern UI */}
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 rounded-xl border-gray-100 text-xs font-bold gap-2 text-gray-600"
+                  >
+                    <Filter className="w-3 h-3" /> Filter
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 rounded-xl border-gray-100 text-xs font-bold gap-2 text-gray-600"
+                  >
+                    <ArrowUpDown className="w-3 h-3" /> Sort
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9 rounded-xl border-gray-100 text-gray-400"
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            <CardContent className="px-6 pb-8 pt-10">
+              <div className="h-[320px] w-full">
+                <ResponsiveContainer width="100%" height="100%" debounce={50}>
+                  <BarChart
+                    data={stats?.chart_data || []}
+                    margin={{ top: 0, right: 0, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="0"
+                      stroke="#F4F4F4"
+                      vertical={false}
                     />
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
+                    <XAxis
+                      dataKey="month"
+                      axisLine={false}
+                      tickLine={false}
+                      fontSize={12}
+                      tick={{ fill: "#9A9FA5", fontWeight: 500 }}
+                      dy={15}
+                    />
+                    <YAxis
+                      hide // Menyembunyikan YAxis untuk tampilan lebih clean
+                    />
+                    <Tooltip
+                      cursor={{ fill: "#F9FAFB" }}
+                      contentStyle={{
+                        borderRadius: "16px",
+                        border: "none",
+                        boxShadow:
+                          "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)",
+                        padding: "12px",
+                      }}
+                    />
+                    <Legend
+                      verticalAlign="bottom"
+                      align="center"
+                      iconType="circle"
+                      iconSize={8}
+                      wrapperStyle={{
+                        paddingTop: "40px",
+                        fontSize: "12px",
+                        fontWeight: 600,
+                        color: "#6F767E",
+                      }}
+                    />
+
+                    {statusNames.map((name, index) => (
+                      <Bar
+                        key={name}
+                        dataKey={name}
+                        name={name}
+                        stackId="a"
+                        fill={modernColors[index % modernColors.length]}
+                        // Memberikan radius yang halus hanya pada bagian paling atas tumpukan
+                        radius={
+                          index === statusNames.length - 1
+                            ? [6, 6, 0, 0]
+                            : [0, 0, 0, 0]
+                        }
+                        barSize={40}
+                      />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </CardContent>
           </Card>
 
@@ -226,18 +304,16 @@ export default function Dashboard() {
                       <span className="text-xl font-bold text-slate-900">
                         {doc.count}
                       </span>
-                      <span className="text-[10px] font-bold text-blue-500 px-2 py-0.5 rounded-full uppercase">
+                      <span className="text-[10px] font-bold text-secondary px-2 py-0.5 rounded-full uppercase">
                         {doc.percentage}%
                       </span>
                     </div>
                   </div>
                   <div className="relative h-2.5 bg-slate-100 rounded-full overflow-hidden">
                     <div
-                      className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
+                      className="absolute inset-y-0 left-0 rounded-full transition-all duration-700 bg-primary"
                       style={{
                         width: `${doc.percentage}%`,
-                        backgroundColor:
-                          dashboardColors[index % dashboardColors.length],
                       }}
                     />
                   </div>

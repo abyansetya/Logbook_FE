@@ -1,7 +1,5 @@
 // types/logbook.ts
 
-import type { StringValidation } from "zod/v3";
-
 export interface Admin {
   id: number;
   nama: string;
@@ -47,13 +45,19 @@ export interface PaginationLink {
 }
 
 export interface PaginationMeta {
+  current_page: number;
   from: number;
+  last_page: number;
+  links: PaginationLink[];
+  path: string;
+  per_page: number;
   to: number;
   total: number;
-  links: PaginationLink[];
 }
 
 export interface PaginationLinks {
+  first: string;
+  last: string;
   prev: string | null;
   next: string | null;
 }
@@ -110,6 +114,19 @@ export interface LogData {
   tanggal_log: string;
 }
 
+export interface updateLogData {
+  user_id: number;
+  keterangan: string;
+  contact_person: string;
+  tanggal_log: string;
+}
+
+export interface updateLogResponse {
+  success: boolean;
+  message: string;
+  data: updateLogData;
+}
+
 export interface addLogResponse {
   success: boolean;
   message: string;
@@ -128,6 +145,11 @@ export interface DocumentSearchResponse {
 }
 
 export interface DeleteDokumenResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface DeleteLogResponse {
   success: boolean;
   message: string;
 }

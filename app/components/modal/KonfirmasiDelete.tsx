@@ -5,11 +5,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "../../components/ui/dialog";
-import { Button } from "../../components/ui/button";
+} from "../ui/dialog";
+import { Button } from "../ui/button";
 import { Loader2 } from "lucide-react";
 
 interface ConfirmDeleteModalProps {
+  label: string;
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
@@ -19,12 +20,14 @@ interface ConfirmDeleteModalProps {
 }
 
 const ConfirmDeleteModal = ({
+  label,
   isOpen,
   onClose,
   onConfirm,
   isLoading,
-  title = "Hapus Dokumen?",
-  description = "Tindakan ini tidak dapat dibatalkan. Seluruh data log terkait dokumen ini juga akan ikut terhapus.",
+  title = `Hapus ${label}?`,
+  description = `Tindakan ini tidak dapat dibatalkan. ${label === "log" ? "Data log terkait akan terhapus" : "Seluruh data log terkait dokumen ini juga akan ikut terhapus."}`,
+  // `Tindakan ini tidak dapat dibatalkan. Seluruh data log terkait ${label} ini juga akan ikut terhapus.`,
 }: ConfirmDeleteModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -55,7 +58,7 @@ const ConfirmDeleteModal = ({
                 Menghapus...
               </>
             ) : (
-              "Ya, Hapus Dokumen"
+              `Ya, Hapus ${label}`
             )}
           </Button>
         </DialogFooter>

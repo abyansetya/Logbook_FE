@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Calendar,
   User,
@@ -9,26 +9,34 @@ import {
   Trash2,
   MessageSquare,
   Clock,
-  ClipboardList, // Import icon clock untuk indikasi waktu update
+  ClipboardList,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
-import { useLogbookDetail } from "~/hooks/use-logbook";
+import { useDeleteLog, useLogbookDetail } from "../../hooks/use-logbook";
 import type { LogEntry } from "../../../types/logbook";
+import UpdateLog from "../../components/modal/UpdateLog";
+import { deleteLog } from "~/service/logbook-service";
+import ConfirmDeleteModal from "~/components/modal/KonfirmasiDelete";
 
 interface DocumentLogDetailsProps {
   documentId: number;
   onAddLog: (docId: number) => void;
-  onEditLog?: (log: LogEntry) => void;
   onDeleteLog?: (logId: number) => void;
 }
 
 const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
   documentId,
   onAddLog,
-  onEditLog,
   onDeleteLog,
 }) => {
   const { data: detailData, isLoading, isError } = useLogbookDetail(documentId);
+
+  // State untuk mengontrol Modal UpdateLog
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedLog, setSelectedLog] = useState<LogEntry | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+
+  const deleteLogMutation = useDeleteLog(documentId);
 
   // Helper untuk memformat tanggal utama
   const formatDate = (dateString: string) => {
@@ -46,7 +54,7 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
     }
   };
 
-  // Helper untuk memformat waktu update (Tooltip atau text kecil)
+  // Helper untuk memformat waktu update
   const formatUpdateTime = (dateString: string) => {
     try {
       const date = new Date(dateString);
@@ -57,6 +65,26 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
     } catch {
       return dateString;
     }
+  };
+
+  // Fungsi yang dijalankan saat tombol hapus di klik
+  const handleDeleteClick = (id: number) => {
+    setDeleteConfirmId(id);
+  };
+
+  // Fungsi yang dijalankan saat konfirmasi di modal delete di klik
+  const handleConfirmDelete = () => {
+    if (deleteConfirmId) {
+      deleteLogMutation.mutate(deleteConfirmId, {
+        onSuccess: () => {
+          setDeleteConfirmId(null);
+        },
+      });
+    }
+  };
+  const handleEditClick = (log: LogEntry) => {
+    setSelectedLog(log);
+    setIsEditModalOpen(true);
   };
 
   if (isLoading) {
@@ -108,14 +136,12 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
           <div className="space-y-0">
             {logs.map((logEntry: LogEntry, index: number) => {
               const dateObj = formatDate(logEntry.tanggal_log);
-              // Cek apakah data pernah diupdate (perbandingan string tanggal)
               const isUpdated =
                 logEntry.updated_at &&
                 logEntry.updated_at !== logEntry.tanggal_log;
 
               return (
                 <div key={logEntry.id} className="group flex gap-6">
-                  {/* Left Side: Date */}
                   <div className="w-20 pt-1 flex flex-col items-end">
                     <span className="text-sm font-bold text-black uppercase">
                       {dateObj.day}
@@ -125,7 +151,6 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
                     </span>
                   </div>
 
-                  {/* Middle: Timeline Line & Dot */}
                   <div className="relative flex flex-col items-center">
                     <div className="z-10 w-4 h-4 rounded-full border-2 border-black bg-white group-hover:bg-black transition-colors" />
                     {index !== logs.length - 1 && (
@@ -133,7 +158,6 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
                     )}
                   </div>
 
-                  {/* Right Side: Content Card */}
                   <div className="flex-1 pb-10">
                     <div className="bg-white border-2 border-gray-100 group-hover:border-black transition-all rounded-xl p-5 shadow-sm hover:shadow-md">
                       <div className="flex justify-between items-start mb-4">
@@ -144,11 +168,9 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
                               Admin: {logEntry.admin.nama}
                             </div>
 
-                            {/* Indikator Update */}
                             {isUpdated && (
                               <div className="flex items-center gap-1.5 text-[11px] text-gray-400 font-medium italic">
                                 <span className="w-1 h-1 rounded-full bg-gray-300" />{" "}
-                                {/* Dot Separator */}
                                 <span>
                                   Diperbarui{" "}
                                   {formatUpdateTime(logEntry.updated_at)}
@@ -167,7 +189,7 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 hover:bg-gray-100"
-                            onClick={() => onEditLog?.(logEntry)}
+                            onClick={() => handleEditClick(logEntry)}
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
@@ -175,7 +197,7 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
-                            onClick={() => onDeleteLog?.(logEntry.id)}
+                            onClick={() => handleDeleteClick(logEntry.id)}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -201,14 +223,11 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
           </div>
         ) : (
           <div className="text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-            {/* Container Icon */}
             <div className="flex justify-center mb-4">
               <div className="relative">
-                {/* Lingkaran background icon */}
                 <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center shadow-sm border border-gray-100">
                   <ClipboardList className="w-8 h-8 text-gray-300" />
                 </div>
-                {/* Badge kecil Plus di pojok icon */}
                 <div className="absolute -bottom-1 -right-1 bg-black text-white rounded-full p-1 border-2 border-gray-50">
                   <Plus className="w-3 h-3" />
                 </div>
@@ -233,6 +252,35 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
           </div>
         )}
       </div>
+
+      {/* Modal Update Log */}
+      <UpdateLog
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedLog(null);
+        }}
+        logData={
+          selectedLog
+            ? {
+                id: selectedLog.id,
+                dokumen_id: documentId,
+                user_id: selectedLog.admin.id,
+                keterangan: selectedLog.keterangan,
+                contact_person: selectedLog.contact_person,
+                tanggal_log: selectedLog.tanggal_log,
+              }
+            : null
+        }
+      />
+
+      <ConfirmDeleteModal
+        label="log"
+        isOpen={deleteConfirmId !== null}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={handleConfirmDelete}
+        isLoading={deleteLogMutation.isPending}
+      />
     </div>
   );
 };
