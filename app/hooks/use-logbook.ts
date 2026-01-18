@@ -20,7 +20,7 @@ import type {
   LogbookDetailResponse,
 } from "../../types/logbook";
 import { toast } from "sonner";
-import { Variable } from "lucide-react";
+
 import type { updateLogData } from "~/lib/schema";
 
 // Hook untuk list logbook
@@ -56,7 +56,7 @@ export const useAddDokumen = () => {
     },
     onError: (error: any) => {
       toast.error(
-        "Gagal menambah dokumen: " + (error.message || "Terjadi kesalahan")
+        "Gagal menambah dokumen: " + (error.message || "Terjadi kesalahan"),
       );
     },
   });
@@ -80,7 +80,7 @@ export const useAddLog = () => {
         "Gagal menambah log: " +
           (error.response?.data?.message ||
             error.message ||
-            "Terjadi kesalahan")
+            "Terjadi kesalahan"),
       );
     },
   });
@@ -115,7 +115,7 @@ export const useEditDokumen = () => {
     },
     onError: (error: any) => {
       toast.error(
-        "Gagal memperbarui dokumen: " + (error.message || "Terjadi kesalahan")
+        "Gagal memperbarui dokumen: " + (error.message || "Terjadi kesalahan"),
       );
     },
   });
@@ -155,7 +155,7 @@ export const useEditLog = () => {
         "Gagal memperbarui log: " +
           (error.response?.data?.message ||
             error.message ||
-            "Terjadi kesalahan")
+            "Terjadi kesalahan"),
       );
     },
   });
@@ -175,7 +175,7 @@ export const useDeleteDokumen = () => {
     },
     onError: (error: any) => {
       toast.error(
-        "Gagal menghapus dokumen: " + (error.message || "Terjadi kesalahan")
+        "Gagal menghapus dokumen: " + (error.message || "Terjadi kesalahan"),
       );
     },
   });

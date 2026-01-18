@@ -11,6 +11,11 @@ import type { Route } from "./+types/root";
 import "./app.css";
 import ReactQueryProvider from "./provider/react-query-provider";
 
+export const meta: Route.MetaFunction = () => [
+  { title: "Logbook - Kerja Sama" },
+  { name: "description", content: "Sistem Logbook Elektronik Kerja Sama" },
+];
+
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Check, Plus, Search, Loader2 } from "lucide-react";
 import {
   Check as CheckIcon,
   Plus as PlusIcon,
@@ -26,14 +25,14 @@ interface MitraAutocompleteProps {
   value?: number;
   onChange: (mitraId: number, mitraNama: string) => void;
   placeholder?: string;
-  initialDisplayValue?: string; // Tambahkan ini sesuai error sebelumnya
+  initialDisplayValue?: string;
 }
 
 const MitraAutocomplete: React.FC<MitraAutocompleteProps> = ({
   value,
   onChange,
   placeholder = "Cari atau tambah mitra...",
-  initialDisplayValue = "", // Berikan default value
+  initialDisplayValue = "",
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -46,16 +45,15 @@ const MitraAutocomplete: React.FC<MitraAutocompleteProps> = ({
 
   const filteredMitra = data?.data || [];
 
-  // SININKRONISASI: Set nilai input jika ada initialDisplayValue (Mode Edit)
+  // SINKRONISASI: Set nilai input jika ada initialDisplayValue (Mode Edit)
   useEffect(() => {
     if (initialDisplayValue) {
       setSearchQuery(initialDisplayValue);
-      // Jika kita punya value (ID) dan initialDisplayValue (Nama),
-      // kita anggap mitra ini sudah terpilih secara internal
       if (value) {
         setSelectedMitra({ id: value, nama: initialDisplayValue });
       }
-    } else {
+    } else if (!value) {
+      // Reset hanya jika tidak ada value
       setSearchQuery("");
       setSelectedMitra(null);
     }
@@ -76,10 +74,13 @@ const MitraAutocomplete: React.FC<MitraAutocompleteProps> = ({
   }, []);
 
   const handleSelectMitra = (mitra: Mitra) => {
+    // Set semua state yang diperlukan
     setSelectedMitra(mitra);
     setSearchQuery(mitra.nama);
-    onChange(mitra.id, mitra.nama);
     setIsOpen(false);
+
+    // Call parent onChange - PENTING untuk update form
+    onChange(mitra.id, mitra.nama);
   };
 
   const handleAddNewMitra = () => {
@@ -89,10 +90,21 @@ const MitraAutocomplete: React.FC<MitraAutocompleteProps> = ({
         onSuccess: (response: MitraCreateResponse) => {
           if (response.success) {
             const newMitra = response.data;
-            handleSelectMitra(newMitra);
+
+            // Set semua state yang diperlukan
+            setSelectedMitra(newMitra);
+            setSearchQuery(newMitra.nama);
+            setIsOpen(false);
+
+            // Call parent onChange - PENTING untuk update form
+            onChange(newMitra.id, newMitra.nama);
           }
         },
-      }
+        onError: (error) => {
+          console.error("Error adding mitra:", error);
+          // TODO: Tambahkan toast notification untuk user feedback
+        },
+      },
     );
   };
 
@@ -104,34 +116,38 @@ const MitraAutocomplete: React.FC<MitraAutocompleteProps> = ({
           type="text"
           value={searchQuery}
           onChange={(e) => {
-            setSearchQuery(e.target.value);
+            const newValue = e.target.value;
+            setSearchQuery(newValue);
             setIsOpen(true);
+
             // Jika user mengetik manual, hapus status "terpilih" agar bisa mencari ulang
-            if (selectedMitra && e.target.value !== selectedMitra.nama) {
+            if (selectedMitra && newValue !== selectedMitra.nama) {
               setSelectedMitra(null);
             }
           }}
           onFocus={() => setIsOpen(true)}
           placeholder={placeholder}
+          disabled={addMitraWMutation.isPending}
           className={cn(
             "pl-10 pr-10 border-2 border-black focus-visible:ring-0",
-            selectedMitra && "bg-green-50/30"
+            selectedMitra && "bg-green-50/30",
+            addMitraWMutation.isPending && "opacity-60 cursor-not-allowed",
           )}
         />
 
         {/* Indikator Loading atau Berhasil */}
         <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-          {isFetching && (
+          {(isFetching || addMitraWMutation.isPending) && (
             <LoaderIcon className="w-4 h-4 animate-spin text-gray-400" />
           )}
-          {selectedMitra && !isFetching && (
+          {selectedMitra && !isFetching && !addMitraWMutation.isPending && (
             <CheckIcon className="text-green-600 w-4 h-4" />
           )}
         </div>
       </div>
 
       {/* Dropdown Hasil Pencarian */}
-      {isOpen && searchQuery.length >= 3 && (
+      {isOpen && searchQuery.length >= 3 && !addMitraWMutation.isPending && (
         <div className="absolute border-black z-[100] w-full mt-1 bg-white border-2 rounded-md shadow-xl max-h-60 overflow-y-auto">
           {filteredMitra.length > 0 ? (
             <div className="p-1">
@@ -140,11 +156,11 @@ const MitraAutocomplete: React.FC<MitraAutocompleteProps> = ({
                   key={mitra.id}
                   type="button"
                   onClick={() => handleSelectMitra(mitra)}
-                  className="w-full px-3 py-2 text-left hover:bg-gray-100 rounded-sm flex items-center justify-between text-sm"
+                  className="w-full px-3 py-2 text-left hover:bg-gray-100 rounded-sm flex items-center justify-between text-sm transition-colors"
                 >
-                  {mitra.nama}
+                  <span className="truncate">{mitra.nama}</span>
                   {selectedMitra?.id === mitra.id && (
-                    <CheckIcon className="w-3 h-3 text-green-600" />
+                    <CheckIcon className="w-3 h-3 text-green-600 flex-shrink-0 ml-2" />
                   )}
                 </button>
               ))}
@@ -160,14 +176,19 @@ const MitraAutocomplete: React.FC<MitraAutocompleteProps> = ({
                   size="sm"
                   onClick={handleAddNewMitra}
                   disabled={addMitraWMutation.isPending}
-                  className="bg-black text-white hover:bg-gray-800 w-full"
+                  className="bg-black text-white hover:bg-gray-800 w-full transition-colors"
                 >
                   {addMitraWMutation.isPending ? (
-                    <LoaderIcon className="w-3 h-3 animate-spin mr-2" />
+                    <>
+                      <LoaderIcon className="w-3 h-3 animate-spin mr-2" />
+                      Menambahkan...
+                    </>
                   ) : (
-                    <PlusIcon className="w-3 h-3 mr-2" />
+                    <>
+                      <PlusIcon className="w-3 h-3 mr-2" />
+                      Tambah "{searchQuery}"
+                    </>
                   )}
-                  Tambah "{searchQuery}"
                 </Button>
               </div>
             )

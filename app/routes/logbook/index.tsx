@@ -43,29 +43,31 @@ import UpdateDokumen from "~/components/modal/UpdateDokumen";
 import type { TambahDokumenData } from "~/lib/schema";
 import ConfirmDeleteModal from "~/components/modal/KonfirmasiDelete";
 import DocumentLogDetails from "./logbook-details";
+import { useAuth } from "~/provider/auth-context";
 
 // --- Main Component: Logbook ---
 const Logbook = () => {
-  // State
+  // --- 1. STATES ---
   const [currentPage, setCurrentPage] = useState(1);
-  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearch = useDebounce(searchTerm, 500);
+  const { user, isAuthenticated } = useAuth();
+
+  // UI States (Modals & Dropdowns)
   const [showAddDocModal, setShowAddDocModal] = useState(false);
   const [showUpdateDocModal, setShowUpdateDocModal] = useState(false);
-  const [editingDocument, setEditingDocument] = useState<Document | null>(null);
-  const [selectedMitraId, setSelectedMitraId] = useState<number | null>(null);
   const [showAddLogModal, setShowAddLogModal] = useState<number | null>(null);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
-  const [selectedDocType, setSelectedDocType] = useState<string>("all");
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
-  const debouncedSearch = useDebounce(searchTerm, 500);
+  // Data-related States
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [editingDocument, setEditingDocument] = useState<Document | null>(null);
+  const [selectedMitraId, setSelectedMitraId] = useState<number | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedDocType, setSelectedDocType] = useState<string>("all");
 
-  //Fetch data pencarian (Hanya jalan jika search >= 3 char)
-  const { data: searchResponse, isLoading: isSearchLoading } =
-    useSearchDocument(debouncedSearch);
-
+  // --- 2. DATA FETCHING (QUERIES) ---
   // Fetch data logbook reguler
   const {
     data: response,
@@ -74,35 +76,24 @@ const Logbook = () => {
     error,
   } = useLogbooks(currentPage);
 
+  // Fetch data pencarian (Hanya jalan jika search >= 3 char)
+  const { data: searchResponse, isLoading: isSearchLoading } =
+    useSearchDocument(debouncedSearch);
+
+  // --- 3. MUTATIONS (CUD Operations) ---
   const addDocMutation = useAddDokumen();
   const editDocMutation = useEditDokumen();
-  // Inisialisasi hook delete
   const deleteDocMutation = useDeleteDokumen();
 
-  const handleConfirmDelete = () => {
-    if (deleteConfirmId) {
-      deleteDocMutation.mutate(deleteConfirmId, {
-        onSuccess: () => {
-          setDeleteConfirmId(null);
-        },
-      });
-    }
-  };
-
-  // --- Logic Pemilihan Data ---
+  // --- 4. COMPUTED DATA (MEMOIZED) ---
   const filteredData = useMemo(() => {
-    // Tentukan sumber data dasar
-    let baseData: Document[] = [];
+    // Logic: Pilih sumber data (Search vs Reguler)
+    const isSearching = debouncedSearch.length >= 3 && searchResponse?.success;
+    const baseData: Document[] = isSearching
+      ? searchResponse.data
+      : response?.data?.data || [];
 
-    if (debouncedSearch.length >= 3 && searchResponse?.success) {
-      // Gunakan data dari hasil search server
-      baseData = searchResponse.data;
-    } else {
-      // Gunakan data dari list reguler
-      baseData = response?.data?.data || [];
-    }
-
-    // Terapkan filter tambahan (Status & Jenis) secara client-side
+    // Logic: Filter client-side (Status & Jenis)
     return baseData.filter((doc: Document) => {
       const matchesStatus =
         selectedStatus === "all" || doc.status === selectedStatus;
@@ -118,37 +109,13 @@ const Logbook = () => {
     selectedDocType,
   ]);
 
-  // Handlers
+  // --- 5. ACTION HANDLERS ---
+
+  // Create & Update Handlers
   const handleAddDocumentSubmit = (formData: any) => {
     addDocMutation.mutate(formData, {
       onSuccess: () => setShowAddDocModal(false),
     });
-  };
-
-  // Handler untuk membuka modal log dan menangkap mitra_id
-  const handleOpenAddLog = (docId: number) => {
-    const doc = filteredData.find((d) => d.id === docId);
-    if (doc) {
-      setSelectedMitraId(doc.mitra_id);
-      setShowAddLogModal(docId);
-    }
-  };
-
-  const handleEditDocumentSubmit = (formData: TambahDokumenData) => {
-    if (editingDocument?.id) {
-      editDocMutation.mutate(
-        {
-          id: editingDocument.id,
-          data: formData,
-        },
-        {
-          onSuccess: () => {
-            setShowUpdateDocModal(false);
-            setEditingDocument(null);
-          },
-        }
-      );
-    }
   };
 
   const handleEditClick = (doc: Document) => {
@@ -156,9 +123,41 @@ const Logbook = () => {
     setShowUpdateDocModal(true);
   };
 
+  const handleEditDocumentSubmit = (formData: TambahDokumenData) => {
+    if (!editingDocument?.id) return;
+
+    editDocMutation.mutate(
+      { id: editingDocument.id, data: formData },
+      {
+        onSuccess: () => {
+          setShowUpdateDocModal(false);
+          setEditingDocument(null);
+        },
+      },
+    );
+  };
+
   const handleCloseUpdateModal = () => {
     setShowUpdateDocModal(false);
     setEditingDocument(null);
+  };
+
+  // Delete Handlers
+  const handleConfirmDelete = () => {
+    if (!deleteConfirmId) return;
+
+    deleteDocMutation.mutate(deleteConfirmId, {
+      onSuccess: () => setDeleteConfirmId(null),
+    });
+  };
+
+  // Logbook & UI Handlers
+  const handleOpenAddLog = (docId: number) => {
+    const doc = filteredData.find((d) => d.id === docId);
+    if (doc) {
+      setSelectedMitraId(doc.mitra_id);
+      setShowAddLogModal(docId);
+    }
   };
 
   const toggleRow = (docId: number) => {
@@ -173,16 +172,7 @@ const Logbook = () => {
     setSearchTerm("");
   };
 
-  const formatDate = (dateString: string | null) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString("id-ID", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
-  };
-
-  // Helper UI
+  // --- 6. UI HELPERS & DERIVED STATE ---
   const isLoading =
     isMainLoading || (debouncedSearch.length >= 3 && isSearchLoading);
   const hasActiveFilters =
@@ -190,31 +180,52 @@ const Logbook = () => {
   const meta = response?.data?.meta;
   const links = response?.data?.links;
 
-  // Helper untuk styling badge status mirip gambar
-  const getStatusStyle = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "terbit":
-        return "bg-green-50 text-green-600 border-none";
-      case "draft":
-        return "bg-orange-50 text-orange-600 border-none";
-      default:
-        return "bg-gray-50 text-gray-600 border-none";
-    }
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "-";
+    const date = new Date(dateString);
+    const months = [
+      "Januari",
+      "Februari",
+      "Maret",
+      "April",
+      "Mei",
+      "Juni",
+      "Juli",
+      "Agustus",
+      "September",
+      "Oktober",
+      "November",
+      "Desember",
+    ];
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month} ${year}`;
   };
 
+  const getStatusStyle = (status: string) => {
+    const s = status.toLowerCase();
+    if (s === "terbit") return "bg-green-50 text-green-600 border-none";
+    if (s === "draft") return "bg-orange-50 text-orange-600 border-none";
+    return "bg-gray-50 text-gray-600 border-none";
+  };
+
+  // --- 7. ERROR RENDERING ---
   if (isError) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-red-600 font-bold">
-          Error: {(error as any)?.message}
+          Error: {(error as any)?.message || "Terjadi kesalahan sistem"}
         </p>
       </div>
     );
   }
 
+  if (!isAuthenticated || !user) return null;
+
   return (
     <div className="min-h-screen bg-[#F9FAFB] p-6 lg:p-10">
-      <div className="max-w-8xl mx-auto space-y-6">
+      <div className=" mx-auto space-y-6">
         {/* Header Section */}
         <div className="flex items-center justify-between mb-8">
           <header>

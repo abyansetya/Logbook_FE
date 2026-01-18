@@ -115,7 +115,7 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
               )}
             />
 
-            {/* Mitra dengan Autocomplete */}
+            {/* Mitra dengan Autocomplete - PERBAIKAN DI SINI */}
             <FormField
               control={form.control}
               name="mitra_id"
@@ -126,13 +126,29 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                     <MitraAutocomplete
                       value={field.value}
                       onChange={(id, nama) => {
+                        // console.log("🔴 Parent onChange called:", { id, nama });
+                        // console.log("🔴 Current field value:", field.value);
+
                         field.onChange(id);
                         setSelectedMitraNama(nama);
+
+                        console.log(
+                          "🔴 After update - form values:",
+                          form.getValues(),
+                        );
                       }}
                       placeholder="Cari atau tambah mitra (min. 3 karakter)..."
                     />
                   </FormControl>
                   <FormMessage />
+
+                  {/* Debug info - hapus setelah selesai debug */}
+                  {/* {process.env.NODE_ENV === "development" && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      Debug: mitra_id = {field.value || "undefined"}, nama ={" "}
+                      {selectedMitraNama || "undefined"}
+                    </div>
+                  )} */}
                 </FormItem>
               )}
             />
@@ -177,7 +193,6 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                   <FormLabel className="font-bold">Status</FormLabel>
                   <Select
                     onValueChange={(val) => field.onChange(Number(val))}
-                    // Kita tidak menggunakan defaultValue agar placeholder muncul jika id=0
                     value={
                       field.value !== 0 ? field.value?.toString() : undefined
                     }
@@ -272,7 +287,7 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                             variant="outline"
                             className={cn(
                               "w-full pl-3 text-left font-normal border-2 border-black",
-                              !field.value && "text-muted-foreground"
+                              !field.value && "text-muted-foreground",
                             )}
                           >
                             {field.value ? (
@@ -292,7 +307,7 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                           }
                           onSelect={(date) => {
                             field.onChange(
-                              date ? format(date, "yyyy-MM-dd") : ""
+                              date ? format(date, "yyyy-MM-dd") : "",
                             );
                           }}
                         />
@@ -310,17 +325,15 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
                     <FormLabel className="font-bold">Tanggal Terbit</FormLabel>
-
-                    {/* 2. Hubungkan state ke Popover */}
                     <Popover>
                       <PopoverTrigger asChild>
                         <FormControl>
                           <Button
-                            type="button" // Pastikan type button agar tidak trigger submit form
+                            type="button"
                             variant="outline"
                             className={cn(
                               "w-full pl-3 text-left font-normal border-2 border-black",
-                              !field.value && "text-muted-foreground"
+                              !field.value && "text-muted-foreground",
                             )}
                           >
                             {field.value ? (
@@ -332,7 +345,6 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                           </Button>
                         </FormControl>
                       </PopoverTrigger>
-
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
@@ -340,12 +352,9 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                             field.value ? new Date(field.value) : undefined
                           }
                           onSelect={(date) => {
-                            // 3. Set value ke form
                             field.onChange(
-                              date ? format(date, "yyyy-MM-dd") : null
+                              date ? format(date, "yyyy-MM-dd") : null,
                             );
-
-                            // 4. Paksa tutup popover setelah pilih
                             setIsCalendarOpen(false);
                           }}
                           initialFocus

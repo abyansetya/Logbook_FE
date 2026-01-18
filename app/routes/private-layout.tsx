@@ -1,6 +1,6 @@
 // src/layouts/dashboard-layout.tsx
 import React, { useState, useEffect } from "react";
-import { Link, Outlet, useLocation } from "react-router";
+import { Link, Outlet, useLocation, useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 import {
   LayoutDashboard,
@@ -36,13 +36,22 @@ const navGroups = {
     { name: "Logbook", href: "/logbook", icon: BookOpen },
     { name: "Mitra", href: "/mitra", icon: Users },
   ],
+  ADMIN: [{ name: "Users", href: "/users", icon: User }],
 };
 
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false); // Untuk Mobile
   const [sidebarMinimized, setSidebarMinimized] = useState(false); // Untuk Desktop
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthenticated, isLoading: authLoading } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Global Auth Guard: Redirect to sign-in if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate("/sign-in");
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   // Menutup sidebar otomatis saat pindah rute di mobile
   useEffect(() => {
@@ -148,6 +157,42 @@ export default function DashboardLayout() {
                     </Link>
                   );
                 })}
+
+                {/* Admin Menu */}
+                {user?.roles?.includes("Admin") && (
+                  <>
+                    <p
+                      className={`px-3 text-[11px] font-bold text-gray-400 tracking-wider mb-2 mt-6 uppercase ${sidebarMinimized ? "lg:hidden" : "block"}`}
+                    >
+                      Admin
+                    </p>
+                    {navGroups.ADMIN.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = location.pathname === item.href;
+
+                      return (
+                        <Link
+                          key={item.name}
+                          to={item.href}
+                          className={`flex items-center gap-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all
+                                ${isActive ? "bg-[#F4F4F4] text-primary" : "text-[#6F767E] hover:bg-gray-50 hover:text-gray-900"}
+                                ${sidebarMinimized ? "lg:justify-center" : "justify-start"}
+                            `}
+                          title={sidebarMinimized ? item.name : ""}
+                        >
+                          <Icon
+                            className={`h-5 w-5 shrink-0 ${isActive ? "text-primary" : "text-[#6F767E]"}`}
+                          />
+                          <span
+                            className={`${sidebarMinimized ? "lg:hidden" : "block"}`}
+                          >
+                            {item.name}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </>
+                )}
               </div>
             </div>
           </nav>

@@ -38,32 +38,48 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
 
   const deleteLogMutation = useDeleteLog(documentId);
 
-  // Helper untuk memformat tanggal utama
-  const formatDate = (dateString: string) => {
+  // Custom date formatter to avoid hydration mismatches
+  const getSafeDateParts = (dateString: string) => {
     try {
+      if (!dateString) return { day: "-", year: "" };
       const date = new Date(dateString);
+      if (isNaN(date.getTime())) return { day: dateString, year: "" };
+
+      const months = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "Mei",
+        "Jun",
+        "Jul",
+        "Agu",
+        "Sep",
+        "Okt",
+        "Nov",
+        "Des",
+      ];
+
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = months[date.getMonth()];
+      const year = date.getFullYear();
+
       return {
-        day: date.toLocaleDateString("id-ID", {
-          day: "2-digit",
-          month: "short",
-        }),
-        year: date.getFullYear(),
+        day: `${day} ${month}`,
+        year: year.toString(),
       };
     } catch {
-      return { day: dateString, year: "" };
+      return { day: "-", year: "" };
     }
   };
 
-  // Helper untuk memformat waktu update
   const formatUpdateTime = (dateString: string) => {
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "short",
-      });
+      if (!dateString) return "-";
+      const { day } = getSafeDateParts(dateString);
+      return day;
     } catch {
-      return dateString;
+      return "-";
     }
   };
 
@@ -135,7 +151,7 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
         {logs.length > 0 ? (
           <div className="space-y-0">
             {logs.map((logEntry: LogEntry, index: number) => {
-              const dateObj = formatDate(logEntry.tanggal_log);
+              const dateObj = getSafeDateParts(logEntry.tanggal_log);
               const isUpdated =
                 logEntry.updated_at &&
                 logEntry.updated_at !== logEntry.tanggal_log;

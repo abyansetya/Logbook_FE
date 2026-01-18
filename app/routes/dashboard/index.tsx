@@ -37,18 +37,6 @@ import { useEffect, useState } from "react";
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { data: apiResponse, isLoading: statsLoading } = useDashboardStats();
-  const modernColors = [
-    "#1E3A8A", // Biru Tua (Navy)
-    "#06B6D4", // Cyan (Turquoise/Teal-ish)
-    "#7DD3FC", // Biru Muda (Sky Light)
-    "#3B82F6", // Biru Biasa (Standard/Brand Blue)
-    "#2563EB", // Biru Royal (Deep Blue)
-  ];
-  // Tampilkan skeleton saat loading
-  if (isLoading || statsLoading) {
-    return <DashboardSkeleton />;
-  }
-
   // State untuk menyimpan status yang aktif di chart
   const [activeStatuses, setActiveStatuses] = useState<string[]>([]);
 
@@ -62,6 +50,15 @@ export default function Dashboard() {
       setActiveStatuses(statusNames);
     }
   }, [statusNames]);
+
+  const modernColors = [
+    "#1E3A8A", // Biru Tua (Navy)
+    "#06B6D4", // Cyan (Turquoise/Teal-ish)
+    "#7DD3FC", // Biru Muda (Sky Light)
+    "#3B82F6", // Biru Biasa (Standard/Brand Blue)
+    "#2563EB", // Biru Royal (Deep Blue)
+  ];
+
   // Definisi Palet Warna: Biru Tua, Biru Muda, Kuning (Solid & Kontras)
   const dashboardColors = [
     "#1E3A8A", // Biru Tua (Primary)
@@ -78,9 +75,14 @@ export default function Dashboard() {
       (prev) =>
         prev.includes(status)
           ? prev.filter((s) => s !== status) // Nonaktifkan
-          : [...prev, status] // Aktifkan
+          : [...prev, status], // Aktifkan
     );
   };
+
+  // Tampilkan skeleton saat loading
+  if (isLoading || statsLoading) {
+    return <DashboardSkeleton />;
+  }
 
   if (!isAuthenticated || !user) return null;
 

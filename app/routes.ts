@@ -16,5 +16,6 @@ export default [
     route("profile/edit", "routes/profile/edit.tsx"),
     route("logbook", "routes/logbook/index.tsx"),
     route("mitra", "routes/mitra/index.tsx"),
+    route("users", "routes/users/index.tsx"),
   ]),
 ] satisfies RouteConfig;

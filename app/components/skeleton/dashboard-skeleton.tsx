@@ -42,7 +42,7 @@ const DashboardSkeleton = () => (
               <div
                 key={b}
                 className="w-12 bg-gray-200 rounded-t"
-                style={{ height: `${Math.random() * 100}%` }}
+                style={{ height: `${((b * 13) % 40) + 40}%` }}
               />
             ))}
           </div>
