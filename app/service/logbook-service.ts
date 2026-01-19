@@ -19,12 +19,19 @@ export const getLogbooks = async (
   page: number = 1,
   search: string = "",
   perPage: number = 10,
+  status: string = "all",
+  jenisDokumen: string = "all",
+  order: "asc" | "desc" = "desc",
 ): Promise<LogbooksResponse> => {
   const query = new URLSearchParams({
     page: page.toString(),
     per_page: perPage.toString(),
+    order: order,
   });
   if (search) query.append("q", search);
+  if (status && status !== "all") query.append("status", status);
+  if (jenisDokumen && jenisDokumen !== "all")
+    query.append("jenis_dokumen", jenisDokumen);
 
   return await fetchData<LogbooksResponse>(`/logbook?${query.toString()}`);
 };

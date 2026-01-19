@@ -11,23 +11,26 @@ import {
   Trash2,
   MoreHorizontal,
   ChevronLeft,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
-import { useSearchParams } from "react-router";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
+import { useNavigate, useSearchParams } from "react-router";
+import { useStatuses } from "~/hooks/use-helper";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../components/ui/select";
+} from "~/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-} from "../../components/ui/dropdown-menu";
-import { Label } from "../../components/ui/label";
+} from "~/components/ui/dropdown-menu";
+import { Label } from "~/components/ui/label";
 import { Badge } from "../../components/ui/badge";
 import TambahLog from "~/components/modal/TambahLog";
 import {
@@ -42,6 +45,7 @@ import TambahDokumen from "~/components/modal/TambahDokumen";
 import { useDebounce } from "~/hooks/use-debounce";
 import UpdateDokumen from "~/components/modal/UpdateDokumen";
 import type { TambahDokumenData } from "~/lib/schema";
+import { JENIS_DOKUMEN } from "~/lib/constanst";
 import ConfirmDeleteModal from "~/components/modal/KonfirmasiDelete";
 import DocumentLogDetails from "./logbook-details";
 import { useAuth } from "~/provider/auth-context";
@@ -53,6 +57,9 @@ const Logbook = () => {
   const currentPage = Number(searchParams.get("page")) || 1;
   const searchTerm = searchParams.get("q") || "";
   const perPage = Number(searchParams.get("per_page")) || 10;
+  const currentStatus = searchParams.get("status") || "all";
+  const currentJenis = searchParams.get("jenis_dokumen") || "all";
+  const currentOrder = (searchParams.get("order") as "asc" | "desc") || "desc";
 
   const { user, isAuthenticated } = useAuth();
 
@@ -84,16 +91,26 @@ const Logbook = () => {
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
   const [selectedMitraId, setSelectedMitraId] = useState<number | null>(null);
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
-  const [selectedDocType, setSelectedDocType] = useState<string>("all");
+
+  // Fetch Statuses from Backend
+  const { data: statusesResponse } = useStatuses();
+  const statuses = statusesResponse?.data || [];
 
   // --- 2. DATA FETCHING (QUERIES) ---
   const {
     data: response,
     isLoading: isMainLoading,
+    isFetching,
     isError,
     error,
-  } = useLogbooks(currentPage, searchTerm, perPage);
+  } = useLogbooks(
+    currentPage,
+    searchTerm,
+    perPage,
+    currentStatus,
+    currentJenis,
+    currentOrder,
+  );
 
   // --- 3. MUTATIONS (CUD Operations) ---
   const addDocMutation = useAddDokumen();
@@ -102,17 +119,8 @@ const Logbook = () => {
 
   // --- 4. COMPUTED DATA (MEMOIZED) ---
   const filteredData = useMemo(() => {
-    const baseData: Document[] = response?.data?.data || [];
-
-    // Filter status & jenis di client-side (opsional, bisa juga di backend nanti)
-    return baseData.filter((doc: Document) => {
-      const matchesStatus =
-        selectedStatus === "all" || doc.status === selectedStatus;
-      const matchesDocType =
-        selectedDocType === "all" || doc.jenis_dokumen === selectedDocType;
-      return matchesStatus && matchesDocType;
-    });
-  }, [response, selectedStatus, selectedDocType]);
+    return response?.data?.data || [];
+  }, [response]);
 
   // --- 5. ACTION HANDLERS ---
 
@@ -172,9 +180,22 @@ const Logbook = () => {
   };
 
   const clearFilters = () => {
-    setSelectedStatus("all");
-    setSelectedDocType("all");
+    setSearchParams((prev) => {
+      prev.delete("status");
+      prev.delete("jenis_dokumen");
+      prev.delete("q");
+      prev.set("page", "1");
+      return prev;
+    });
     setSearchInput("");
+  };
+
+  const toggleSortOrder = () => {
+    setSearchParams((prev) => {
+      const nextOrder = currentOrder === "desc" ? "asc" : "desc";
+      prev.set("order", nextOrder);
+      return prev;
+    });
   };
 
   const setCurrentPage = (page: number) => {
@@ -185,9 +206,9 @@ const Logbook = () => {
   };
 
   // --- 6. UI HELPERS & DERIVED STATE ---
-  const isLoading = isMainLoading;
+  const isLoading = isMainLoading || isFetching;
   const hasActiveFilters =
-    selectedStatus !== "all" || selectedDocType !== "all" || searchTerm !== "";
+    currentStatus !== "all" || currentJenis !== "all" || searchTerm !== "";
   const meta = response?.data?.meta;
   const links = response?.data?.links;
   const isAdmin = user?.roles?.includes("Admin");
@@ -218,9 +239,22 @@ const Logbook = () => {
   const getStatusStyle = (status: string) => {
     const s = status.toLowerCase();
     if (s === "terbit") return "bg-green-50 text-green-600 border-none";
-    if (s === "inisiasi & proses")
+    if (s === "acc rektor") return "bg-blue-50 text-blue-600 border-none";
+    if (s === "naskah dikirim")
+      return "bg-yellow-50 text-yellow-600 border-none";
+    if (s === "naskah dicetak")
       return "bg-orange-50 text-orange-600 border-none";
+    if (s === "pending / batal / proses dilanjut unit lain")
+      return "bg-red-50 text-red-600 border-none";
     return "bg-gray-50 text-gray-600 border-none";
+  };
+
+  const getJenisStyle = (jenis: string) => {
+    const j = jenis.toLowerCase();
+    if (j.includes("mou")) return "bg-blue-50 text-blue-600 border-none";
+    if (j.includes("moa")) return "bg-orange-50 text-orange-600 border-none";
+    if (j.includes("ia")) return "bg-yellow-50 text-yellow-600 border-none";
+    return "bg-gray-50 text-gray-500 border-none";
   };
 
   // --- 7. ERROR RENDERING ---
@@ -276,56 +310,104 @@ const Logbook = () => {
               )}
             </div>
 
-            <DropdownMenu
-              open={showFilterDropdown}
-              onOpenChange={setShowFilterDropdown}
+            <Button
+              variant="outline"
+              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+              className={`rounded-xl px-6 py-6 border-gray-100 text-gray-600 font-semibold gap-2 transition-all ${
+                showFilterDropdown ? "bg-gray-100 border-gray-200" : ""
+              }`}
             >
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="rounded-xl px-6 py-6 border-gray-100 text-gray-600 font-semibold gap-2"
-                >
-                  <Filter className="w-4 h-4" />
-                  Filter
-                  {hasActiveFilters && (
-                    <span className="w-2 h-2 bg-black rounded-full" />
-                  )}
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-80 p-5 rounded-2xl border-gray-100 shadow-xl mt-2">
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <h3 className="font-bold text-gray-900">Filter Dokumen</h3>
-                    <X
-                      className="w-4 h-4 cursor-pointer text-gray-400"
-                      onClick={() => setShowFilterDropdown(false)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-gray-500">Status</Label>
+              <Filter className="w-4 h-4" />
+              Filter
+              {hasActiveFilters && (
+                <span className="w-2 h-2 bg-black rounded-full" />
+              )}
+            </Button>
+          </div>
+
+          {/* Expandable Filter Section - Smooth Transition */}
+          <div
+            className={`grid transition-all duration-300 ease-in-out ${
+              showFilterDropdown
+                ? "grid-rows-[1fr] opacity-100 mt-6"
+                : "grid-rows-[0fr] opacity-0 mt-0"
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="pt-6 border-t border-gray-100">
+                <div className="flex flex-wrap gap-6 items-end">
+                  <div className="flex-1 min-w-[200px] space-y-2">
+                    <Label className="text-gray-500 font-semibold text-xs uppercase tracking-wider">
+                      Status Dokumen
+                    </Label>
                     <Select
-                      value={selectedStatus}
-                      onValueChange={setSelectedStatus}
+                      value={currentStatus}
+                      onValueChange={(val) => {
+                        setSearchParams((prev) => {
+                          if (val === "all") prev.delete("status");
+                          else prev.set("status", val);
+                          prev.set("page", "1");
+                          return prev;
+                        });
+                      }}
                     >
-                      <SelectTrigger className="rounded-xl border-gray-100 bg-gray-50">
-                        <SelectValue />
+                      <SelectTrigger className="rounded-xl border-gray-100 bg-gray-50 py-6">
+                        <SelectValue placeholder="Pilih Status" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl">
+                      <SelectContent className="rounded-xl border-gray-100 shadow-xl">
                         <SelectItem value="all">Semua Status</SelectItem>
-                        <SelectItem value="Terbit">Terbit</SelectItem>
-                        <SelectItem value="Draft">Draft</SelectItem>
+                        {statuses.map((s: any) => (
+                          <SelectItem key={s.id} value={s.id.toString()}>
+                            {s.nama}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
+
+                  <div className="flex-1 min-w-[200px] space-y-2">
+                    <Label className="text-gray-500 font-semibold text-xs uppercase tracking-wider">
+                      Jenis Dokumen
+                    </Label>
+                    <Select
+                      value={currentJenis}
+                      onValueChange={(val) => {
+                        setSearchParams((prev) => {
+                          if (val === "all") prev.delete("jenis_dokumen");
+                          else prev.set("jenis_dokumen", val);
+                          prev.set("page", "1");
+                          return prev;
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="rounded-xl border-gray-100 bg-gray-50 py-6">
+                        <SelectValue placeholder="Pilih Jenis" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-gray-100 shadow-xl">
+                        <SelectItem value="all">Semua Jenis</SelectItem>
+                        {JENIS_DOKUMEN.map((jenis) => (
+                          <SelectItem
+                            key={jenis.id}
+                            value={jenis.id.toString()}
+                          >
+                            {jenis.nama}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <Button
                     onClick={clearFilters}
-                    className="w-full bg-black rounded-xl py-6 mt-2"
+                    variant="ghost"
+                    className="rounded-xl px-6 py-6 text-gray-400 hover:text-gray-900 hover:bg-gray-50 font-semibold gap-2"
                   >
+                    <X className="w-4 h-4" />
                     Reset Filter
                   </Button>
                 </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -348,8 +430,21 @@ const Logbook = () => {
                   <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                    Tanggal
+                  <th
+                    className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer group/sort hover:text-gray-900 transition-colors"
+                    onClick={toggleSortOrder}
+                  >
+                    <div className="flex items-center gap-1">
+                      Tanggal
+                      <div className="flex flex-col">
+                        <ArrowUp
+                          className={`w-3 h-3 -mb-1 ${currentOrder === "asc" ? "text-black" : "text-gray-200"}`}
+                        />
+                        <ArrowDown
+                          className={`w-3 h-3 ${currentOrder === "desc" ? "text-black" : "text-gray-200"}`}
+                        />
+                      </div>
+                    </div>
                   </th>
                   {isAdmin && (
                     <th className="px-6 py-5 text-right text-[11px] font-bold text-gray-400 uppercase tracking-wider">
@@ -359,20 +454,25 @@ const Logbook = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filteredData.length === 0 ? (
+                {isLoading ? (
                   <tr>
                     <td
                       colSpan={7}
                       className="px-6 py-20 text-center text-gray-400 font-medium"
                     >
-                      {isLoading ? (
-                        <div className="flex flex-col items-center gap-2">
-                          <Loader2 className="w-6 h-6 animate-spin" />
-                          <span>Memuat data...</span>
-                        </div>
-                      ) : (
-                        "Data tidak ditemukan"
-                      )}
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                        <span>Memuat data...</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredData.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-6 py-20 text-center text-gray-400 font-medium"
+                    >
+                      Data tidak ditemukan
                     </td>
                   </tr>
                 ) : (
@@ -405,7 +505,7 @@ const Logbook = () => {
                         <td className="px-6 py-4">
                           <Badge
                             variant="outline"
-                            className="rounded-lg border-gray-100 text-gray-500 font-medium px-3 py-1 bg-gray-50"
+                            className={`rounded-lg font-semibold px-3 py-1 ${getJenisStyle(doc.jenis_dokumen || "-")}`}
                           >
                             {doc.jenis_dokumen}
                           </Badge>

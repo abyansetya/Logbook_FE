@@ -104,8 +104,6 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
   const onHandleSubmit = (data: TambahDokumenData) => {
     console.log("Submitting data:", { ...data, mitra_nama: selectedMitraNama });
     onSubmit(data);
-    form.reset();
-    setSelectedMitraNama("");
   };
 
   const handleCloseModal = () => {
@@ -302,7 +300,7 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                             variant="outline"
                             className={cn(
                               "w-full pl-3 text-left font-normal border-2 border-black",
-                              !field.value && "text-muted-foreground"
+                              !field.value && "text-muted-foreground",
                             )}
                           >
                             {field.value ? (
@@ -322,7 +320,7 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                           }
                           onSelect={(date) => {
                             field.onChange(
-                              date ? format(date, "yyyy-MM-dd") : ""
+                              date ? format(date, "yyyy-MM-dd") : "",
                             );
                           }}
                           initialFocus
@@ -349,7 +347,7 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                             variant="outline"
                             className={cn(
                               "w-full pl-3 text-left font-normal border-2 border-black",
-                              !field.value && "text-muted-foreground"
+                              !field.value && "text-muted-foreground",
                             )}
                           >
                             {field.value ? (
@@ -369,7 +367,7 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                           }
                           onSelect={(date) => {
                             field.onChange(
-                              date ? format(date, "yyyy-MM-dd") : null
+                              date ? format(date, "yyyy-MM-dd") : null,
                             );
                             setIsCalendarOpen(false);
                           }}

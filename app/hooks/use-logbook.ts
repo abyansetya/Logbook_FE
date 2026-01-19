@@ -28,10 +28,14 @@ export const useLogbooks = (
   page: number,
   search: string = "",
   perPage: number = 10,
+  status: string = "all",
+  jenisDokumen: string = "all",
+  order: "asc" | "desc" = "desc",
 ) => {
   return useQuery<LogbooksResponse>({
-    queryKey: ["logbooks", page, search, perPage],
-    queryFn: () => getLogbooks(page, search, perPage),
+    queryKey: ["logbooks", page, search, perPage, status, jenisDokumen, order],
+    queryFn: () =>
+      getLogbooks(page, search, perPage, status, jenisDokumen, order),
     // Di TanStack Query v5, gunakan placeholderData: keepPreviousData
     placeholderData: keepPreviousData,
     staleTime: 30000, // Data dianggap segar selama 30 detik

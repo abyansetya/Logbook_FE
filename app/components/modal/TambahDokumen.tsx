@@ -72,8 +72,6 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
   const onHandleSubmit = (data: TambahDokumenData) => {
     console.log("Submitting data:", { ...data, mitra_nama: selectedMitraNama });
     onSubmit(data);
-    form.reset();
-    setSelectedMitraNama("");
   };
 
   const handleCloseModal = () => {
