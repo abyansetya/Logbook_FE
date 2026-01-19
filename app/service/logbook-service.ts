@@ -17,9 +17,16 @@ import type {
 
 export const getLogbooks = async (
   page: number = 1,
+  search: string = "",
+  perPage: number = 10,
 ): Promise<LogbooksResponse> => {
-  // Masukkan interface ke dalam < > agar fetchData mengembalikan tipe yang benar
-  return await fetchData<LogbooksResponse>(`/logbook?page=${page}`);
+  const query = new URLSearchParams({
+    page: page.toString(),
+    per_page: perPage.toString(),
+  });
+  if (search) query.append("q", search);
+
+  return await fetchData<LogbooksResponse>(`/logbook?${query.toString()}`);
 };
 
 export const getLogbookDetail = async (

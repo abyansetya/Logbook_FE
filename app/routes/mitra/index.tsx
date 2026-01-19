@@ -1,6 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "~/provider/auth-context";
-import { useNavigate } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import {
@@ -43,15 +43,33 @@ export default function MitraPage() {
   const navigate = useNavigate();
 
   // States
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const debouncedSearch = useDebounce(searchTerm, 500);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = Number(searchParams.get("page")) || 1;
+  const searchTerm = searchParams.get("q") || "";
+  const perPage = Number(searchParams.get("per_page")) || 10;
+
+  // Input state for search
+  const [searchInput, setSearchInput] = useState(searchTerm);
+  const debouncedSearchInput = useDebounce(searchInput, 500);
+
+  // Sync debounced search with URL
+  useEffect(() => {
+    const currentQ = searchParams.get("q") || "";
+    if (debouncedSearchInput !== currentQ) {
+      setSearchParams((prev) => {
+        if (debouncedSearchInput) prev.set("q", debouncedSearchInput);
+        else prev.delete("q");
+        prev.set("page", "1");
+        return prev;
+      });
+    }
+  }, [debouncedSearchInput, setSearchParams, searchParams]);
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingMitra, setEditingMitra] = useState<Mitra | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
-
+  const isAdmin = user?.roles?.includes("Admin");
   // Form States
   const [formData, setFormData] = useState<MitraPayload>({
     nama: "",
@@ -63,7 +81,8 @@ export default function MitraPage() {
   // Queries & Mutations
   const { data: response, isLoading } = useGetMitra(
     currentPage,
-    debouncedSearch,
+    searchTerm,
+    perPage,
   );
   const createMutation = useCreateMitra();
   const updateMutation = useUpdateMitra();
@@ -134,13 +153,15 @@ export default function MitraPage() {
             </h2>
             <p className="text-slate-500">Kelola daftar mitra kerja sama</p>
           </div>
-          <Button
-            onClick={() => setIsAddOpen(true)}
-            className="bg-black hover:bg-gray-800 text-white rounded-xl"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Tambah Mitra
-          </Button>
+          {isAdmin && (
+            <Button
+              onClick={() => setIsAddOpen(true)}
+              className="bg-black hover:bg-gray-800 text-white rounded-xl"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Tambah Mitra
+            </Button>
+          )}
         </div>
 
         {/* Search */}
@@ -150,8 +171,8 @@ export default function MitraPage() {
             <Input
               placeholder="Cari mitra..."
               className="pl-9 bg-gray-50 border-gray-100 rounded-xl"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
             />
           </div>
         </div>
@@ -167,7 +188,9 @@ export default function MitraPage() {
                     <th className="px-6 py-4 font-medium">Klasifikasi</th>
                     <th className="px-6 py-4 font-medium">Alamat</th>
                     <th className="px-6 py-4 font-medium">Kontak</th>
-                    <th className="px-6 py-4 font-medium text-right">Aksi</th>
+                    {isAdmin && (
+                      <th className="px-6 py-4 font-medium text-right">Aksi</th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -201,26 +224,28 @@ export default function MitraPage() {
                         <td className="px-6 py-4 text-slate-600">
                           {mitra.contact_person || "-"}
                         </td>
-                        <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-slate-500 hover:text-slate-900"
-                              onClick={() => handleEditClick(mitra)}
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 text-slate-500 hover:text-red-600"
-                              onClick={() => setDeleteConfirmId(mitra.id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </td>
+                        {isAdmin && (
+                          <td className="px-6 py-4 text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-slate-500 hover:text-slate-900"
+                                onClick={() => handleEditClick(mitra)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-slate-500 hover:text-red-600"
+                                onClick={() => setDeleteConfirmId(mitra.id)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     ))
                   )}
@@ -228,35 +253,129 @@ export default function MitraPage() {
               </table>
             </div>
 
-            {/* Pagination Logic similar to Logbook */}
+            {/* Pagination - Style diperbarui mengikuti Logbook */}
             {!isLoading && meta && links && (
-              <div className="px-6 py-4 border-t border-gray-100 bg-white flex items-center justify-between">
-                <span className="text-sm text-gray-500">
-                  Showing {meta.from} to {meta.to} of {meta.total} results
-                </span>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!meta.prev_page_url}
-                    onClick={() => setCurrentPage((p) => p - 1)}
-                    className="h-8 w-8 p-0 rounded-full"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  {/* Simplified pagination numbers for brevity */}
-                  <span className="text-sm font-medium px-2">
-                    Page {meta.current_page} of {meta.last_page}
+              <div className="px-4 py-4 sm:px-6 border-t border-gray-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-4 text-[13px]">
+                {/* Sisi Kiri: Info Total Data */}
+                <div className="text-gray-500 font-medium">
+                  Menampilkan{" "}
+                  <span className="font-bold text-gray-900 mx-1">
+                    {meta.from || 0} - {meta.to || 0}
+                  </span>{" "}
+                  dari{" "}
+                  <span className="font-bold text-gray-900 ml-1">
+                    {meta.total}
                   </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!meta.next_page_url}
-                    onClick={() => setCurrentPage((p) => p + 1)}
-                    className="h-8 w-8 p-0 rounded-full"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
+                </div>
+
+                {/* Sisi Kanan: Lines per page & Navigation */}
+                <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
+                  {/* Lines per page (Dropdown style) */}
+                  <div className="hidden sm:flex items-center gap-3">
+                    <span className="text-gray-500 font-medium">
+                      Lines per page
+                    </span>
+                    <select
+                      className="flex items-center border border-gray-200 rounded-lg px-2 py-1.5 gap-2 bg-white font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-slate-200 cursor-pointer"
+                      value={perPage}
+                      onChange={(e) => {
+                        const newPerPage = e.target.value;
+                        setSearchParams((prev) => {
+                          prev.set("per_page", newPerPage);
+                          prev.set("page", "1");
+                          return prev;
+                        });
+                      }}
+                    >
+                      {[10, 25, 50, 100].map((num) => (
+                        <option key={num} value={num}>
+                          {num}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Kontrol Navigasi Angka */}
+                  <div className="flex items-center gap-1">
+                    {/* Tombol Sebelumnya */}
+                    <button
+                      disabled={!meta.prev_page_url}
+                      onClick={() => {
+                        setSearchParams((prev) => {
+                          prev.set("page", (currentPage - 1).toString());
+                          return prev;
+                        });
+                      }}
+                      className="p-2 text-gray-400 hover:text-gray-900 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+
+                    {/* Mapping Angka Halaman */}
+                    {links.map((link: any, index: number) => {
+                      const isPrevNext =
+                        link.label.toLowerCase().includes("previous") ||
+                        link.label.toLowerCase().includes("next");
+                      if (isPrevNext) return null;
+
+                      const isEllipsis = link.label === "...";
+                      const isActive = link.active;
+
+                      if (isEllipsis) {
+                        return (
+                          <span
+                            key={index}
+                            className="w-8 h-8 flex items-center justify-center text-gray-400"
+                          >
+                            ...
+                          </span>
+                        );
+                      }
+
+                      return (
+                        <button
+                          key={index}
+                          disabled={isActive}
+                          onClick={() => {
+                            if (link.url) {
+                              const url = new URL(
+                                link.url,
+                                window.location.origin,
+                              );
+                              const page = url.searchParams.get("page");
+                              if (page) {
+                                setSearchParams((prev) => {
+                                  prev.set("page", page);
+                                  return prev;
+                                });
+                              }
+                            }
+                          }}
+                          className={`w-8 h-8 flex items-center justify-center rounded-full transition-all text-[12px] font-bold ${
+                            isActive
+                              ? "bg-[#0F172A] text-white shadow-sm"
+                              : "text-gray-500 hover:bg-gray-100"
+                          }`}
+                        >
+                          {link.label}
+                        </button>
+                      );
+                    })}
+
+                    {/* Tombol Selanjutnya */}
+                    <button
+                      disabled={!meta.next_page_url}
+                      onClick={() => {
+                        setSearchParams((prev) => {
+                          prev.set("page", (currentPage + 1).toString());
+                          return prev;
+                        });
+                      }}
+                      className="p-2 text-gray-400 hover:text-gray-900 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             )}

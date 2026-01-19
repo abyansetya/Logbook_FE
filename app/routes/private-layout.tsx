@@ -23,6 +23,7 @@ import {
 } from "../components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { useAuth } from "~/provider/auth-context";
+import undip from "../assets/undip.png";
 
 interface NavItem {
   name: string;
@@ -95,10 +96,12 @@ export default function DashboardLayout() {
               className={`flex items-center gap-2 ${sidebarMinimized ? "lg:hidden" : "flex"}`}
             >
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
-                <span className="text-white font-bold text-xl">S</span>
+                <span className="text-white font-bold text-xl">
+                  <img src={undip} alt="" />
+                </span>
               </div>
               <h1 className="text-xl font-bold text-[#1A1D1F] truncate">
-                SIKMA
+                Logbook
               </h1>
             </div>
 

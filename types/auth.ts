@@ -9,3 +9,13 @@ export interface LoginResponse {
     expires_in: number;
   };
 }
+
+export interface RegisterResponse {
+  message: string;
+  data: {
+    user: User;
+    token: string;
+    token_type: string;
+    expires_in: number;
+  };
+}

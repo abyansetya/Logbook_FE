@@ -59,11 +59,11 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
     resolver: zodResolver(tambahDokumenSchema),
     defaultValues: {
       mitra_id: undefined,
-      jenis_dokumen_id: 0,
+      jenis_dokumen_id: undefined,
       nomor_dokumen_mitra: "",
       nomor_dokumen_undip: "",
       judul_dokumen: "",
-      status_id: 0,
+      status_id: undefined,
       tanggal_masuk: new Date().toISOString().split("T")[0],
       tanggal_terbit: "",
     },

@@ -24,10 +24,14 @@ import { toast } from "sonner";
 import type { updateLogData } from "~/lib/schema";
 
 // Hook untuk list logbook
-export const useLogbooks = (page: number) => {
+export const useLogbooks = (
+  page: number,
+  search: string = "",
+  perPage: number = 10,
+) => {
   return useQuery<LogbooksResponse>({
-    queryKey: ["logbooks", page],
-    queryFn: () => getLogbooks(page),
+    queryKey: ["logbooks", page, search, perPage],
+    queryFn: () => getLogbooks(page, search, perPage),
     // Di TanStack Query v5, gunakan placeholderData: keepPreviousData
     placeholderData: keepPreviousData,
     staleTime: 30000, // Data dianggap segar selama 30 detik
@@ -52,6 +56,7 @@ export const useAddDokumen = () => {
     onSuccess: () => {
       // Refresh list logbook agar dokumen baru langsung muncul di tabel
       queryClient.invalidateQueries({ queryKey: ["logbooks"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       toast.success("Dokumen berhasil ditambahkan!");
     },
     onError: (error: any) => {

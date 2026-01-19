@@ -9,10 +9,14 @@ import type { MitraPayload } from "../../types/mitra";
 import { toast } from "sonner"; // Assuming sonner is used
 import { addMitraQuick, searchMitra } from "~/service/logbook-service";
 
-export const useGetMitra = (page: number, search: string) => {
+export const useGetMitra = (
+  page: number,
+  search: string,
+  perPage: number = 10,
+) => {
   return useQuery({
-    queryKey: ["mitra", page, search],
-    queryFn: () => getMitra(page, search),
+    queryKey: ["mitra", page, search, perPage],
+    queryFn: () => getMitra(page, search, perPage),
     placeholderData: (previousData) => previousData, // Keep previous data while fetching new
   });
 };

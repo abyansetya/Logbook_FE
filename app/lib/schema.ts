@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export type SignInFormData = z.infer<typeof signInSchema>;
+export type SignUpFormData = z.infer<typeof signUpSchema>;
 export type TambahDokumenData = z.infer<typeof tambahDokumenSchema>;
 export type TambahLogData = z.infer<typeof tambahLogSchema>;
 export type updateLogData = z.infer<typeof updateLogSchema>;
@@ -69,6 +70,22 @@ export const signInSchema = z.object({
   email: z.string().email({ message: "Invalid email address" }),
   password: z.string().min(1, "Password is required"),
 });
+
+export const signUpSchema = z
+  .object({
+    nama: z
+      .string()
+      .min(1, "Nama wajib diisi")
+      .max(255, "Nama maksimal 255 karakter"),
+    email: z.string().email({ message: "Format email tidak valid" }),
+    password: z.string().min(8, "Password minimal 8 karakter"),
+    password_confirmation: z.string().min(1, "Konfirmasi password wajib diisi"),
+    nim_nip: z.string().max(50, "NIM/NIP maksimal 50 karakter").optional(),
+  })
+  .refine((data) => data.password === data.password_confirmation, {
+    message: "Konfirmasi password tidak sama",
+    path: ["password_confirmation"],
+  });
 
 export const updateProfileSchema = z.object({
   nama: z

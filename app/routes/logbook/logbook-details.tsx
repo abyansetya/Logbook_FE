@@ -17,6 +17,7 @@ import type { LogEntry } from "../../../types/logbook";
 import UpdateLog from "../../components/modal/UpdateLog";
 import { deleteLog } from "~/service/logbook-service";
 import ConfirmDeleteModal from "~/components/modal/KonfirmasiDelete";
+import { useAuth } from "~/provider/auth-context";
 
 interface DocumentLogDetailsProps {
   documentId: number;
@@ -29,6 +30,8 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
   onAddLog,
   onDeleteLog,
 }) => {
+  const { user } = useAuth();
+  const isAdmin = user?.roles?.includes("Admin");
   const { data: detailData, isLoading, isError } = useLogbookDetail(documentId);
 
   // State untuk mengontrol Modal UpdateLog
@@ -138,13 +141,15 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
             Urutan kronologis pemrosesan dokumen
           </p>
         </div>
-        <Button
-          onClick={() => onAddLog(documentId)}
-          className="bg-black text-white hover:bg-gray-800 shadow-lg"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Tambah Log
-        </Button>
+        {isAdmin && (
+          <Button
+            onClick={() => onAddLog(documentId)}
+            className="bg-black text-white hover:bg-gray-800 shadow-lg"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Tambah Log
+          </Button>
+        )}
       </div>
 
       <div className="relative">
@@ -201,22 +206,26 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
                         </div>
 
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 hover:bg-gray-100"
-                            onClick={() => handleEditClick(logEntry)}
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
-                            onClick={() => handleDeleteClick(logEntry.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {isAdmin && (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:bg-gray-100"
+                                onClick={() => handleEditClick(logEntry)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
+                                onClick={() => handleDeleteClick(logEntry.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </div>
 
@@ -257,14 +266,16 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
               Belum ada aktivitas yang tercatat untuk dokumen ini.
             </p>
 
-            <Button
-              variant="outline"
-              onClick={() => onAddLog(documentId)}
-              className="mt-6 border-black hover:bg-black hover:text-white transition-all font-bold"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Buat Log Pertama
-            </Button>
+            {isAdmin && (
+              <Button
+                variant="outline"
+                onClick={() => onAddLog(documentId)}
+                className="mt-6 border-black hover:bg-black hover:text-white transition-all font-bold"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Buat Log Pertama
+              </Button>
+            )}
           </div>
         )}
       </div>

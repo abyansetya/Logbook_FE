@@ -12,6 +12,7 @@ import {
   MoreHorizontal,
   ChevronLeft,
 } from "lucide-react";
+import { useSearchParams } from "react-router";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import {
@@ -48,10 +49,29 @@ import { useAuth } from "~/provider/auth-context";
 // --- Main Component: Logbook ---
 const Logbook = () => {
   // --- 1. STATES ---
-  const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState("");
-  const debouncedSearch = useDebounce(searchTerm, 500);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = Number(searchParams.get("page")) || 1;
+  const searchTerm = searchParams.get("q") || "";
+  const perPage = Number(searchParams.get("per_page")) || 10;
+
   const { user, isAuthenticated } = useAuth();
+
+  // Input state for immediate UI feedback (before debounced search update)
+  const [searchInput, setSearchInput] = useState(searchTerm);
+  const debouncedSearchInput = useDebounce(searchInput, 500);
+
+  // Sync debounced input with URL
+  React.useEffect(() => {
+    const currentQ = searchParams.get("q") || "";
+    if (debouncedSearchInput !== currentQ) {
+      setSearchParams((prev) => {
+        if (debouncedSearchInput) prev.set("q", debouncedSearchInput);
+        else prev.delete("q");
+        prev.set("page", "1"); // Reset ke halaman 1 hanya saat search berubah
+        return prev;
+      });
+    }
+  }, [debouncedSearchInput, setSearchParams, searchParams]);
 
   // UI States (Modals & Dropdowns)
   const [showAddDocModal, setShowAddDocModal] = useState(false);
@@ -68,17 +88,12 @@ const Logbook = () => {
   const [selectedDocType, setSelectedDocType] = useState<string>("all");
 
   // --- 2. DATA FETCHING (QUERIES) ---
-  // Fetch data logbook reguler
   const {
     data: response,
     isLoading: isMainLoading,
     isError,
     error,
-  } = useLogbooks(currentPage);
-
-  // Fetch data pencarian (Hanya jalan jika search >= 3 char)
-  const { data: searchResponse, isLoading: isSearchLoading } =
-    useSearchDocument(debouncedSearch);
+  } = useLogbooks(currentPage, searchTerm, perPage);
 
   // --- 3. MUTATIONS (CUD Operations) ---
   const addDocMutation = useAddDokumen();
@@ -87,13 +102,9 @@ const Logbook = () => {
 
   // --- 4. COMPUTED DATA (MEMOIZED) ---
   const filteredData = useMemo(() => {
-    // Logic: Pilih sumber data (Search vs Reguler)
-    const isSearching = debouncedSearch.length >= 3 && searchResponse?.success;
-    const baseData: Document[] = isSearching
-      ? searchResponse.data
-      : response?.data?.data || [];
+    const baseData: Document[] = response?.data?.data || [];
 
-    // Logic: Filter client-side (Status & Jenis)
+    // Filter status & jenis di client-side (opsional, bisa juga di backend nanti)
     return baseData.filter((doc: Document) => {
       const matchesStatus =
         selectedStatus === "all" || doc.status === selectedStatus;
@@ -101,13 +112,7 @@ const Logbook = () => {
         selectedDocType === "all" || doc.jenis_dokumen === selectedDocType;
       return matchesStatus && matchesDocType;
     });
-  }, [
-    searchResponse,
-    response,
-    debouncedSearch,
-    selectedStatus,
-    selectedDocType,
-  ]);
+  }, [response, selectedStatus, selectedDocType]);
 
   // --- 5. ACTION HANDLERS ---
 
@@ -169,16 +174,23 @@ const Logbook = () => {
   const clearFilters = () => {
     setSelectedStatus("all");
     setSelectedDocType("all");
-    setSearchTerm("");
+    setSearchInput("");
+  };
+
+  const setCurrentPage = (page: number) => {
+    setSearchParams((prev) => {
+      prev.set("page", page.toString());
+      return prev;
+    });
   };
 
   // --- 6. UI HELPERS & DERIVED STATE ---
-  const isLoading =
-    isMainLoading || (debouncedSearch.length >= 3 && isSearchLoading);
+  const isLoading = isMainLoading;
   const hasActiveFilters =
     selectedStatus !== "all" || selectedDocType !== "all" || searchTerm !== "";
   const meta = response?.data?.meta;
   const links = response?.data?.links;
+  const isAdmin = user?.roles?.includes("Admin");
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "-";
@@ -206,7 +218,8 @@ const Logbook = () => {
   const getStatusStyle = (status: string) => {
     const s = status.toLowerCase();
     if (s === "terbit") return "bg-green-50 text-green-600 border-none";
-    if (s === "draft") return "bg-orange-50 text-orange-600 border-none";
+    if (s === "inisiasi & proses")
+      return "bg-orange-50 text-orange-600 border-none";
     return "bg-gray-50 text-gray-600 border-none";
   };
 
@@ -236,13 +249,15 @@ const Logbook = () => {
               Dokumen Kerja Sama
             </h1>
           </header>
-          <Button
-            onClick={() => setShowAddDocModal(true)}
-            className="bg-black hover:bg-gray-800 text-white rounded-xl px-6 py-6 transition-all shadow-sm"
-          >
-            <Plus className="w-5 h-5 mr-2" />
-            Tambah Dokumen
-          </Button>
+          {isAdmin && (
+            <Button
+              onClick={() => setShowAddDocModal(true)}
+              className="bg-black hover:bg-gray-800 text-white rounded-xl px-6 py-6 transition-all shadow-sm"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Tambah Dokumen
+            </Button>
+          )}
         </div>
 
         {/* Search & Filter Bar - Style diperhalus */}
@@ -251,9 +266,9 @@ const Logbook = () => {
             <div className="flex-1 relative min-w-[300px]">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
-                placeholder="Cari dokumen (min. 3 karakter)..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Cari dokumen..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 className="pl-12 py-6 bg-gray-50 border-gray-100 rounded-xl focus-visible:ring-1 focus-visible:ring-gray-300"
               />
               {isLoading && (
@@ -336,9 +351,11 @@ const Logbook = () => {
                   <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                     Tanggal
                   </th>
-                  <th className="px-6 py-5 text-right text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                    Action
-                  </th>
+                  {isAdmin && (
+                    <th className="px-6 py-5 text-right text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                      Action
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -413,25 +430,29 @@ const Logbook = () => {
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="flex justify-end gap-1">
-                            <Button
-                              variant="abu"
-                              size="icon"
-                              className="w-8 h-8 text-gray-400 hover:text-gray-900"
-                              onClick={() => handleEditClick(doc)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="abu"
-                              size="icon"
-                              className=" w-8 h-8 text-gray-400 hover:text-red-500 cursor-pointer"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setDeleteConfirmId(doc.id);
-                              }}
-                            >
-                              <Trash2 className="w-4 h-4 text-red-500 " />
-                            </Button>
+                            {isAdmin && (
+                              <>
+                                <Button
+                                  variant="abu"
+                                  size="icon"
+                                  className="w-8 h-8 text-gray-400 hover:text-gray-900"
+                                  onClick={() => handleEditClick(doc)}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="abu"
+                                  size="icon"
+                                  className=" w-8 h-8 text-gray-400 hover:text-red-500 cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDeleteConfirmId(doc.id);
+                                  }}
+                                >
+                                  <Trash2 className="w-4 h-4 text-red-500 " />
+                                </Button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -456,11 +477,15 @@ const Logbook = () => {
           </div>
 
           {/* Pagination - Style diperbarui */}
-          {!debouncedSearch && meta && links && (
+          {meta && links && (
             <div className="px-4 py-4 sm:px-6 border-t border-gray-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-4 text-[13px]">
               {/* Sisi Kiri: Info Total Data */}
               <div className="text-gray-500 font-medium">
-                Total{" "}
+                Menampilkan{" "}
+                <span className="font-bold text-gray-900 mx-1">
+                  {meta.from || 0} - {meta.to || 0}
+                </span>{" "}
+                dari{" "}
                 <span className="font-bold text-gray-900 ml-1">
                   {meta.total}
                 </span>
@@ -473,12 +498,24 @@ const Logbook = () => {
                   <span className="text-gray-500 font-medium">
                     Lines per page
                   </span>
-                  <div className="flex items-center border border-gray-200 rounded-lg px-3 py-1.5 gap-2 bg-white">
-                    <span className="font-bold text-gray-900">
-                      {meta.per_page}
-                    </span>
-                    <ChevronDown className="w-3.5 h-3.5 text-gray-400" />
-                  </div>
+                  <select
+                    className="flex items-center border border-gray-200 rounded-lg px-2 py-1.5 gap-2 bg-white font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-slate-200 cursor-pointer"
+                    value={perPage}
+                    onChange={(e) => {
+                      const newPerPage = e.target.value;
+                      setSearchParams((prev) => {
+                        prev.set("per_page", newPerPage);
+                        prev.set("page", "1"); // Reset ke halaman 1 saat limit berubah
+                        return prev;
+                      });
+                    }}
+                  >
+                    {[10, 25, 50, 100].map((num) => (
+                      <option key={num} value={num}>
+                        {num}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Kontrol Navigasi Angka */}
