@@ -131,13 +131,13 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
 
   return (
     <div className="mx-auto py-4">
-      <div className="flex items-center justify-between mb-8 border-b-2 border-black pb-4">
+      <div className="flex items-center justify-between mb-6 border-b-2 border-black pb-4">
         <div>
           <h3 className="text-xl font-bold flex items-center gap-2">
             <FileText className="w-6 h-6" />
             Riwayat Aktivitas
           </h3>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-semibold">
             Urutan kronologis pemrosesan dokumen
           </p>
         </div>
@@ -179,9 +179,9 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
                     )}
                   </div>
 
-                  <div className="flex-1 pb-10">
-                    <div className="bg-white border-2 border-gray-100 group-hover:border-black transition-all rounded-xl p-5 shadow-sm hover:shadow-md">
-                      <div className="flex justify-between items-start mb-4">
+                  <div className="flex-1 pb-6">
+                    <div className="bg-white border-2 border-gray-100 group-hover:border-black transition-all rounded-xl p-4 shadow-sm hover:shadow-md">
+                      <div className="flex justify-between items-start mb-2">
                         <div className="space-y-1">
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                             <div className="flex items-center gap-1.5 text-xs font-bold text-gray-400 uppercase tracking-wider">
@@ -200,7 +200,7 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
                             )}
                           </div>
 
-                          <p className="text-base font-semibold text-gray-900 leading-relaxed">
+                          <p className="text-sm font-semibold text-gray-900 leading-snug">
                             {logEntry.keterangan}
                           </p>
                         </div>
@@ -214,7 +214,7 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
                                 className="h-8 w-8 hover:bg-gray-100"
                                 onClick={() => handleEditClick(logEntry)}
                               >
-                                <Edit className="w-4 h-4" />
+                                <Edit className="w-4 h-4 text-yellow-500" />
                               </Button>
                               <Button
                                 variant="ghost"
@@ -222,14 +222,14 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
                                 className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
                                 onClick={() => handleDeleteClick(logEntry.id)}
                               >
-                                <Trash2 className="w-4 h-4" />
+                                <Trash2 className="w-4 h-4 text-red-500" />
                               </Button>
                             </>
                           )}
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-50">
+                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
                         <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
                           <MessageSquare className="w-3.5 h-3.5 text-gray-500" />
                           <span className="text-xs font-medium text-gray-600">

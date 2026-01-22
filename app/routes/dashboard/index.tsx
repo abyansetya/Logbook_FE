@@ -17,7 +17,15 @@ import {
   Filter,
   ArrowUpDown,
   MoreHorizontal,
+  Check,
 } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
+import { Checkbox } from "~/components/ui/checkbox";
+import { Label } from "~/components/ui/label";
 import {
   BarChart,
   Bar,
@@ -28,15 +36,19 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { recentActivities } from "../../dummy/dashboard-data";
 import { useDashboardStats } from "~/hooks/use-dashboard";
+import { useRecentActivities } from "~/hooks/use-helper";
 import { Button } from "~/components/ui/button";
 import DashboardSkeleton from "~/components/skeleton/dashboard-skeleton";
 import { useEffect, useState } from "react";
-
+import { formatDistanceToNow } from "date-fns";
+import { id } from "date-fns/locale";
+import type { Activity as ActivityType } from "types/activity";
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { data: apiResponse, isLoading: statsLoading } = useDashboardStats();
+  const { data: activitiesResponse, isLoading: activitiesLoading } =
+    useRecentActivities();
   // State untuk menyimpan status yang aktif di chart
   const [activeStatuses, setActiveStatuses] = useState<string[]>([]);
 
@@ -59,28 +71,8 @@ export default function Dashboard() {
     "#2563EB", // Biru Royal (Deep Blue)
   ];
 
-  // Definisi Palet Warna: Biru Tua, Biru Muda, Kuning (Solid & Kontras)
-  const dashboardColors = [
-    "#1E3A8A", // Biru Tua (Primary)
-    "#3B82F6", // Biru Muda (Secondary)
-    "#EAB308", // Kuning/Gold (Accent)
-    "#1D4ED8", // Biru Medium
-    "#60A5FA", // Biru Langit
-    "#CA8A04", // Kuning Gelap
-  ];
-
-  // Handler untuk toggle checkbox
-  const toggleStatus = (status: string) => {
-    setActiveStatuses(
-      (prev) =>
-        prev.includes(status)
-          ? prev.filter((s) => s !== status) // Nonaktifkan
-          : [...prev, status], // Aktifkan
-    );
-  };
-
   // Tampilkan skeleton saat loading
-  if (isLoading || statsLoading) {
+  if (isLoading || statsLoading || activitiesLoading) {
     return <DashboardSkeleton />;
   }
 
@@ -192,20 +184,88 @@ export default function Dashboard() {
 
                 {/* Action Buttons ala Modern UI */}
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 rounded-xl border-gray-100 text-xs font-bold gap-2 text-gray-600"
-                  >
-                    <Filter className="w-3 h-3" /> Filter
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-9 rounded-xl border-gray-100 text-xs font-bold gap-2 text-gray-600"
-                  >
-                    <ArrowUpDown className="w-3 h-3" /> Sort
-                  </Button>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-9 rounded-xl border-gray-100 text-xs font-bold gap-2 text-gray-600"
+                      >
+                        <Filter className="w-3 h-3" /> Filter
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      align="end"
+                      className="w-64 p-3 rounded-2xl"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between px-1">
+                          <p className="text-sm font-bold text-slate-800">
+                            Filter Status
+                          </p>
+                          <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full text-slate-500 font-bold">
+                            {activeStatuses.length} Terpilih
+                          </span>
+                        </div>
+                        <div className="grid gap-2">
+                          {statusNames.map((status, index) => (
+                            <div
+                              key={status}
+                              className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all cursor-pointer hover:bg-slate-50 ${
+                                activeStatuses.includes(status)
+                                  ? "border-primary/20 bg-primary/[0.02]"
+                                  : "border-gray-100"
+                              }`}
+                              onClick={() => {
+                                if (activeStatuses.includes(status)) {
+                                  setActiveStatuses(
+                                    activeStatuses.filter((s) => s !== status),
+                                  );
+                                } else {
+                                  setActiveStatuses([
+                                    ...activeStatuses,
+                                    status,
+                                  ]);
+                                }
+                              }}
+                            >
+                              <Checkbox
+                                id={`status-${status}`}
+                                checked={activeStatuses.includes(status)}
+                                onCheckedChange={() => {}} // Controlled by div onClick
+                              />
+                              <div className="flex-1">
+                                <Label
+                                  htmlFor={`status-${status}`}
+                                  className="text-xs font-semibold text-slate-700 cursor-pointer block"
+                                >
+                                  {status}
+                                </Label>
+                              </div>
+                              <div
+                                className="w-2 h-2 rounded-full"
+                                style={{
+                                  backgroundColor:
+                                    modernColors[index % modernColors.length],
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                        <div className="pt-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="w-full h-8 text-[10px] font-bold text-primary hover:bg-primary/5 rounded-lg"
+                            onClick={() => setActiveStatuses(statusNames)}
+                          >
+                            Reset Filter
+                          </Button>
+                        </div>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+
                   <Button
                     variant="outline"
                     size="icon"
@@ -263,22 +323,19 @@ export default function Dashboard() {
                       }}
                     />
 
-                    {statusNames.map((name, index) => (
-                      <Bar
-                        key={name}
-                        dataKey={name}
-                        name={name}
-                        stackId="a"
-                        fill={modernColors[index % modernColors.length]}
-                        // Memberikan radius yang halus hanya pada bagian paling atas tumpukan
-                        radius={
-                          index === statusNames.length - 1
-                            ? [6, 6, 0, 0]
-                            : [0, 0, 0, 0]
-                        }
-                        barSize={40}
-                      />
-                    ))}
+                    {statusNames.map((name, index) => {
+                      if (!activeStatuses.includes(name)) return null;
+                      return (
+                        <Bar
+                          key={name}
+                          dataKey={name}
+                          name={name}
+                          stackId="a"
+                          fill={modernColors[index % modernColors.length]}
+                          barSize={40}
+                        />
+                      );
+                    })}
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -381,44 +438,58 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="divide-y divide-slate-50">
-              {recentActivities.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="flex items-start gap-4 p-5 hover:bg-slate-50/50 transition-colors cursor-pointer group"
-                >
+              {(activitiesResponse?.data || []).map(
+                (activity: ActivityType) => (
                   <div
-                    className={`mt-0.5 p-2.5 rounded-xl text-white ${
-                      activity.type === "logbook"
-                        ? "bg-[#1E3A8A]"
-                        : activity.type === "dokumen"
-                          ? "bg-[#3B82F6]"
-                          : "bg-[#EAB308]"
-                    }`}
+                    key={activity.id}
+                    className="flex items-start gap-4 p-5 hover:bg-slate-50/50 transition-colors cursor-pointer group"
                   >
-                    {activity.type === "logbook" ? (
-                      <BookOpen className="h-4 w-4" />
-                    ) : activity.type === "dokumen" ? (
-                      <FileText className="h-4 w-4" />
-                    ) : (
-                      <Users className="h-4 w-4" />
-                    )}
+                    <div
+                      className={`mt-0.5 p-2.5 rounded-xl text-white ${
+                        activity.type.toLowerCase() === "logbook"
+                          ? "bg-[#1E3A8A]"
+                          : activity.type.toLowerCase() === "dokumen"
+                            ? "bg-[#3B82F6]"
+                            : "bg-[#EAB308]"
+                      }`}
+                    >
+                      {activity.type.toLowerCase() === "logbook" ? (
+                        <BookOpen className="h-4 w-4" />
+                      ) : activity.type.toLowerCase() === "dokumen" ? (
+                        <FileText className="h-4 w-4" />
+                      ) : (
+                        <Users className="h-4 w-4" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-800 group-hover:text-[#1E3A8A]">
+                        {activity.action} •{" "}
+                        <span className="text-xs text-slate-400">
+                          ditambahkan oleh: {activity.user?.nama || "System"}
+                        </span>
+                      </p>
+                      <p className="text-sm text-slate-500 mt-0.5 truncate">
+                        {activity.description}
+                      </p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">
+                        {formatDistanceToNow(new Date(activity.created_at), {
+                          addSuffix: true,
+                          locale: id,
+                        })}
+                      </span>
+                      <ArrowUpRight className="w-4 h-4 text-slate-200 group-hover:text-[#1E3A8A] transition-colors" />
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-800 group-hover:text-[#1E3A8A]">
-                      {activity.title}
-                    </p>
-                    <p className="text-sm text-slate-500 mt-0.5 truncate">
-                      {activity.description}
-                    </p>
-                  </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase">
-                      {activity.timestamp}
-                    </span>
-                    <ArrowUpRight className="w-4 h-4 text-slate-200 group-hover:text-[#1E3A8A] transition-colors" />
-                  </div>
+                ),
+              )}
+              {(activitiesResponse?.data || []).length === 0 && (
+                <div className="p-10 text-center text-slate-400">
+                  <Activity className="w-10 h-10 mx-auto mb-2 opacity-20" />
+                  <p className="text-sm">Belum ada aktivitas</p>
                 </div>
-              ))}
+              )}
             </div>
           </CardContent>
         </Card>

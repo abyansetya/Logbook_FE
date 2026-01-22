@@ -1,6 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { getUsers, searchUser, updateUserRole } from "~/service/user-service";
+import {
+  getUsers,
+  searchUser,
+  updateUserRole,
+  deleteUser,
+} from "~/service/user-service";
+import { useAddActivity } from "./use-helper";
 
 export const useGetUsers = () => {
   return useQuery({
@@ -21,6 +27,7 @@ export const useSearchUser = (query: string) => {
 
 export const useUpdateUserRole = () => {
   const queryClient = useQueryClient();
+  const { logActivity } = useAddActivity();
 
   return useMutation({
     mutationFn: ({ userId, role }: { userId: number; role: string }) =>
@@ -55,8 +62,13 @@ export const useUpdateUserRole = () => {
       // 4. Kembalikan context agar onError bisa melakukan rollback
       return { previousUsers, previousSearch };
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       toast.success("Role berhasil diubah!");
+      logActivity({
+        action: "Edit User",
+        description: `Mengubah role user ID ${variables.userId} menjadi ${variables.role}`,
+        type: "User",
+      });
     },
 
     // Jika server merespon error, kembalikan data ke snapshot awal
@@ -74,6 +86,28 @@ export const useUpdateUserRole = () => {
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["user-search"] });
+    },
+  });
+};
+
+export const useDeleteUser = () => {
+  const queryClient = useQueryClient();
+  const { logActivity } = useAddActivity();
+
+  return useMutation({
+    mutationFn: (userId: number) => deleteUser(userId),
+    onSuccess: (_, userId) => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["user-search"] });
+      toast.success("User berhasil dihapus");
+      logActivity({
+        action: "Hapus User",
+        description: `Menghapus user ID ${userId}`,
+        type: "User",
+      });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Gagal menghapus user");
     },
   });
 };

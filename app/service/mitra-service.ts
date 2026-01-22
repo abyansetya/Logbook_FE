@@ -5,12 +5,15 @@ export const getMitra = async (
   page = 1,
   search = "",
   perPage = 10,
+  klasifikasi = "all",
 ): Promise<MitraResponse> => {
   const query = new URLSearchParams({
     page: page.toString(),
     per_page: perPage.toString(),
   });
   if (search) query.append("q", search);
+  if (klasifikasi && klasifikasi !== "all")
+    query.append("klasifikasi", klasifikasi);
   return await fetchData<MitraResponse>(`/mitra?${query.toString()}`);
 };
 

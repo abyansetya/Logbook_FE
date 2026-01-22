@@ -22,6 +22,7 @@ import type {
 import { toast } from "sonner";
 
 import type { updateLogData } from "~/lib/schema";
+import { useAddActivity } from "./use-helper";
 
 // Hook untuk list logbook
 export const useLogbooks = (
@@ -54,14 +55,21 @@ export const useLogbookDetail = (id: number | null) => {
 
 export const useAddDokumen = () => {
   const queryClient = useQueryClient();
+  const { logActivity } = useAddActivity();
 
   return useMutation({
     mutationFn: addDokumen,
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Refresh list logbook agar dokumen baru langsung muncul di tabel
       queryClient.invalidateQueries({ queryKey: ["logbooks"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
       toast.success("Dokumen berhasil ditambahkan!");
+      logActivity({
+        action: "Tambah Dokumen",
+        description: `Menambahkan dokumen "${data.data.judul_dokumen}"`,
+        type: "Dokumen",
+      });
     },
     onError: (error: any) => {
       toast.error(
@@ -73,16 +81,22 @@ export const useAddDokumen = () => {
 
 export const useAddLog = () => {
   const queryClient = useQueryClient();
+  const { logActivity } = useAddActivity();
 
   return useMutation({
     mutationFn: addLog,
     onSuccess: (response, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["logbooks"] });
       queryClient.invalidateQueries({
         queryKey: ["logbook-detail", variables.dokumen_id],
       });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
 
       toast.success("Log aktivitas berhasil ditambahkan!");
+      logActivity({
+        action: "Tambah Log",
+        description: `Menambahkan log untuk dokumen ID ${variables.dokumen_id}`,
+        type: "Logbook",
+      });
     },
     onError: (error: any) => {
       toast.error(
@@ -107,6 +121,7 @@ export const useSearchDocument = (query: string) => {
 // Hook untuk edit dokumen
 export const useEditDokumen = () => {
   const queryClient = useQueryClient();
+  const { logActivity } = useAddActivity();
 
   return useMutation({
     // Sekarang mutationFn menerima objek yang berisi id dan data
@@ -114,6 +129,7 @@ export const useEditDokumen = () => {
     onSuccess: (response, variables) => {
       // Invalidate list utama
       queryClient.invalidateQueries({ queryKey: ["logbooks"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
 
       // Invalidate detail spesifik dokumen yang baru diedit
       queryClient.invalidateQueries({
@@ -121,6 +137,11 @@ export const useEditDokumen = () => {
       });
 
       toast.success("Dokumen berhasil diperbarui!");
+      logActivity({
+        action: "Edit Dokumen",
+        description: `Memperbarui dokumen "${response.data.judul_dokumen}"`,
+        type: "Dokumen",
+      });
     },
     onError: (error: any) => {
       toast.error(
@@ -132,6 +153,7 @@ export const useEditDokumen = () => {
 
 export const useEditLog = () => {
   const queryClient = useQueryClient();
+  const { logActivity } = useAddActivity();
 
   return useMutation({
     /**
@@ -146,18 +168,21 @@ export const useEditLog = () => {
     }) => editLog({ id: variables.id, data: variables.data }),
 
     onSuccess: (response, variables) => {
-      // 1. Refresh list logbook utama (Tabel besar)
-      queryClient.invalidateQueries({ queryKey: ["logbooks"] });
-
-      // 2. Refresh detail dokumen spesifik agar log terbaru muncul
+      // 1. Refresh detail dokumen spesifik agar log terbaru muncul
       // 'dokumen_id' dikirim melalui mutate() untuk kebutuhan cache invalidation di frontend
       if (variables.dokumen_id) {
         queryClient.invalidateQueries({
           queryKey: ["logbook-detail", variables.dokumen_id],
         });
       }
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
 
       toast.success("Log aktivitas berhasil diperbarui!");
+      logActivity({
+        action: "Edit Log",
+        description: `Memperbarui log ID ${variables.id}`,
+        type: "Logbook",
+      });
     },
     onError: (error: any) => {
       toast.error(
@@ -172,15 +197,21 @@ export const useEditLog = () => {
 
 export const useDeleteDokumen = () => {
   const queryClient = useQueryClient();
+  const { logActivity } = useAddActivity();
 
   return useMutation({
     // Kita menerima parameter id di sini
     mutationFn: (id: number) => deleteDokumen({ id }),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       // Refresh list agar baris yang dihapus hilang dari tabel
       queryClient.invalidateQueries({ queryKey: ["logbooks"] });
-
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
       toast.success("Dokumen berhasil dihapus!");
+      logActivity({
+        action: "Hapus Dokumen",
+        description: `Menghapus dokumen ID ${variables}`,
+        type: "Dokumen",
+      });
     },
     onError: (error: any) => {
       toast.error(
@@ -192,15 +223,21 @@ export const useDeleteDokumen = () => {
 
 export const useDeleteLog = (documentId: number) => {
   const queryClient = useQueryClient();
+  const { logActivity } = useAddActivity();
   return useMutation({
     mutationFn: (id: number) => deleteLog({ id }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["logbooks"] });
+    onSuccess: (_, variables) => {
       // Sekarang documentId sudah tersedia karena dikirim saat inisialisasi hook
       queryClient.invalidateQueries({
         queryKey: ["logbook-detail", documentId],
       });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
       toast.success("Log berhasil dihapus!");
+      logActivity({
+        action: "Hapus Log",
+        description: `Menghapus log ID ${variables} pada dokumen ID ${documentId}`,
+        type: "Logbook",
+      });
     },
   });
 };

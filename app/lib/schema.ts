@@ -5,6 +5,20 @@ export type SignUpFormData = z.infer<typeof signUpSchema>;
 export type TambahDokumenData = z.infer<typeof tambahDokumenSchema>;
 export type TambahLogData = z.infer<typeof tambahLogSchema>;
 export type updateLogData = z.infer<typeof updateLogSchema>;
+export type MitraFormData = z.infer<typeof mitraSchema>;
+
+export const mitraSchema = z.object({
+  nama: z
+    .string()
+    .min(1, "Nama mitra wajib diisi")
+    .max(255, "Nama mitra maksimal 255 karakter"),
+  klasifikasi_mitra_id: z.number({ message: "Klasifikasi mitra wajib diisi" }),
+  alamat: z.string().max(500, "Alamat terlalu panjang").optional(),
+  contact_person: z
+    .string()
+    .max(255, "Contact person terlalu panjang")
+    .optional(),
+});
 
 export const updateLogSchema = z.object({
   user_id: z.number({ message: "User ID Wajib diisi" }),

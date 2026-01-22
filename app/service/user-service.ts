@@ -1,4 +1,4 @@
-import { fetchData, updateData } from "../lib/fetch-util";
+import { fetchData, updateData, deleteData } from "../lib/fetch-util";
 import type { updateRoleResponse, UserResponse } from "../../types/users";
 
 export const searchUser = async (query: string): Promise<UserResponse> => {
@@ -16,4 +16,8 @@ export const updateUserRole = async (
   return await updateData<updateRoleResponse>(`/users/${userId}/role`, {
     role: newRole,
   });
+};
+
+export const deleteUser = async (userId: number): Promise<any> => {
+  return await deleteData(`/users/${userId}`);
 };

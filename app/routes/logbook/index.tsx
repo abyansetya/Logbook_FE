@@ -274,7 +274,7 @@ const Logbook = () => {
     <div className="min-h-screen bg-[#F9FAFB] p-6 lg:p-10">
       <div className=" mx-auto space-y-6">
         {/* Header Section */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between ">
           <header>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">
               Logbook
@@ -286,7 +286,7 @@ const Logbook = () => {
           {isAdmin && (
             <Button
               onClick={() => setShowAddDocModal(true)}
-              className="bg-black hover:bg-gray-800 text-white rounded-xl px-6 py-6 transition-all shadow-sm"
+              className="bg-black hover:bg-gray-800 text-white rounded-xl px-6 py-6 transition-all shadow-sm cursor-pointer"
             >
               <Plus className="w-5 h-5 mr-2" />
               Tambah Dokumen
@@ -313,7 +313,7 @@ const Logbook = () => {
             <Button
               variant="outline"
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-              className={`rounded-xl px-6 py-6 border-gray-100 text-gray-600 font-semibold gap-2 transition-all ${
+              className={`rounded-xl px-6 py-6 border-gray-100 cursor-pointer text-gray-600 font-semibold gap-2 transition-all ${
                 showFilterDropdown ? "bg-gray-100 border-gray-200" : ""
               }`}
             >
@@ -400,7 +400,7 @@ const Logbook = () => {
                   <Button
                     onClick={clearFilters}
                     variant="ghost"
-                    className="rounded-xl px-6 py-6 text-gray-400 hover:text-gray-900 hover:bg-gray-50 font-semibold gap-2"
+                    className="rounded-xl px-6 py-6 text-gray-400 hover:text-gray-900 hover:bg-gray-50 font-semibold gap-2 cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                     Reset Filter
@@ -448,7 +448,7 @@ const Logbook = () => {
                   </th>
                   {isAdmin && (
                     <th className="px-6 py-5 text-right text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                      Action
+                      Aksi
                     </th>
                   )}
                 </tr>
@@ -535,10 +535,10 @@ const Logbook = () => {
                                 <Button
                                   variant="abu"
                                   size="icon"
-                                  className="w-8 h-8 text-gray-400 hover:text-gray-900"
+                                  className="w-8 h-8 text-gray-400 hover:text-gray-900 cursor-pointer"
                                   onClick={() => handleEditClick(doc)}
                                 >
-                                  <Edit className="w-4 h-4" />
+                                  <Edit className="w-4 h-4 text-yellow-500" />
                                 </Button>
                                 <Button
                                   variant="abu"
@@ -714,7 +714,7 @@ const Logbook = () => {
         }}
         documentId={showAddLogModal}
         mitraId={selectedMitraId ?? 0}
-        userId={1} // Ganti dengan ID user dari context/session auth Anda
+        userId={user?.id} // Ganti dengan ID user dari context/session auth Anda
       />
 
       {/* Modal Konfirmasi Hapus */}

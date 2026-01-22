@@ -34,6 +34,7 @@ import {
   useGetUsers,
   useSearchUser,
   useUpdateUserRole,
+  useDeleteUser,
 } from "~/hooks/use-user";
 import type { User } from "../../../types/users";
 import ConfirmDeleteModal from "~/components/modal/KonfirmasiDelete";
@@ -73,6 +74,7 @@ export default function UsersPage() {
 
   // Mutations
   const updateRole = useUpdateUserRole();
+  const deleteUser = useDeleteUser();
 
   // --- 4. COMPUTED LOGIC ---
   const isSearching = debouncedSearch.length >= 3;
@@ -100,22 +102,11 @@ export default function UsersPage() {
 
   const handleConfirmDelete = async () => {
     if (!deleteConfirmId) return;
-
-    try {
-      setUpdatingId(deleteConfirmId);
-      await deleteData(`/users/${deleteConfirmId}`);
-
-      // Refresh data setelah delete
-      queryClient.invalidateQueries({ queryKey: ["users"] });
-      queryClient.invalidateQueries({ queryKey: ["user-search"] });
-      toast.success("User berhasil dihapus");
-    } catch (error) {
-      console.error("Failed to delete user", error);
-      toast.error("Gagal menghapus user.");
-    } finally {
-      setUpdatingId(null);
-      setDeleteConfirmId(null);
-    }
+    deleteUser.mutate(deleteConfirmId, {
+      onSettled: () => {
+        setDeleteConfirmId(null);
+      },
+    });
   };
 
   // --- 6. HELPERS ---
@@ -301,7 +292,7 @@ export default function UsersPage() {
         isOpen={deleteConfirmId !== null}
         onClose={() => setDeleteConfirmId(null)}
         onConfirm={handleConfirmDelete}
-        isLoading={updatingId !== null}
+        isLoading={deleteUser.isPending}
       />
     </div>
   );
