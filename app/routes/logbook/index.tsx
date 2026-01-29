@@ -85,7 +85,10 @@ const Logbook = () => {
   const [showUpdateDocModal, setShowUpdateDocModal] = useState(false);
   const [showAddLogModal, setShowAddLogModal] = useState<number | null>(null);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [deleteConfirmData, setDeleteConfirmData] = useState<{
+    id: number;
+    judul_dokumen: string;
+  } | null>(null);
 
   // Data-related States
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
@@ -157,10 +160,10 @@ const Logbook = () => {
 
   // Delete Handlers
   const handleConfirmDelete = () => {
-    if (!deleteConfirmId) return;
+    if (!deleteConfirmData) return;
 
-    deleteDocMutation.mutate(deleteConfirmId, {
-      onSuccess: () => setDeleteConfirmId(null),
+    deleteDocMutation.mutate(deleteConfirmData, {
+      onSuccess: () => setDeleteConfirmData(null),
     });
   };
 
@@ -546,7 +549,10 @@ const Logbook = () => {
                                   className=" w-8 h-8 text-gray-400 hover:text-red-500 cursor-pointer"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setDeleteConfirmId(doc.id);
+                                    setDeleteConfirmData({
+                                      id: doc.id,
+                                      judul_dokumen: doc.judul_dokumen,
+                                    });
                                   }}
                                 >
                                   <Trash2 className="w-4 h-4 text-red-500 " />
@@ -720,8 +726,8 @@ const Logbook = () => {
       {/* Modal Konfirmasi Hapus */}
       <ConfirmDeleteModal
         label="dokumen"
-        isOpen={deleteConfirmId !== null}
-        onClose={() => setDeleteConfirmId(null)}
+        isOpen={deleteConfirmData !== null}
+        onClose={() => setDeleteConfirmData(null)}
         onConfirm={handleConfirmDelete}
         isLoading={deleteDocMutation.isPending}
       />

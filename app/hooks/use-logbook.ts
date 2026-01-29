@@ -89,6 +89,7 @@ export const useAddLog = () => {
       queryClient.invalidateQueries({
         queryKey: ["logbook-detail", variables.dokumen_id],
       });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["activities"] });
 
       toast.success("Log aktivitas berhasil ditambahkan!");
@@ -201,15 +202,22 @@ export const useDeleteDokumen = () => {
 
   return useMutation({
     // Kita menerima parameter id di sini
-    mutationFn: (id: number) => deleteDokumen({ id }),
+    mutationFn: ({
+      id,
+      judul_dokumen,
+    }: {
+      id: number;
+      judul_dokumen: string;
+    }) => deleteDokumen({ id }),
     onSuccess: (_, variables) => {
       // Refresh list agar baris yang dihapus hilang dari tabel
       queryClient.invalidateQueries({ queryKey: ["logbooks"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["activities"] });
       toast.success("Dokumen berhasil dihapus!");
       logActivity({
         action: "Hapus Dokumen",
-        description: `Menghapus dokumen ID ${variables}`,
+        description: `Menghapus dokumen "${variables.judul_dokumen}" (ID: ${variables.id})`,
         type: "Dokumen",
       });
     },
@@ -231,6 +239,7 @@ export const useDeleteLog = (documentId: number) => {
       queryClient.invalidateQueries({
         queryKey: ["logbook-detail", documentId],
       });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["activities"] });
       toast.success("Log berhasil dihapus!");
       logActivity({

@@ -30,14 +30,22 @@ export const useUpdateUserRole = () => {
   const { logActivity } = useAddActivity();
 
   return useMutation({
-    mutationFn: ({ userId, role }: { userId: number; role: string }) =>
-      updateUserRole(userId, role),
+    mutationFn: ({
+      userId,
+      role,
+      nama,
+    }: {
+      userId: number;
+      role: string;
+      nama: string;
+    }) => updateUserRole(userId, role),
 
     // Logika Optimistik: Jalankan SEBELUM request server selesai
     onMutate: async (newUpdate) => {
       // 1. Batalkan refetch yang sedang berjalan agar tidak menimpa state optimistik
       await queryClient.cancelQueries({ queryKey: ["users"] });
       await queryClient.cancelQueries({ queryKey: ["user-search"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
 
       // 2. Simpan snapshot data lama (untuk rollback jika error)
       const previousUsers = queryClient.getQueryData(["users"]);
@@ -66,7 +74,7 @@ export const useUpdateUserRole = () => {
       toast.success("Role berhasil diubah!");
       logActivity({
         action: "Edit User",
-        description: `Mengubah role user ID ${variables.userId} menjadi ${variables.role}`,
+        description: `Mengubah role user "${variables.nama}" (ID: ${variables.userId}) menjadi ${variables.role}`,
         type: "User",
       });
     },
@@ -95,14 +103,15 @@ export const useDeleteUser = () => {
   const { logActivity } = useAddActivity();
 
   return useMutation({
-    mutationFn: (userId: number) => deleteUser(userId),
-    onSuccess: (_, userId) => {
+    mutationFn: ({ userId, nama }: { userId: number; nama: string }) =>
+      deleteUser(userId),
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["user-search"] });
       toast.success("User berhasil dihapus");
       logActivity({
         action: "Hapus User",
-        description: `Menghapus user ID ${userId}`,
+        description: `Menghapus user "${variables.nama}" (ID: ${variables.userId})`,
         type: "User",
       });
     },

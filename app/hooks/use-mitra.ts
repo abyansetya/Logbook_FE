@@ -30,6 +30,7 @@ export const useCreateMitra = () => {
     mutationFn: (payload: MitraPayload) => createMitra(payload),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["mitra"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["activities"] });
       toast.success("Mitra berhasil ditambahkan");
       logActivity({
@@ -75,14 +76,15 @@ export const useDeleteMitra = () => {
   const queryClient = useQueryClient();
   const { logActivity } = useAddActivity();
   return useMutation({
-    mutationFn: (id: number) => deleteMitra(id),
+    mutationFn: ({ id, nama }: { id: number; nama: string }) => deleteMitra(id),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["mitra"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["activities"] });
       toast.success("Mitra berhasil dihapus");
       logActivity({
         action: "Hapus Mitra",
-        description: `Menghapus mitra dengan ID ${variables}`,
+        description: `Menghapus mitra "${variables.nama}" dengan ID ${variables.id}`,
         type: "Mitra",
       });
     },
@@ -109,6 +111,7 @@ export const useAddMitraQuick = () => {
     mutationFn: addMitraQuick,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["mitra-search"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
       queryClient.invalidateQueries({ queryKey: ["activities"] });
       logActivity({
         action: "Tambah Mitra",

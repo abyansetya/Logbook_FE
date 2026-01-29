@@ -60,7 +60,10 @@ export default function UsersPage() {
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 500);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [deleteConfirmData, setDeleteConfirmData] = useState<{
+    id: number;
+    nama: string;
+  } | null>(null);
 
   // --- 3. DATA FETCHING (QUERIES) ---
   const queryClient = useQueryClient();
@@ -92,21 +95,24 @@ export default function UsersPage() {
     authLoading || (isAllUsersLoading && !usersData && !isSearching);
 
   // --- 5. ACTION HANDLERS ---
-  const handleRoleChange = (userId: number, newRole: string) => {
-    updateRole.mutate({ userId, role: newRole });
+  const handleRoleChange = (userId: number, newRole: string, nama: string) => {
+    updateRole.mutate({ userId, role: newRole, nama });
   };
 
-  const handleDeleteClick = (userId: number) => {
-    setDeleteConfirmId(userId);
+  const handleDeleteClick = (user: { id: number; nama: string }) => {
+    setDeleteConfirmData(user);
   };
 
   const handleConfirmDelete = async () => {
-    if (!deleteConfirmId) return;
-    deleteUser.mutate(deleteConfirmId, {
-      onSettled: () => {
-        setDeleteConfirmId(null);
+    if (!deleteConfirmData) return;
+    deleteUser.mutate(
+      { userId: deleteConfirmData.id, nama: deleteConfirmData.nama },
+      {
+        onSettled: () => {
+          setDeleteConfirmData(null);
+        },
       },
-    });
+    );
   };
 
   // --- 6. HELPERS ---
@@ -227,7 +233,11 @@ export default function UsersPage() {
                               }
                               value={userData.roles?.[0]}
                               onValueChange={(val) =>
-                                handleRoleChange(userData.id, val)
+                                handleRoleChange(
+                                  userData.id,
+                                  val,
+                                  userData.nama,
+                                )
                               }
                             >
                               <SelectTrigger className="w-[130px] h-8 text-xs">
@@ -269,7 +279,12 @@ export default function UsersPage() {
                               updatingId === userData.id ||
                               userData.id === user?.id
                             }
-                            onClick={() => handleDeleteClick(userData.id)}
+                            onClick={() =>
+                              handleDeleteClick({
+                                id: userData.id,
+                                nama: userData.nama,
+                              })
+                            }
                             title="Hapus User"
                           >
                             <Trash className="h-4 w-4" />
@@ -289,8 +304,8 @@ export default function UsersPage() {
         label="pengguna"
         title="Hapus Pengguna?"
         description="Tindakan ini tidak dapat dibatalkan. Data pengguna ini akan dihapus secara permanen dari sistem."
-        isOpen={deleteConfirmId !== null}
-        onClose={() => setDeleteConfirmId(null)}
+        isOpen={deleteConfirmData !== null}
+        onClose={() => setDeleteConfirmData(null)}
         onConfirm={handleConfirmDelete}
         isLoading={deleteUser.isPending}
       />

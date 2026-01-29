@@ -84,7 +84,10 @@ export default function MitraPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingMitra, setEditingMitra] = useState<Mitra | null>(null);
-  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [deleteConfirmData, setDeleteConfirmData] = useState<{
+    id: number;
+    nama: string;
+  } | null>(null);
   const isAdmin = user?.roles?.includes("Admin");
   // Form States
   const [formData, setFormData] = useState<MitraPayload>({
@@ -147,9 +150,9 @@ export default function MitraPage() {
   };
 
   const handleDeleteConfirm = () => {
-    if (deleteConfirmId) {
-      deleteMutation.mutate(deleteConfirmId, {
-        onSuccess: () => setDeleteConfirmId(null),
+    if (deleteConfirmData) {
+      deleteMutation.mutate(deleteConfirmData, {
+        onSuccess: () => setDeleteConfirmData(null),
       });
     }
   };
@@ -339,7 +342,12 @@ export default function MitraPage() {
                               variant="abu"
                               size="icon"
                               className=" w-8 h-8 text-gray-400 hover:text-red-500 cursor-pointer"
-                              onClick={() => setDeleteConfirmId(mitra.id)}
+                              onClick={() =>
+                                setDeleteConfirmData({
+                                  id: mitra.id,
+                                  nama: mitra.nama,
+                                })
+                              }
                             >
                               <Trash2 className="h-4 w-4 text-red-500" />
                             </Button>
@@ -550,8 +558,8 @@ export default function MitraPage() {
 
       {/* Delete Confirm */}
       <Dialog
-        open={deleteConfirmId !== null}
-        onOpenChange={(open) => !open && setDeleteConfirmId(null)}
+        open={deleteConfirmData !== null}
+        onOpenChange={(open) => !open && setDeleteConfirmData(null)}
       >
         <DialogContent>
           <DialogHeader>
@@ -562,7 +570,10 @@ export default function MitraPage() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirmData(null)}
+            >
               Batal
             </Button>
             <Button

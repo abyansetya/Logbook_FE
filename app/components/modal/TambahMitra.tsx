@@ -1,7 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check, ChevronsUpDown, Search } from "lucide-react";
+import { cn } from "~/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import {
   Dialog,
   DialogContent,
@@ -23,13 +25,6 @@ import {
 } from "../ui/form";
 import { mitraSchema, type MitraFormData } from "~/lib/schema";
 import { useKlasifikasis } from "~/hooks/use-helper";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
 
 interface TambahMitraProps {
   isOpen: boolean;
@@ -65,6 +60,9 @@ const TambahMitra: React.FC<TambahMitraProps> = ({
   const { data: klasifikasiResponse, isLoading: isLoadingKlasifikasi } =
     useKlasifikasis();
   const klasifikasis = klasifikasiResponse?.data || [];
+
+  const [open, setOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const onHandleSubmit = (data: MitraFormData) => {
     onSubmit(data);
@@ -111,30 +109,99 @@ const TambahMitra: React.FC<TambahMitraProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="font-bold">Klasifikasi Mitra</FormLabel>
-                  <Select
-                    onValueChange={(val) => field.onChange(Number(val))}
-                    value={field.value?.toString()}
-                    disabled={isLoadingKlasifikasi}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="border-2 border-black">
-                        <SelectValue
-                          placeholder={
-                            isLoadingKlasifikasi
+                  <Popover open={open} onOpenChange={setOpen}>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={open}
+                          className={cn(
+                            "w-full flex justify-between border-2 border-black min-w-0",
+                            (!field.value ||
+                              !klasifikasis.find(
+                                (k: any) => k.id === field.value,
+                              )) &&
+                              "text-muted-foreground",
+                          )}
+                          disabled={isLoadingKlasifikasi}
+                        >
+                          <span className="truncate">
+                            {isLoadingKlasifikasi
                               ? "Memuat..."
-                              : "Pilih klasifikasi"
-                          }
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {klasifikasis.map((k: any) => (
-                        <SelectItem key={k.id} value={k.id.toString()}>
-                          {k.nama}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                              : field.value
+                                ? klasifikasis.find(
+                                    (k: any) => k.id === field.value,
+                                  )?.nama || "Pilih Klasifikasi"
+                                : "Pilih Klasifikasi"}
+                          </span>
+                          <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50 ml-2" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-(--radix-popover-trigger-width) p-0 border-2 border-black"
+                      align="start"
+                    >
+                      <div className="p-2 border-b border-gray-100">
+                        <div className="flex items-center px-3 bg-gray-50 rounded-xl border border-gray-200">
+                          <Search className="h-4 w-4 text-gray-400 mr-2 shrink-0" />
+                          <Input
+                            placeholder="Cari klasifikasi..."
+                            className="border-none bg-transparent focus-visible:ring-0 h-9 text-sm focus-visible:ring-offset-0 shadow-none w-full"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                          />
+                        </div>
+                      </div>
+                      <div
+                        className="max-h-[200px] overflow-y-auto p-1"
+                        onWheel={(e) => e.stopPropagation()}
+                      >
+                        {klasifikasis.length > 0 &&
+                          klasifikasis.filter((k: any) =>
+                            k.nama
+                              .toLowerCase()
+                              .includes(searchTerm.toLowerCase()),
+                          ).length === 0 && (
+                            <div className="py-6 text-center text-sm text-muted-foreground">
+                              Klasifikasi tidak ditemukan.
+                            </div>
+                          )}
+                        {klasifikasis
+                          .filter((k: any) =>
+                            k.nama
+                              .toLowerCase()
+                              .includes(searchTerm.toLowerCase()),
+                          )
+                          .map((k: any) => (
+                            <div
+                              key={k.id}
+                              className={cn(
+                                "relative flex w-full cursor-pointer select-none items-center rounded-md px-3 py-2 text-sm outline-none hover:bg-gray-100 transition-colors justify-start text-left",
+                                field.value === k.id
+                                  ? "bg-gray-100 font-bold"
+                                  : "",
+                              )}
+                              onClick={() => {
+                                field.onChange(k.id); // Update form directly
+                                setOpen(false);
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4 shrink-0",
+                                  field.value === k.id
+                                    ? "opacity-100 text-black"
+                                    : "opacity-0",
+                                )}
+                              />
+                              <span className="truncate flex-1">{k.nama}</span>
+                            </div>
+                          ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}
