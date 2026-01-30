@@ -249,7 +249,7 @@ export default function EditProfilePage() {
                   <Button
                     type="submit"
                     disabled={updateProfileMutation.isPending}
-                    className="w-full bg-black text-white hover:bg-gray-800 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all h-12 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-black text-white hover:bg-gray-800 border-2 border-black cursor-pointer  h-12 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Save className="mr-2 h-5 w-5" />
                     {updateProfileMutation.isPending
@@ -421,7 +421,7 @@ export default function EditProfilePage() {
                   <Button
                     type="submit"
                     disabled={changePasswordMutation.isPending}
-                    className="w-full bg-black text-white hover:bg-gray-800 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all h-12 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-black text-white hover:bg-gray-800 border-2 border-black cursor-pointer h-12 text-base font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ShieldCheck className="mr-2 h-5 w-5" />
                     {changePasswordMutation.isPending

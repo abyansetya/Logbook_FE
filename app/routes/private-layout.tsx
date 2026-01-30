@@ -214,10 +214,6 @@ export default function DashboardLayout() {
             <Menu className="h-6 w-6" />
           </button>
 
-          <div className="flex-1 lg:hidden ml-4">
-            <h1 className="text-lg font-bold text-[#1A1D1F]">SIKMA</h1>
-          </div>
-
           {/* Right Actions */}
           <div className="flex items-center gap-x-6 ml-auto">
             <DropdownMenu>
@@ -231,7 +227,7 @@ export default function DashboardLayout() {
                       {user?.roles?.[0] || "Guest"}
                     </p>
                   </div>
-                  <Avatar className="h-9 w-9 md:h-10 md:w-10 border-2 border-transparent group-hover:border-primary/20 transition-all">
+                  <Avatar className="h-9 w-9 md:h-10 md:w-10 border-2 border-transparent group-hover:border-primary/20 transition-all cursor-pointer">
                     <AvatarFallback className="bg-gray-900 text-white text-xs font-bold">
                       {getInitials(user?.nama)}
                     </AvatarFallback>

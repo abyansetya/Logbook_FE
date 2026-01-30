@@ -249,7 +249,7 @@ const Logbook = () => {
       return "bg-orange-50 text-orange-600 border-none";
     if (s === "pending / batal / proses dilanjut unit lain")
       return "bg-red-50 text-red-600 border-none";
-    return "bg-gray-50 text-gray-600 border-none";
+    return "bg-gray-100 text-gray-600 border-none";
   };
 
   const getJenisStyle = (jenis: string) => {
@@ -421,16 +421,16 @@ const Logbook = () => {
               <thead>
                 <tr className="bg-gray-50/50 border-b border-gray-100">
                   <th className="px-6 py-5 w-12"></th>
-                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[150px]">
                     Nomor Dokumen
                   </th>
-                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[200px]">
                     Judul Dokumen
                   </th>
-                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[120px]">
                     Jenis
                   </th>
-                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[120px]">
                     Status
                   </th>
                   <th
@@ -501,30 +501,30 @@ const Logbook = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <div className="text-sm font-semibold text-gray-700 max-w-xs truncate">
+                          <div className="text-sm font-semibold text-gray-700 whitespace-normal break-words leading-relaxed">
                             {doc.judul_dokumen}
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <Badge
                             variant="outline"
-                            className={`rounded-lg font-semibold px-3 py-1 ${getJenisStyle(doc.jenis_dokumen || "-")}`}
+                            className={`rounded-lg w-full font-semibold px-2 py-1 lg:px-3 lg:py-1.5 whitespace-normal wrap-break-words text-center text-[10px] lg:text-sm ${getJenisStyle(doc.jenis_dokumen || "-")}`}
                           >
                             {doc.jenis_dokumen}
                           </Badge>
                         </td>
                         <td className="px-6 py-4">
                           <Badge
-                            className={`rounded-lg px-3 py-1 font-semibold ${getStatusStyle(doc.status ?? "-")}`}
+                            className={`rounded-lg w-full px-2 py-1 lg:px-3 lg:py-1.5 font-semibold whitespace-normal wrap-break-words text-center  text-[10px] lg:text-sm ${getStatusStyle(doc.status ?? "-")}`}
                           >
                             {doc.status}
                           </Badge>
                         </td>
-                        <td className="px-6 py-4 text-sm">
-                          <div className="text-gray-700 font-medium">
+                        <td className="px-6 py-4">
+                          <div className="text-gray-700 font-medium text-[10px] lg:text-sm">
                             {formatDate(doc.tanggal_masuk)}
                           </div>
-                          <div className="text-[11px] text-gray-400">
+                          <div className="text-[9px] lg:text-[11px] text-gray-400">
                             Tanggal terbit: {formatDate(doc.tanggal_terbit)}
                           </div>
                         </td>

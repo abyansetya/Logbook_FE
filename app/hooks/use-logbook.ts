@@ -146,7 +146,8 @@ export const useEditDokumen = () => {
     },
     onError: (error: any) => {
       toast.error(
-        "Gagal memperbarui dokumen: " + (error.message || "Terjadi kesalahan"),
+        "Gagal memperbarui dokumen: " +
+          (error.response?.data?.message || "Terjadi kesalahan"),
       );
     },
   });

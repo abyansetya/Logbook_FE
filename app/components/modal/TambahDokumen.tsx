@@ -124,9 +124,6 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                     <MitraAutocomplete
                       value={field.value}
                       onChange={(id, nama) => {
-                        // console.log("🔴 Parent onChange called:", { id, nama });
-                        // console.log("🔴 Current field value:", field.value);
-
                         field.onChange(id);
                         setSelectedMitraNama(nama);
 
