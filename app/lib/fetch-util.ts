@@ -16,14 +16,22 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+import { logger } from "./logger";
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    logger.error(`API Error: ${error.config?.url}`, {
+      status: error.response?.status,
+      message: error.message,
+      data: error.response?.data,
+    });
+
     if (error.response?.status === 401) {
       window.dispatchEvent(new Event("force-logout"));
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 const postData = async <T>(path: string, data: unknown): Promise<T> => {
