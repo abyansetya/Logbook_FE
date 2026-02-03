@@ -14,6 +14,7 @@ import {
   addLog,
   editLog,
   deleteLog,
+  exportLogbook,
 } from "~/service/logbook-service";
 import type {
   LogbooksResponse,
@@ -248,6 +249,36 @@ export const useDeleteLog = (documentId: number) => {
         description: `Menghapus log ID ${variables} pada dokumen ID ${documentId}`,
         type: "Logbook",
       });
+    },
+  });
+};
+
+export const useExportLogbook = () => {
+  return useMutation({
+    mutationFn: ({
+      search,
+      status,
+      jenisDokumen,
+    }: {
+      search: string;
+      status: string;
+      jenisDokumen: string;
+    }) => exportLogbook(search, status, jenisDokumen),
+    onSuccess: (blob) => {
+      // Buat link download virtual
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `Logbook_${new Date().toISOString()}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      toast.success("Logbook berhasil diunduh");
+    },
+    onError: (error: any) => {
+      toast.error(
+        "Gagal mengunduh logbook: " + (error.message || "Terjadi kesalahan"),
+      );
     },
   });
 };

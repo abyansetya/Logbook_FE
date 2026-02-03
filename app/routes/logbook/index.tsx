@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ArrowUp,
   ArrowDown,
+  Download,
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useStatuses } from "~/hooks/use-helper";
@@ -39,6 +40,7 @@ import {
   useEditDokumen,
   useSearchDocument,
   useDeleteDokumen,
+  useExportLogbook,
 } from "~/hooks/use-logbook";
 import type { Document } from "../../../types/logbook";
 import TambahDokumen from "~/components/modal/TambahDokumen";
@@ -119,6 +121,15 @@ const Logbook = () => {
   const addDocMutation = useAddDokumen();
   const editDocMutation = useEditDokumen();
   const deleteDocMutation = useDeleteDokumen();
+  const exportMutation = useExportLogbook();
+
+  const handleExport = () => {
+    exportMutation.mutate({
+      search: searchTerm,
+      status: currentStatus,
+      jenisDokumen: currentJenis,
+    });
+  };
 
   // --- 4. COMPUTED DATA (MEMOIZED) ---
   const filteredData = useMemo(() => {
@@ -299,32 +310,47 @@ const Logbook = () => {
 
         {/* Search & Filter Bar - Style diperhalus */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-          <div className="flex flex-wrap gap-4">
-            <div className="flex-1 relative min-w-[300px]">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input
-                placeholder="Cari dokumen..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="pl-12 py-6 bg-gray-50 border-gray-100 rounded-xl focus-visible:ring-1 focus-visible:ring-gray-300"
-              />
-              {isLoading && (
-                <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
-              )}
-            </div>
+          <div className="flex flex-wrap gap-4 justify-between items-center">
+            <div className="flex flex-1 gap-4">
+              <div className="flex-1 relative min-w-[300px]">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Input
+                  placeholder="Cari dokumen..."
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  className="pl-12 py-6 bg-gray-50 border-gray-100 rounded-xl focus-visible:ring-1 focus-visible:ring-gray-300"
+                />
+                {isLoading && (
+                  <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
+                )}
+              </div>
 
+              <Button
+                variant="outline"
+                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                className={`rounded-xl px-6 py-6 border-gray-100 cursor-pointer text-gray-600 font-semibold gap-2 transition-all ${
+                  showFilterDropdown ? "bg-gray-100 border-gray-200" : ""
+                }`}
+              >
+                <Filter className="w-4 h-4" />
+                Filter
+                {hasActiveFilters && (
+                  <span className="w-2 h-2 bg-black rounded-full" />
+                )}
+              </Button>
+            </div>
             <Button
               variant="outline"
-              onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-              className={`rounded-xl px-6 py-6 border-gray-100 cursor-pointer text-gray-600 font-semibold gap-2 transition-all ${
-                showFilterDropdown ? "bg-gray-100 border-gray-200" : ""
-              }`}
+              className="rounded-xl px-6 py-6 border-gray-100 cursor-pointer text-green-600 hover:text-green-700 hover:bg-green-50 font-semibold gap-2"
+              onClick={() => handleExport()}
+              disabled={exportMutation.isPending}
             >
-              <Filter className="w-4 h-4" />
-              Filter
-              {hasActiveFilters && (
-                <span className="w-2 h-2 bg-black rounded-full" />
+              {exportMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4" />
               )}
+              Download Excel
             </Button>
           </div>
 

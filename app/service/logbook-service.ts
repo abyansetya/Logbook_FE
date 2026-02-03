@@ -36,6 +36,33 @@ export const getLogbooks = async (
   return await fetchData<LogbooksResponse>(`/logbook?${query.toString()}`);
 };
 
+export const exportLogbook = async (
+  search: string = "",
+  status: string = "all",
+  jenisDokumen: string = "all",
+): Promise<Blob> => {
+  const query = new URLSearchParams();
+  if (search) query.append("q", search);
+  if (status && status !== "all") query.append("status", status);
+  if (jenisDokumen && jenisDokumen !== "all")
+    query.append("jenis_dokumen", jenisDokumen);
+
+  const response = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL}/logbook/export?${query.toString()}`,
+    {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`, // Assuming token is here, or handle via axios/fetch-util if it supports blob
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error("Gagal mengunduh file");
+  }
+
+  return await response.blob();
+};
+
 export const getLogbookDetail = async (
   id: number,
 ): Promise<LogbookDetailResponse> => {
