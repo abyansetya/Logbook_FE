@@ -64,6 +64,7 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
       nomor_dokumen_mitra: "",
       nomor_dokumen_undip: "",
       judul_dokumen: "",
+      tanggal_dokumen: "",
       contact_person: "",
       status_id: 0,
       tanggal_masuk: new Date().toISOString().split("T")[0],
@@ -91,6 +92,7 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
         nomor_dokumen_mitra: initialData.nomor_dokumen_mitra || "",
         nomor_dokumen_undip: initialData.nomor_dokumen_undip || "",
         judul_dokumen: initialData.judul_dokumen || "",
+        tanggal_dokumen: initialData.tanggal_dokumen || "",
         contact_person: initialData.contact_person || "",
         status_id: currentStatus ? currentStatus.id : 0, // Gunakan ID dari database
         tanggal_masuk:
@@ -141,6 +143,53 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Tanggal Dokumen */}
+            <FormField
+              control={form.control}
+              name="tanggal_dokumen"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel className="font-bold">Tanggal Dokumen</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={cn(
+                            "w-full pl-3 text-left font-normal border-2 border-black",
+                            !field.value && "text-muted-foreground",
+                          )}
+                        >
+                          {field.value ? (
+                            format(new Date(field.value), "dd MMMM yyyy")
+                          ) : (
+                            <span>Pilih tanggal</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={
+                          field.value ? new Date(field.value) : undefined
+                        }
+                        onSelect={(date) => {
+                          field.onChange(
+                            date ? format(date, "yyyy-MM-dd") : null,
+                          );
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}

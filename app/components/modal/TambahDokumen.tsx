@@ -61,6 +61,7 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
       nomor_dokumen_mitra: "",
       nomor_dokumen_undip: "",
       judul_dokumen: "",
+      tanggal_dokumen: "",
       contact_person: "",
       status_id: 1,
       tanggal_masuk: new Date().toISOString().split("T")[0],
@@ -106,6 +107,53 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                       {...field}
                     />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Tanggal Dokumen */}
+            <FormField
+              control={form.control}
+              name="tanggal_dokumen"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel className="font-bold">Tanggal Dokumen</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className={cn(
+                            "w-full pl-3 text-left font-normal border-2 border-black",
+                            !field.value && "text-muted-foreground",
+                          )}
+                        >
+                          {field.value ? (
+                            format(new Date(field.value), "dd MMMM yyyy")
+                          ) : (
+                            <span>Pilih tanggal</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={
+                          field.value ? new Date(field.value) : undefined
+                        }
+                        onSelect={(date) => {
+                          field.onChange(
+                            date ? format(date, "yyyy-MM-dd") : null,
+                          );
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}

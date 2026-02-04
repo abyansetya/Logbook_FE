@@ -19,6 +19,7 @@ export interface Document {
   judul_dokumen: string;
   nomor_dokumen_mitra: string | null;
   nomor_dokumen_undip: string | null;
+  tanggal_dokumen: string | null;
   tanggal_masuk: string; // ISO 8601 format
   tanggal_terbit: string | null;
   contact_person: string | null;
@@ -94,6 +95,7 @@ export interface DokumenData {
   judul_dokumen: string;
   nomor_dokumen_mitra: string | null;
   nomor_dokumen_undip: string | null;
+  tanggal_dokumen: string | null;
   tanggal_masuk: string; // ISO 8601 format
   tanggal_terbit: string | null;
   contact_person: string | null;

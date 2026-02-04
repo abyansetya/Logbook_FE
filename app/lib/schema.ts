@@ -63,6 +63,7 @@ export const tambahDokumenSchema = z.object({
     .string()
     .min(1, "Judul dokumen wajib diisi")
     .max(255, "Judul dokumen maksimal 255 karakter"),
+  tanggal_dokumen: z.string().optional().or(z.literal("")),
   contact_person: z
     .string()
     .max(255, "Contact person maksimal 255 karakter")
