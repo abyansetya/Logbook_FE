@@ -34,7 +34,6 @@ interface UpdateLogProps {
     dokumen_id: number;
     user_id: number;
     keterangan: string;
-    contact_person: string;
     tanggal_log: string;
   } | null;
 }
@@ -43,7 +42,6 @@ const UpdateLog: React.FC<UpdateLogProps> = ({ isOpen, onClose, logData }) => {
   // State untuk form
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [keterangan, setKeterangan] = useState("");
-  const [contactPerson, setContactPerson] = useState("");
   const [userId, setUserId] = useState<number>(0);
 
   // Integrasi Hook useEditLog
@@ -53,7 +51,6 @@ const UpdateLog: React.FC<UpdateLogProps> = ({ isOpen, onClose, logData }) => {
   useEffect(() => {
     if (isOpen && logData) {
       setKeterangan(logData.keterangan);
-      setContactPerson(logData.contact_person);
       setUserId(logData.user_id);
 
       const parsedDate = new Date(logData.tanggal_log);
@@ -66,7 +63,7 @@ const UpdateLog: React.FC<UpdateLogProps> = ({ isOpen, onClose, logData }) => {
   };
 
   const handleSubmit = () => {
-    if (!date || !keterangan || !contactPerson) {
+    if (!date || !keterangan) {
       toast.error("Mohon lengkapi semua field");
       return;
     }
@@ -84,7 +81,6 @@ const UpdateLog: React.FC<UpdateLogProps> = ({ isOpen, onClose, logData }) => {
         data: {
           user_id: userId,
           keterangan: keterangan,
-          contact_person: contactPerson,
           tanggal_log: format(date, "yyyy-MM-dd"),
         },
       },
@@ -92,7 +88,7 @@ const UpdateLog: React.FC<UpdateLogProps> = ({ isOpen, onClose, logData }) => {
         onSuccess: () => {
           handleClose();
         },
-      }
+      },
     );
   };
 
@@ -116,7 +112,7 @@ const UpdateLog: React.FC<UpdateLogProps> = ({ isOpen, onClose, logData }) => {
                   disabled={isPending}
                   className={cn(
                     "w-full pl-3 text-left font-normal border-2 border-black",
-                    !date && "text-muted-foreground"
+                    !date && "text-muted-foreground",
                   )}
                 >
                   {date ? (
@@ -151,17 +147,6 @@ const UpdateLog: React.FC<UpdateLogProps> = ({ isOpen, onClose, logData }) => {
               disabled={isPending}
               rows={3}
               className="border-2 border-black resize-none focus-visible:ring-0"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label className="font-bold text-sm">Contact Person</Label>
-            <Input
-              placeholder="Contoh: Budi - Staff IT"
-              value={contactPerson}
-              onChange={(e) => setContactPerson(e.target.value)}
-              disabled={isPending}
-              className="border-2 border-black h-11 focus-visible:ring-0"
             />
           </div>
         </div>

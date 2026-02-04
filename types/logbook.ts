@@ -9,7 +9,7 @@ export interface LogEntry {
   id: number;
   tanggal_log: string;
   keterangan: string;
-  contact_person: string;
+  unit_name: string | null;
   updated_at: string;
   admin: Admin;
 }
@@ -21,6 +21,7 @@ export interface Document {
   nomor_dokumen_undip: string | null;
   tanggal_masuk: string; // ISO 8601 format
   tanggal_terbit: string | null;
+  contact_person: string | null;
   jenis_dokumen: string | null;
   status: string | null;
   jenis_dokumen_id: number;
@@ -30,7 +31,7 @@ export interface Document {
   created_at: string;
 }
 
-export interface LogbookDetailData {
+export interface LogbookDetailData extends Document {
   logs: LogEntry[];
 }
 
@@ -95,6 +96,7 @@ export interface DokumenData {
   nomor_dokumen_undip: string | null;
   tanggal_masuk: string; // ISO 8601 format
   tanggal_terbit: string | null;
+  contact_person: string | null;
   jenis_dokumen: string | null;
   status: string | null;
   jenis_dokumen_id: number;
@@ -110,14 +112,12 @@ export interface LogData {
   mitra_id: number;
   dokumen_id: number;
   keterangan: string;
-  contact_person: string;
   tanggal_log: string;
 }
 
 export interface updateLogData {
   user_id: number;
   keterangan: string;
-  contact_person: string;
   tanggal_log: string;
 }
 

@@ -64,6 +64,7 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
       nomor_dokumen_mitra: "",
       nomor_dokumen_undip: "",
       judul_dokumen: "",
+      contact_person: "",
       status_id: 0,
       tanggal_masuk: new Date().toISOString().split("T")[0],
       tanggal_terbit: "",
@@ -90,6 +91,7 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
         nomor_dokumen_mitra: initialData.nomor_dokumen_mitra || "",
         nomor_dokumen_undip: initialData.nomor_dokumen_undip || "",
         judul_dokumen: initialData.judul_dokumen || "",
+        contact_person: initialData.contact_person || "",
         status_id: currentStatus ? currentStatus.id : 0, // Gunakan ID dari database
         tanggal_masuk:
           initialData.tanggal_masuk || new Date().toISOString().split("T")[0],
@@ -126,7 +128,6 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
             onSubmit={form.handleSubmit(onHandleSubmit)}
             className="space-y-4"
           >
-            {/* Judul Dokumen */}
             <FormField
               control={form.control}
               name="judul_dokumen"
@@ -138,6 +139,26 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                       placeholder="Masukkan judul dokumen"
                       className="border-2 border-black"
                       {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Contact Person */}
+            <FormField
+              control={form.control}
+              name="contact_person"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-bold">Contact Person</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Masukkan contact person (pilihan)"
+                      className="border-2 border-black"
+                      {...field}
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />

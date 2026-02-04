@@ -26,10 +26,6 @@ export const updateLogSchema = z.object({
     .string()
     .min(5, "Keterangan minimal berisi 5 karakter")
     .max(500, "Keterangan terlalu panjang"),
-  contact_person: z
-    .string()
-    .min(1, "Contact person wajib diisi")
-    .max(255, "Contact person maksimal 255 karakter"),
   tanggal_log: z
     .string()
     .min(1, "Tanggal log wajib diisi")
@@ -45,10 +41,6 @@ export const tambahLogSchema = z.object({
     .string()
     .min(5, "Keterangan minimal berisi 5 karakter")
     .max(500, "Keterangan terlalu panjang"),
-  contact_person: z
-    .string()
-    .min(1, "Contact person wajib diisi")
-    .max(255, "Contact person maksimal 255 karakter"),
   tanggal_log: z
     .string()
     .min(1, "Tanggal log wajib diisi")
@@ -71,6 +63,10 @@ export const tambahDokumenSchema = z.object({
     .string()
     .min(1, "Judul dokumen wajib diisi")
     .max(255, "Judul dokumen maksimal 255 karakter"),
+  contact_person: z
+    .string()
+    .max(255, "Contact person maksimal 255 karakter")
+    .optional(),
   status_id: z.number({ message: "Status dokumen wajib diisi" }),
   tanggal_masuk: z
     .string()

@@ -40,7 +40,6 @@ const TambahLog: React.FC<TambahLogProps> = ({
 }) => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [keterangan, setKeterangan] = useState("");
-  const [contactPerson, setContactPerson] = useState("");
 
   // Integrasi Hook useAddLog
   const { mutate: addLogMutation, isPending } = useAddLog();
@@ -48,12 +47,11 @@ const TambahLog: React.FC<TambahLogProps> = ({
   const handleClose = () => {
     setDate(new Date());
     setKeterangan("");
-    setContactPerson("");
     onClose();
   };
 
   const handleSubmit = () => {
-    if (!date || !keterangan || !contactPerson) {
+    if (!date || !keterangan) {
       toast.error("Mohon lengkapi semua field");
       return;
     }
@@ -70,14 +68,13 @@ const TambahLog: React.FC<TambahLogProps> = ({
         mitra_id: mitraId,
         dokumen_id: documentId,
         keterangan: keterangan,
-        contact_person: contactPerson,
         tanggal_log: format(date, "yyyy-MM-dd"),
       },
       {
         onSuccess: () => {
           handleClose();
         },
-      }
+      },
     );
   };
 
@@ -101,7 +98,7 @@ const TambahLog: React.FC<TambahLogProps> = ({
                   disabled={isPending}
                   className={cn(
                     "w-full pl-3 text-left font-normal border-2 border-black",
-                    !date && "text-muted-foreground"
+                    !date && "text-muted-foreground",
                   )}
                 >
                   {date ? (
@@ -136,17 +133,6 @@ const TambahLog: React.FC<TambahLogProps> = ({
               disabled={isPending}
               rows={3}
               className="border-2 border-black resize-none focus-visible:ring-0"
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label className="font-bold text-sm">Contact Person</Label>
-            <Input
-              placeholder="Contoh: Budi - Staff IT"
-              value={contactPerson}
-              onChange={(e) => setContactPerson(e.target.value)}
-              disabled={isPending}
-              className="border-2 border-black h-11 focus-visible:ring-0"
             />
           </div>
         </div>

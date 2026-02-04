@@ -141,15 +141,28 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
             Urutan kronologis pemrosesan dokumen
           </p>
         </div>
-        {isAdmin && (
-          <Button
-            onClick={() => onAddLog(documentId)}
-            className="bg-black text-white hover:bg-gray-800 shadow-lg"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Tambah Log
-          </Button>
-        )}
+        <div className="flex flex-col items-end gap-2">
+          {detailData?.data?.contact_person && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border-2 border-black">
+              <MessageSquare className="w-4 h-4 text-black" />
+              <span className="text-sm font-bold text-gray-900">
+                CP:{" "}
+                <span className="text-black">
+                  {detailData.data.contact_person}
+                </span>
+              </span>
+            </div>
+          )}
+          {isAdmin && (
+            <Button
+              onClick={() => onAddLog(documentId)}
+              className="bg-black text-white hover:bg-gray-800 shadow-lg"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Tambah Log
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="relative">
@@ -202,6 +215,11 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
 
                           <p className="text-sm font-semibold text-gray-900 leading-snug">
                             {logEntry.keterangan}
+                            {logEntry.unit_name && (
+                              <span className="text-gray-500 font-medium ml-1">
+                                — {logEntry.unit_name}
+                              </span>
+                            )}
                           </p>
                         </div>
 
@@ -226,18 +244,6 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
                               </Button>
                             </>
                           )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border border-gray-100">
-                          <MessageSquare className="w-3.5 h-3.5 text-gray-500" />
-                          <span className="text-xs font-medium text-gray-600">
-                            CP:{" "}
-                            <span className="text-black">
-                              {logEntry.contact_person}
-                            </span>
-                          </span>
                         </div>
                       </div>
                     </div>
@@ -281,25 +287,22 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
       </div>
 
       {/* Modal Update Log */}
-      <UpdateLog
-        isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setSelectedLog(null);
-        }}
-        logData={
-          selectedLog
-            ? {
-                id: selectedLog.id,
-                dokumen_id: documentId,
-                user_id: selectedLog.admin.id,
-                keterangan: selectedLog.keterangan,
-                contact_person: selectedLog.contact_person,
-                tanggal_log: selectedLog.tanggal_log,
-              }
-            : null
-        }
-      />
+      {selectedLog && (
+        <UpdateLog
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedLog(null);
+          }}
+          logData={{
+            id: selectedLog.id,
+            dokumen_id: documentId,
+            user_id: selectedLog.admin.id,
+            keterangan: selectedLog.keterangan,
+            tanggal_log: selectedLog.tanggal_log,
+          }}
+        />
+      )}
 
       <ConfirmDeleteModal
         label="log"

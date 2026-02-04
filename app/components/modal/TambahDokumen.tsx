@@ -32,7 +32,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { cn } from "~/lib/utils";
 import { tambahDokumenSchema, type TambahDokumenData } from "~/lib/schema";
 import MitraAutocomplete from "./MitraAutoComplete";
-import { useStatuses } from "~/hooks/use-helper";
 import { JENIS_DOKUMEN } from "~/lib/constanst";
 
 interface TambahDokumenProps {
@@ -52,8 +51,7 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
   const [isCalendarOpen, setIsCalendarOpen] = React.useState(false);
 
   //get status
-  const { data: statusResponse, isLoading: isLoadingStatus } = useStatuses();
-  const statuses = statusResponse?.data || [];
+  const statuses = [];
 
   const form = useForm<TambahDokumenData>({
     resolver: zodResolver(tambahDokumenSchema),
@@ -63,7 +61,8 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
       nomor_dokumen_mitra: "",
       nomor_dokumen_undip: "",
       judul_dokumen: "",
-      status_id: undefined,
+      contact_person: "",
+      status_id: 1,
       tanggal_masuk: new Date().toISOString().split("T")[0],
       tanggal_terbit: "",
     },
@@ -94,7 +93,6 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
             onSubmit={form.handleSubmit(onHandleSubmit)}
             className="space-y-4"
           >
-            {/* Judul Dokumen */}
             <FormField
               control={form.control}
               name="judul_dokumen"
@@ -106,6 +104,26 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                       placeholder="Masukkan judul dokumen"
                       className="border-2 border-black"
                       {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Contact Person */}
+            <FormField
+              control={form.control}
+              name="contact_person"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-bold">Contact Person</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Masukkan contact person (pilihan)"
+                      className="border-2 border-black"
+                      {...field}
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -170,47 +188,6 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                       {JENIS_DOKUMEN.map((jenis) => (
                         <SelectItem key={jenis.id} value={jenis.id.toString()}>
                           {jenis.nama}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Status */}
-            <FormField
-              control={form.control}
-              name="status_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="font-bold">Status</FormLabel>
-                  <Select
-                    onValueChange={(val) => field.onChange(Number(val))}
-                    value={
-                      field.value !== 0 ? field.value?.toString() : undefined
-                    }
-                    disabled={isLoadingStatus}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="min-w-full border-2 border-black">
-                        <SelectValue
-                          placeholder={
-                            isLoadingStatus
-                              ? "Memuat status..."
-                              : "Pilih status dokumen"
-                          }
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {statuses.map((status) => (
-                        <SelectItem
-                          key={status.id}
-                          value={status.id.toString()}
-                        >
-                          {status.nama}
                         </SelectItem>
                       ))}
                     </SelectContent>
