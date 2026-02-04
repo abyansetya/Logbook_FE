@@ -22,6 +22,7 @@ export const mitraSchema = z.object({
 
 export const updateLogSchema = z.object({
   user_id: z.number({ message: "User ID Wajib diisi" }),
+  unit_id: z.number().nullable().optional(),
   keterangan: z
     .string()
     .min(5, "Keterangan minimal berisi 5 karakter")
@@ -37,6 +38,7 @@ export const tambahLogSchema = z.object({
   user_id: z.number({ message: "User ID wajib diisi" }),
   mitra_id: z.number({ message: "Mitra ID wajib diisi" }),
   dokumen_id: z.number({ message: "Dokumen ID wajib diisi" }),
+  unit_id: z.number({ message: "Unit wajib diisi" }),
   keterangan: z
     .string()
     .min(5, "Keterangan minimal berisi 5 karakter")

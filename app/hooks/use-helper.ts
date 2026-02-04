@@ -4,6 +4,7 @@ import {
   getKlasifikasis,
   addActivity,
   getRecentActivities,
+  getUnits,
 } from "~/service/helper-service";
 import { useAuth } from "~/provider/auth-context";
 import type { addActivityPayload } from "types/activity";
@@ -13,6 +14,14 @@ export const useStatuses = () => {
     queryKey: ["statuses"],
     queryFn: getStatuses,
     staleTime: 24 * 60 * 60 * 1000, // 24 hours (statuses rarely change)
+  });
+};
+
+export const useUnits = () => {
+  return useQuery({
+    queryKey: ["units"],
+    queryFn: getUnits,
+    staleTime: 24 * 60 * 60 * 1000,
   });
 };
 

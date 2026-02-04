@@ -21,7 +21,15 @@ import {
 } from "../../components/ui/popover";
 import { cn } from "../../lib/utils";
 import { useAddLog } from "../../hooks/use-logbook"; // Sesuaikan path hook Anda
+import { useUnits } from "~/hooks/use-helper";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 interface TambahLogProps {
   isOpen: boolean;
@@ -40,6 +48,10 @@ const TambahLog: React.FC<TambahLogProps> = ({
 }) => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [keterangan, setKeterangan] = useState("");
+  const [unitId, setUnitId] = useState<string>("");
+
+  const { data: unitResponse } = useUnits();
+  const units = unitResponse?.data || [];
 
   // Integrasi Hook useAddLog
   const { mutate: addLogMutation, isPending } = useAddLog();
@@ -47,11 +59,12 @@ const TambahLog: React.FC<TambahLogProps> = ({
   const handleClose = () => {
     setDate(new Date());
     setKeterangan("");
+    setUnitId("");
     onClose();
   };
 
   const handleSubmit = () => {
-    if (!date || !keterangan) {
+    if (!date || !keterangan || !unitId) {
       toast.error("Mohon lengkapi semua field");
       return;
     }
@@ -67,6 +80,7 @@ const TambahLog: React.FC<TambahLogProps> = ({
         user_id: userId,
         mitra_id: mitraId,
         dokumen_id: documentId,
+        unit_id: Number(unitId),
         keterangan: keterangan,
         tanggal_log: format(date, "yyyy-MM-dd"),
       },
@@ -122,6 +136,22 @@ const TambahLog: React.FC<TambahLogProps> = ({
                 />
               </PopoverContent>
             </Popover>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label className="font-bold text-sm">Unit Penginput</Label>
+            <Select onValueChange={setUnitId} value={unitId}>
+              <SelectTrigger className="border-2 border-black focus-visible:ring-0">
+                <SelectValue placeholder="Pilih Unit" />
+              </SelectTrigger>
+              <SelectContent>
+                {units.map((unit) => (
+                  <SelectItem key={unit.id} value={unit.id.toString()}>
+                    {unit.nama}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex flex-col gap-2">

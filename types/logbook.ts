@@ -9,6 +9,7 @@ export interface LogEntry {
   id: number;
   tanggal_log: string;
   keterangan: string;
+  unit_id: number | null;
   unit_name: string | null;
   updated_at: string;
   admin: Admin;
@@ -119,6 +120,7 @@ export interface LogData {
 
 export interface updateLogData {
   user_id: number;
+  unit_id: number | null;
   keterangan: string;
   tanggal_log: string;
 }

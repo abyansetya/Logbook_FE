@@ -294,13 +294,8 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
             setIsEditModalOpen(false);
             setSelectedLog(null);
           }}
-          logData={{
-            id: selectedLog.id,
-            dokumen_id: documentId,
-            user_id: selectedLog.admin.id,
-            keterangan: selectedLog.keterangan,
-            tanggal_log: selectedLog.tanggal_log,
-          }}
+          logData={selectedLog}
+          documentId={documentId}
         />
       )}
 

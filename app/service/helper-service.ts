@@ -47,3 +47,18 @@ export const addActivity = async (
 export const getRecentActivities = async (): Promise<ActivityResponse> => {
   return await fetchData<ActivityResponse>("/helper/activities");
 };
+
+export interface Unit {
+  id: number;
+  nama: string;
+}
+
+export interface UnitsResponse {
+  success: boolean;
+  message: string;
+  data: Unit[];
+}
+
+export const getUnits = async (): Promise<UnitsResponse> => {
+  return await fetchData<UnitsResponse>("/helper/getUnit");
+};

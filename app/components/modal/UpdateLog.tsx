@@ -23,26 +23,39 @@ import {
 } from "../../components/ui/popover";
 import { cn } from "../../lib/utils";
 import { useEditLog } from "../../hooks/use-logbook";
+import { useUnits } from "~/hooks/use-helper";
 import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
+import type { LogEntry } from "types/logbook";
 
 interface UpdateLogProps {
   isOpen: boolean;
   onClose: () => void;
   // Data log lama yang akan diedit
-  logData: {
-    id: number;
-    dokumen_id: number;
-    user_id: number;
-    keterangan: string;
-    tanggal_log: string;
-  } | null;
+  logData: LogEntry | null;
+  documentId: number;
 }
 
-const UpdateLog: React.FC<UpdateLogProps> = ({ isOpen, onClose, logData }) => {
+const UpdateLog: React.FC<UpdateLogProps> = ({
+  isOpen,
+  onClose,
+  logData,
+  documentId,
+}) => {
   // State untuk form
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [keterangan, setKeterangan] = useState("");
   const [userId, setUserId] = useState<number>(0);
+  const [unitId, setUnitId] = useState<string>("");
+
+  const { data: unitResponse } = useUnits();
+  const units = unitResponse?.data || [];
 
   // Integrasi Hook useEditLog
   const { mutate: updateLogMutation, isPending } = useEditLog();
@@ -51,7 +64,8 @@ const UpdateLog: React.FC<UpdateLogProps> = ({ isOpen, onClose, logData }) => {
   useEffect(() => {
     if (isOpen && logData) {
       setKeterangan(logData.keterangan);
-      setUserId(logData.user_id);
+      setUserId(logData.admin.id);
+      setUnitId(logData.unit_id ? logData.unit_id.toString() : "");
 
       const parsedDate = new Date(logData.tanggal_log);
       setDate(isNaN(parsedDate.getTime()) ? new Date() : parsedDate);
@@ -77,9 +91,10 @@ const UpdateLog: React.FC<UpdateLogProps> = ({ isOpen, onClose, logData }) => {
     updateLogMutation(
       {
         id: logData.id,
-        dokumen_id: logData.dokumen_id,
+        dokumen_id: documentId,
         data: {
           user_id: userId,
+          unit_id: unitId ? Number(unitId) : null,
           keterangan: keterangan,
           tanggal_log: format(date, "yyyy-MM-dd"),
         },
@@ -136,6 +151,22 @@ const UpdateLog: React.FC<UpdateLogProps> = ({ isOpen, onClose, logData }) => {
                 />
               </PopoverContent>
             </Popover>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label className="font-bold text-sm">Unit Penginput</Label>
+            <Select onValueChange={setUnitId} value={unitId}>
+              <SelectTrigger className="border-2 border-black focus-visible:ring-0">
+                <SelectValue placeholder="Pilih Unit" />
+              </SelectTrigger>
+              <SelectContent>
+                {units.map((unit) => (
+                  <SelectItem key={unit.id} value={unit.id.toString()}>
+                    {unit.nama}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex flex-col gap-2">
