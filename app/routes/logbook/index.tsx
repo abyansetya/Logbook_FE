@@ -128,6 +128,7 @@ const Logbook = () => {
       search: searchTerm,
       status: currentStatus,
       jenisDokumen: currentJenis,
+      order: currentOrder,
     });
   };
 

@@ -259,11 +259,13 @@ export const useExportLogbook = () => {
       search,
       status,
       jenisDokumen,
+      order,
     }: {
       search: string;
       status: string;
       jenisDokumen: string;
-    }) => exportLogbook(search, status, jenisDokumen),
+      order: "asc" | "desc";
+    }) => exportLogbook(search, status, jenisDokumen, order),
     onSuccess: (blob) => {
       // Buat link download virtual
       const url = window.URL.createObjectURL(blob);

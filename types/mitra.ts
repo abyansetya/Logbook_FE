@@ -9,7 +9,6 @@ export interface MitraFull {
   klasifikasi_mitra_id: number;
   alamat?: string;
   contact_person?: string;
-  logo_mitra?: string;
   klasifikasi_mitra?: KlasifikasiMitra;
   created_at: string;
   updated_at: string;

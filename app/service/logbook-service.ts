@@ -40,12 +40,14 @@ export const exportLogbook = async (
   search: string = "",
   status: string = "all",
   jenisDokumen: string = "all",
+  order: "asc" | "desc" = "desc",
 ): Promise<Blob> => {
   const query = new URLSearchParams();
   if (search) query.append("q", search);
   if (status && status !== "all") query.append("status", status);
   if (jenisDokumen && jenisDokumen !== "all")
     query.append("jenis_dokumen", jenisDokumen);
+  query.append("order", order);
 
   const response = await fetch(
     `${import.meta.env.VITE_API_BASE_URL}/logbook/export?${query.toString()}`,

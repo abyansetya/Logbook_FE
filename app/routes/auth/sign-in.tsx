@@ -122,17 +122,6 @@ export default function SignIn() {
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <div className="flex justify-between items-center">
-                        <FormLabel className="text-sm font-semibold text-slate-700">
-                          Password
-                        </FormLabel>
-                        <button
-                          type="button"
-                          className="text-xs font-semibold text-primary hover:underline"
-                        >
-                          Forgot password?
-                        </button>
-                      </div>
                       <FormControl>
                         <div className="relative">
                           <Input
