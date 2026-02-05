@@ -41,12 +41,21 @@ import { useRecentActivities } from "~/hooks/use-helper";
 import { Button } from "~/components/ui/button";
 import DashboardSkeleton from "~/components/skeleton/dashboard-skeleton";
 import { useEffect, useState } from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
 import type { Activity as ActivityType } from "types/activity";
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { data: apiResponse, isLoading: statsLoading } = useDashboardStats();
+  const [selectedYear, setSelectedYear] = useState<string>("all");
+  const { data: apiResponse, isLoading: statsLoading } =
+    useDashboardStats(selectedYear);
   const { data: activitiesResponse, isLoading: activitiesLoading } =
     useRecentActivities();
   // State untuk menyimpan status yang aktif di chart
@@ -55,6 +64,7 @@ export default function Dashboard() {
   const stats = apiResponse?.data;
   const statusNames = stats?.all_status_names || [];
   const docDistribution = stats?.document_status || [];
+  const availableYears = stats?.available_years || [];
 
   // Sinkronisasi status aktif saat data pertama kali dimuat
   useEffect(() => {
@@ -342,15 +352,35 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          {/* Document Status */}
           <Card className="lg:col-span-2 bg-white border-0 shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold text-slate-800">
-                Status Dokumen
-              </CardTitle>
-              <CardDescription className="text-slate-400">
-                Distribusi status saat ini
-              </CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+              <div className="space-y-1">
+                <CardTitle className="text-lg font-semibold text-slate-800">
+                  Status Dokumen
+                </CardTitle>
+                <CardDescription className="text-slate-400">
+                  Distribusi status saat ini
+                </CardDescription>
+              </div>
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="w-[110px] h-8 text-xs border-slate-100 rounded-xl font-bold bg-slate-50/50">
+                  <SelectValue placeholder="Tahun" />
+                </SelectTrigger>
+                <SelectContent className="rounded-xl">
+                  <SelectItem value="all" className="text-xs font-semibold">
+                    Tahun
+                  </SelectItem>
+                  {availableYears.map((year) => (
+                    <SelectItem
+                      key={year}
+                      value={year.toString()}
+                      className="text-xs font-semibold"
+                    >
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </CardHeader>
             <CardContent className="space-y-6">
               {docDistribution.map((doc, index) => (

@@ -12,6 +12,7 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
+  Building2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -37,7 +38,10 @@ const navGroups = {
     { name: "Logbook", href: "/logbook", icon: BookOpen },
     { name: "Mitra", href: "/mitra", icon: Users },
   ],
-  ADMIN: [{ name: "Users", href: "/users", icon: User }],
+  ADMIN: [
+    { name: "Users", href: "/users", icon: User },
+    { name: "Unit", href: "/unit", icon: Building2 },
+  ],
 };
 
 export default function DashboardLayout() {

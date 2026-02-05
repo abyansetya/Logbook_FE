@@ -22,6 +22,7 @@ export const getLogbooks = async (
   status: string = "all",
   jenisDokumen: string = "all",
   order: "asc" | "desc" = "desc",
+  tahun: string = "all",
 ): Promise<LogbooksResponse> => {
   const query = new URLSearchParams({
     page: page.toString(),
@@ -32,6 +33,7 @@ export const getLogbooks = async (
   if (status && status !== "all") query.append("status", status);
   if (jenisDokumen && jenisDokumen !== "all")
     query.append("jenis_dokumen", jenisDokumen);
+  if (tahun && tahun !== "all") query.append("tahun", tahun);
 
   return await fetchData<LogbooksResponse>(`/logbook?${query.toString()}`);
 };
@@ -41,12 +43,14 @@ export const exportLogbook = async (
   status: string = "all",
   jenisDokumen: string = "all",
   order: "asc" | "desc" = "desc",
+  tahun: string = "all",
 ): Promise<Blob> => {
   const query = new URLSearchParams();
   if (search) query.append("q", search);
   if (status && status !== "all") query.append("status", status);
   if (jenisDokumen && jenisDokumen !== "all")
     query.append("jenis_dokumen", jenisDokumen);
+  if (tahun && tahun !== "all") query.append("tahun", tahun);
   query.append("order", order);
 
   const response = await fetch(

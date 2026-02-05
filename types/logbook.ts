@@ -120,7 +120,7 @@ export interface LogData {
 
 export interface updateLogData {
   user_id: number;
-  unit_id: number | null;
+  unit_id?: number | null;
   keterangan: string;
   tanggal_log: string;
 }

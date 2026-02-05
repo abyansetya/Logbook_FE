@@ -30,6 +30,7 @@ export interface DashboardData {
   document_status: DocumentStatus[];
   chart_data: LogbookChart[];
   all_status_names: string[]; // Tambahkan ini sesuai response backend terbaru
+  available_years: number[];
 }
 
 export interface DashboardResponse {

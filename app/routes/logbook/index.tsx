@@ -62,6 +62,7 @@ const Logbook = () => {
   const currentStatus = searchParams.get("status") || "all";
   const currentJenis = searchParams.get("jenis_dokumen") || "all";
   const currentOrder = (searchParams.get("order") as "asc" | "desc") || "desc";
+  const currentTahun = searchParams.get("tahun") || "all";
 
   const { user, isAuthenticated } = useAuth();
 
@@ -115,6 +116,7 @@ const Logbook = () => {
     currentStatus,
     currentJenis,
     currentOrder,
+    currentTahun,
   );
 
   // --- 3. MUTATIONS (CUD Operations) ---
@@ -129,6 +131,7 @@ const Logbook = () => {
       status: currentStatus,
       jenisDokumen: currentJenis,
       order: currentOrder,
+      tahun: currentTahun,
     });
   };
 
@@ -198,6 +201,7 @@ const Logbook = () => {
     setSearchParams((prev) => {
       prev.delete("status");
       prev.delete("jenis_dokumen");
+      prev.delete("tahun");
       prev.delete("q");
       prev.set("page", "1");
       return prev;
@@ -223,7 +227,10 @@ const Logbook = () => {
   // --- 6. UI HELPERS & DERIVED STATE ---
   const isLoading = isMainLoading || isFetching;
   const hasActiveFilters =
-    currentStatus !== "all" || currentJenis !== "all" || searchTerm !== "";
+    currentStatus !== "all" ||
+    currentJenis !== "all" ||
+    currentTahun !== "all" ||
+    searchTerm !== "";
   const meta = response?.data?.meta;
   const links = response?.data?.links;
   const isAdmin = user?.roles?.includes("Admin");
@@ -427,6 +434,38 @@ const Logbook = () => {
                     </Select>
                   </div>
 
+                  <div className="flex-1 min-w-[200px] space-y-2">
+                    <Label className="text-gray-500 font-semibold text-xs uppercase tracking-wider">
+                      Tahun Dokumen
+                    </Label>
+                    <Select
+                      value={currentTahun}
+                      onValueChange={(val) => {
+                        setSearchParams((prev) => {
+                          if (val === "all") prev.delete("tahun");
+                          else prev.set("tahun", val);
+                          prev.set("page", "1");
+                          return prev;
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="rounded-xl border-gray-100 bg-gray-50 py-6">
+                        <SelectValue placeholder="Pilih Tahun" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-gray-100 shadow-xl">
+                        <SelectItem value="all">Semua Tahun</SelectItem>
+                        {Array.from(
+                          { length: 8 },
+                          (_, i) => new Date().getFullYear() - i,
+                        ).map((year) => (
+                          <SelectItem key={year} value={year.toString()}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   <Button
                     onClick={clearFilters}
                     variant="ghost"
@@ -451,6 +490,9 @@ const Logbook = () => {
                   <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[150px]">
                     Nomor Dokumen
                   </th>
+                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[150px]">
+                    Tanggal Dokumen
+                  </th>
                   <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[200px]">
                     Judul Dokumen
                   </th>
@@ -465,7 +507,7 @@ const Logbook = () => {
                     onClick={toggleSortOrder}
                   >
                     <div className="flex items-center gap-1">
-                      Tanggal
+                      Tanggal Masuk
                       <div className="flex flex-col">
                         <ArrowUp
                           className={`w-3 h-3 -mb-1 ${currentOrder === "asc" ? "text-black" : "text-gray-200"}`}
@@ -487,7 +529,7 @@ const Logbook = () => {
                 {isLoading ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="px-6 py-20 text-center text-gray-400 font-medium"
                     >
                       <div className="flex flex-col items-center gap-2">
@@ -499,7 +541,7 @@ const Logbook = () => {
                 ) : filteredData.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="px-6 py-20 text-center text-gray-400 font-medium"
                     >
                       Data tidak ditemukan
@@ -525,6 +567,11 @@ const Logbook = () => {
                           </div>
                           <div className="text-xs text-gray-400">
                             {doc.nomor_dokumen_mitra}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm">
+                          <div className="text-gray-700 font-medium">
+                            {formatDate(doc.tanggal_dokumen)}
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -592,7 +639,7 @@ const Logbook = () => {
                       {expandedRows.has(doc.id) && (
                         <tr className="bg-gray-50/50">
                           <td
-                            colSpan={7}
+                            colSpan={8}
                             className="px-8 py-8 border-l-2 border-black ml-4"
                           >
                             <DocumentLogDetails

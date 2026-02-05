@@ -33,11 +33,21 @@ export const useLogbooks = (
   status: string = "all",
   jenisDokumen: string = "all",
   order: "asc" | "desc" = "desc",
+  tahun: string = "all",
 ) => {
   return useQuery<LogbooksResponse>({
-    queryKey: ["logbooks", page, search, perPage, status, jenisDokumen, order],
+    queryKey: [
+      "logbooks",
+      page,
+      search,
+      perPage,
+      status,
+      jenisDokumen,
+      order,
+      tahun,
+    ],
     queryFn: () =>
-      getLogbooks(page, search, perPage, status, jenisDokumen, order),
+      getLogbooks(page, search, perPage, status, jenisDokumen, order, tahun),
     // Di TanStack Query v5, gunakan placeholderData: keepPreviousData
     placeholderData: keepPreviousData,
     staleTime: 30000, // Data dianggap segar selama 30 detik
@@ -260,12 +270,14 @@ export const useExportLogbook = () => {
       status,
       jenisDokumen,
       order,
+      tahun,
     }: {
       search: string;
       status: string;
       jenisDokumen: string;
       order: "asc" | "desc";
-    }) => exportLogbook(search, status, jenisDokumen, order),
+      tahun: string;
+    }) => exportLogbook(search, status, jenisDokumen, order, tahun),
     onSuccess: (blob) => {
       // Buat link download virtual
       const url = window.URL.createObjectURL(blob);

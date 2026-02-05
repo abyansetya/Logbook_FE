@@ -128,11 +128,12 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
   }
 
   const logs = detailData?.data?.logs || [];
+  const isTerbit = detailData?.data?.status === "Terbit";
 
   return (
     <div className="mx-auto py-4">
       <div className="flex items-center justify-between mb-6 border-b-2 border-black pb-4">
-        <div>
+        <div className="flex flex-col">
           <h3 className="text-xl font-bold flex items-center gap-2">
             <FileText className="w-6 h-6" />
             Riwayat Aktivitas
@@ -140,10 +141,8 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
           <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-semibold">
             Urutan kronologis pemrosesan dokumen
           </p>
-        </div>
-        <div className="flex flex-col items-end gap-2">
           {detailData?.data?.contact_person && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border-2 border-black">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border-2 border-black w-fit mt-3">
               <MessageSquare className="w-4 h-4 text-black" />
               <span className="text-sm font-bold text-gray-900">
                 CP:{" "}
@@ -153,14 +152,27 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
               </span>
             </div>
           )}
+        </div>
+        <div className="flex flex-col items-end gap-2">
           {isAdmin && (
             <Button
               onClick={() => onAddLog(documentId)}
-              className="bg-black text-white hover:bg-gray-800 shadow-lg"
+              disabled={isTerbit}
+              className={`bg-black text-white hover:bg-gray-800 shadow-lg ${
+                isTerbit ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              title={
+                isTerbit ? "Dokumen sudah terbit, tidak dapat menambah log" : ""
+              }
             >
               <Plus className="w-4 h-4 mr-2" />
               Tambah Log
             </Button>
+          )}
+          {isTerbit && (
+            <span className="text-[10px] font-bold text-red-500 uppercase tracking-tighter">
+              Dokumen Terbit (Log Terkunci)
+            </span>
           )}
         </div>
       </div>
@@ -276,7 +288,12 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
               <Button
                 variant="outline"
                 onClick={() => onAddLog(documentId)}
-                className="mt-6 border-black hover:bg-black hover:text-white transition-all font-bold"
+                disabled={isTerbit}
+                className={`mt-6 border-black transition-all font-bold ${
+                  isTerbit
+                    ? "opacity-50 cursor-not-allowed bg-gray-100"
+                    : "hover:bg-black hover:text-white"
+                }`}
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Buat Log Pertama

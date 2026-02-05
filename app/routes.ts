@@ -18,5 +18,6 @@ export default [
     route("logbook", "routes/logbook/index.tsx"),
     route("mitra", "routes/mitra/index.tsx"),
     route("users", "routes/users/index.tsx"),
+    route("unit", "routes/unit/index.tsx"),
   ]),
 ] satisfies RouteConfig;

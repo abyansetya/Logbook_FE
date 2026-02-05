@@ -139,9 +139,9 @@ const TambahLog: React.FC<TambahLogProps> = ({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label className="font-bold text-sm">Unit Penginput</Label>
+            <Label className="font-bold text-sm">Unit/Fakultas</Label>
             <Select onValueChange={setUnitId} value={unitId}>
-              <SelectTrigger className="border-2 border-black focus-visible:ring-0">
+              <SelectTrigger className="border-2 border-black focus-visible:ring-0 w-full">
                 <SelectValue placeholder="Pilih Unit" />
               </SelectTrigger>
               <SelectContent>
