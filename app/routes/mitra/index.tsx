@@ -200,7 +200,7 @@ export default function MitraPage() {
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
-              {(isLoading || isFetching) && (
+              {isFetching && (
                 <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
               )}
             </div>
@@ -300,7 +300,7 @@ export default function MitraPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {isLoading || isFetching ? (
+                {isLoading ? (
                   <tr>
                     <td colSpan={5} className="py-8 text-center">
                       <Loader2 className="h-6 w-6 animate-spin mx-auto text-slate-400" />

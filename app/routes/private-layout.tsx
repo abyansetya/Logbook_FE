@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Building2,
+  ListChecks,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -41,6 +42,7 @@ const navGroups = {
   ADMIN: [
     { name: "Users", href: "/users", icon: User },
     { name: "Unit", href: "/unit", icon: Building2 },
+    { name: "Status", href: "/status", icon: ListChecks },
   ],
 };
 

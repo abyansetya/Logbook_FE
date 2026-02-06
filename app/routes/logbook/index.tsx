@@ -225,7 +225,7 @@ const Logbook = () => {
   };
 
   // --- 6. UI HELPERS & DERIVED STATE ---
-  const isLoading = isMainLoading || isFetching;
+  const isLoading = isMainLoading;
   const hasActiveFilters =
     currentStatus !== "all" ||
     currentJenis !== "all" ||

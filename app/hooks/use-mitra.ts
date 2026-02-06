@@ -56,9 +56,26 @@ export const useUpdateMitra = () => {
       id: number;
       payload: Partial<MitraPayload>;
     }) => updateMitra(id, payload),
+    onMutate: async (newMitra) => {
+      await queryClient.cancelQueries({ queryKey: ["mitra"] });
+      const previousMitra = queryClient.getQueriesData({ queryKey: ["mitra"] });
+
+      queryClient.setQueriesData({ queryKey: ["mitra"] }, (old: any) => {
+        if (!old?.data?.data) return old;
+        return {
+          ...old,
+          data: {
+            ...old.data,
+            data: old.data.data.map((item: any) =>
+              item.id === newMitra.id ? { ...item, ...newMitra.payload } : item,
+            ),
+          },
+        };
+      });
+
+      return { previousMitra };
+    },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["mitra"] });
-      queryClient.invalidateQueries({ queryKey: ["activities"] });
       toast.success("Mitra berhasil diperbarui");
       logActivity({
         action: "Edit Mitra",
@@ -66,8 +83,17 @@ export const useUpdateMitra = () => {
         type: "Mitra",
       });
     },
-    onError: (error: any) => {
+    onError: (error: any, _, context) => {
+      if (context?.previousMitra) {
+        context.previousMitra.forEach(([queryKey, oldData]) => {
+          queryClient.setQueryData(queryKey, oldData);
+        });
+      }
       toast.error(error.response?.data?.message || "Gagal memperbarui mitra");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["mitra"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
     },
   });
 };
@@ -77,10 +103,25 @@ export const useDeleteMitra = () => {
   const { logActivity } = useAddActivity();
   return useMutation({
     mutationFn: ({ id, nama }: { id: number; nama: string }) => deleteMitra(id),
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: ["mitra"] });
+      const previousMitra = queryClient.getQueriesData({ queryKey: ["mitra"] });
+
+      queryClient.setQueriesData({ queryKey: ["mitra"] }, (old: any) => {
+        if (!old?.data?.data) return old;
+        return {
+          ...old,
+          data: {
+            ...old.data,
+            data: old.data.data.filter((item: any) => item.id !== variables.id),
+            total: old.data.total - 1,
+          },
+        };
+      });
+
+      return { previousMitra };
+    },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["mitra"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["activities"] });
       toast.success("Mitra berhasil dihapus");
       logActivity({
         action: "Hapus Mitra",
@@ -88,8 +129,18 @@ export const useDeleteMitra = () => {
         type: "Mitra",
       });
     },
-    onError: (error: any) => {
+    onError: (error: any, _, context) => {
+      if (context?.previousMitra) {
+        context.previousMitra.forEach(([queryKey, oldData]) => {
+          queryClient.setQueryData(queryKey, oldData);
+        });
+      }
       toast.error(error.response?.data?.message || "Gagal menghapus mitra");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["mitra"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
     },
   });
 };

@@ -136,18 +136,54 @@ export const useEditDokumen = () => {
   const { logActivity } = useAddActivity();
 
   return useMutation({
-    // Sekarang mutationFn menerima objek yang berisi id dan data
     mutationFn: editDokumen,
-    onSuccess: (response, variables) => {
-      // Invalidate list utama
-      queryClient.invalidateQueries({ queryKey: ["logbooks"] });
-      queryClient.invalidateQueries({ queryKey: ["activities"] });
-
-      // Invalidate detail spesifik dokumen yang baru diedit
-      queryClient.invalidateQueries({
-        queryKey: ["logbook-detail", variables.id],
+    onMutate: async (newDoc) => {
+      // Menghindari refetch yang sedang berjalan agar tidak menimpa pembaruan optimistik kita
+      await queryClient.cancelQueries({ queryKey: ["logbooks"] });
+      await queryClient.cancelQueries({
+        queryKey: ["logbook-detail", newDoc.id],
       });
 
+      // Ambil snapshot data sebelumnya
+      const previousLogbooks = queryClient.getQueriesData({
+        queryKey: ["logbooks"],
+      });
+      const previousDetail = queryClient.getQueryData([
+        "logbook-detail",
+        newDoc.id,
+      ]);
+
+      // Perbarui cache list logbook secara optimistik
+      queryClient.setQueriesData({ queryKey: ["logbooks"] }, (old: any) => {
+        if (!old?.data?.data) return old;
+        return {
+          ...old,
+          data: {
+            ...old.data,
+            data: old.data.data.map((item: any) =>
+              item.id === newDoc.id ? { ...item, ...newDoc.data } : item,
+            ),
+          },
+        };
+      });
+
+      // Perbarui cache detail dokumen secara optimistik
+      if (previousDetail) {
+        queryClient.setQueryData(["logbook-detail", newDoc.id], (old: any) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: {
+              ...old.data,
+              ...newDoc.data,
+            },
+          };
+        });
+      }
+
+      return { previousLogbooks, previousDetail };
+    },
+    onSuccess: (response) => {
       toast.success("Dokumen berhasil diperbarui!");
       logActivity({
         action: "Edit Dokumen",
@@ -155,11 +191,31 @@ export const useEditDokumen = () => {
         type: "Dokumen",
       });
     },
-    onError: (error: any) => {
+    onError: (error: any, variables, context) => {
+      // Rollback data jika terjadi kesalahan
+      if (context?.previousLogbooks) {
+        context.previousLogbooks.forEach(([queryKey, oldData]) => {
+          queryClient.setQueryData(queryKey, oldData);
+        });
+      }
+      if (context?.previousDetail) {
+        queryClient.setQueryData(
+          ["logbook-detail", variables.id],
+          context.previousDetail,
+        );
+      }
       toast.error(
         "Gagal memperbarui dokumen: " +
           (error.response?.data?.message || "Terjadi kesalahan"),
       );
+    },
+    onSettled: (response, error, variables) => {
+      // Refresh setelah selesai untuk memastikan data sinkron
+      queryClient.invalidateQueries({ queryKey: ["logbooks"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+      queryClient.invalidateQueries({
+        queryKey: ["logbook-detail", variables.id],
+      });
     },
   });
 };
@@ -213,7 +269,6 @@ export const useDeleteDokumen = () => {
   const { logActivity } = useAddActivity();
 
   return useMutation({
-    // Kita menerima parameter id di sini
     mutationFn: ({
       id,
       judul_dokumen,
@@ -221,11 +276,30 @@ export const useDeleteDokumen = () => {
       id: number;
       judul_dokumen: string;
     }) => deleteDokumen({ id }),
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: ["logbooks"] });
+      const previousLogbooks = queryClient.getQueriesData({
+        queryKey: ["logbooks"],
+      });
+
+      queryClient.setQueriesData({ queryKey: ["logbooks"] }, (old: any) => {
+        if (!old?.data?.data) return old;
+        return {
+          ...old,
+          data: {
+            ...old.data,
+            data: old.data.data.filter((item: any) => item.id !== variables.id),
+            meta: {
+              ...old.data.meta,
+              total: old.data.meta ? old.data.meta.total - 1 : 0,
+            },
+          },
+        };
+      });
+
+      return { previousLogbooks };
+    },
     onSuccess: (_, variables) => {
-      // Refresh list agar baris yang dihapus hilang dari tabel
-      queryClient.invalidateQueries({ queryKey: ["logbooks"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["activities"] });
       toast.success("Dokumen berhasil dihapus!");
       logActivity({
         action: "Hapus Dokumen",
@@ -233,10 +307,20 @@ export const useDeleteDokumen = () => {
         type: "Dokumen",
       });
     },
-    onError: (error: any) => {
+    onError: (error: any, _, context) => {
+      if (context?.previousLogbooks) {
+        context.previousLogbooks.forEach(([queryKey, oldData]) => {
+          queryClient.setQueryData(queryKey, oldData);
+        });
+      }
       toast.error(
         "Gagal menghapus dokumen: " + (error.message || "Terjadi kesalahan"),
       );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["logbooks"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
     },
   });
 };
@@ -246,19 +330,53 @@ export const useDeleteLog = (documentId: number) => {
   const { logActivity } = useAddActivity();
   return useMutation({
     mutationFn: (id: number) => deleteLog({ id }),
-    onSuccess: (_, variables) => {
-      // Sekarang documentId sudah tersedia karena dikirim saat inisialisasi hook
-      queryClient.invalidateQueries({
+    onMutate: async (logId) => {
+      await queryClient.cancelQueries({
         queryKey: ["logbook-detail", documentId],
       });
-      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["activities"] });
+      const previousDetail = queryClient.getQueryData([
+        "logbook-detail",
+        documentId,
+      ]);
+
+      queryClient.setQueryData(["logbook-detail", documentId], (old: any) => {
+        if (!old?.data?.logs) return old;
+        return {
+          ...old,
+          data: {
+            ...old.data,
+            logs: old.data.logs.filter((log: any) => log.id !== logId),
+          },
+        };
+      });
+
+      return { previousDetail };
+    },
+    onSuccess: (_, variables) => {
       toast.success("Log berhasil dihapus!");
       logActivity({
         action: "Hapus Log",
         description: `Menghapus log ID ${variables} pada dokumen ID ${documentId}`,
         type: "Logbook",
       });
+    },
+    onError: (error: any, _, context) => {
+      if (context?.previousDetail) {
+        queryClient.setQueryData(
+          ["logbook-detail", documentId],
+          context.previousDetail,
+        );
+      }
+      toast.error(
+        "Gagal menghapus log: " + (error.message || "Terjadi kesalahan"),
+      );
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["logbook-detail", documentId],
+      });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
     },
   });
 };

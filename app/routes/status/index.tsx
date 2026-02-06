@@ -13,17 +13,17 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { useDebounce } from "~/hooks/use-debounce";
 import {
-  useUnits,
-  useAddUnit,
-  useUpdateUnit,
-  useDeleteUnit,
-} from "~/hooks/use-unit";
-import type { Unit } from "~/service/unit-service";
-import UnitModal from "~/components/modal/UnitModal";
+  useStatuses,
+  useAddStatus,
+  useUpdateStatus,
+  useDeleteStatus,
+} from "~/hooks/use-status";
+import type { Status } from "~/service/status-service";
+import StatusModal from "~/components/modal/StatusModal";
 import ConfirmDeleteModal from "~/components/modal/KonfirmasiDelete";
 import { useAuth } from "~/provider/auth-context";
 
-const UnitPage = () => {
+const StatusPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentPage = Number(searchParams.get("page")) || 1;
   const searchTerm = searchParams.get("q") || "";
@@ -35,7 +35,7 @@ const UnitPage = () => {
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
+  const [editingStatus, setEditingStatus] = useState<Status | null>(null);
   const [deleteConfirmData, setDeleteConfirmData] = useState<{
     id: number;
     nama: string;
@@ -60,13 +60,13 @@ const UnitPage = () => {
     isFetching,
     isError,
     error,
-  } = useUnits(currentPage, searchTerm, perPage);
+  } = useStatuses(currentPage, searchTerm, perPage);
 
-  const addMutation = useAddUnit();
-  const updateMutation = useUpdateUnit();
-  const deleteMutation = useDeleteUnit();
+  const addMutation = useAddStatus();
+  const updateMutation = useUpdateStatus();
+  const deleteMutation = useDeleteStatus();
 
-  const units = response?.data?.data || [];
+  const statuses = response?.data?.data || [];
   const meta: any = response?.data?.meta || response?.data;
 
   const isAdmin = user?.roles?.includes("Admin");
@@ -77,19 +77,19 @@ const UnitPage = () => {
     });
   };
 
-  const handleEditClick = (unit: Unit) => {
-    setEditingUnit(unit);
+  const handleEditClick = (status: Status) => {
+    setEditingStatus(status);
     setShowEditModal(true);
   };
 
   const handleEditSubmit = (data: { nama: string }) => {
-    if (!editingUnit?.id) return;
+    if (!editingStatus?.id) return;
     updateMutation.mutate(
-      { id: editingUnit.id, data },
+      { id: editingStatus.id, data },
       {
         onSuccess: () => {
           setShowEditModal(false);
-          setEditingUnit(null);
+          setEditingStatus(null);
         },
       },
     );
@@ -141,7 +141,7 @@ const UnitPage = () => {
               Manajemen
             </p>
             <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-              Unit
+              Status
             </h1>
           </header>
           <Button
@@ -149,7 +149,7 @@ const UnitPage = () => {
             className="bg-black hover:bg-gray-800 text-white rounded-xl px-6 py-6 transition-all shadow-sm cursor-pointer"
           >
             <Plus className="w-5 h-5 mr-2" />
-            Tambah Unit
+            Tambah Status
           </Button>
         </div>
 
@@ -158,7 +158,7 @@ const UnitPage = () => {
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
-              placeholder="Cari unit..."
+              placeholder="Cari status..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               className="pl-12 py-6 bg-gray-50 border-gray-100 rounded-xl focus-visible:ring-1 focus-visible:ring-gray-300"
@@ -179,7 +179,7 @@ const UnitPage = () => {
                     No
                   </th>
                   <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-                    Nama Unit
+                    Nama Status
                   </th>
                   <th className="px-6 py-5 text-right text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                     Aksi
@@ -199,7 +199,7 @@ const UnitPage = () => {
                       </div>
                     </td>
                   </tr>
-                ) : units.length === 0 ? (
+                ) : statuses.length === 0 ? (
                   <tr>
                     <td
                       colSpan={3}
@@ -209,16 +209,16 @@ const UnitPage = () => {
                     </td>
                   </tr>
                 ) : (
-                  units.map((unit, index) => (
+                  statuses.map((status, index) => (
                     <tr
-                      key={unit.id}
+                      key={status.id}
                       className="hover:bg-gray-50/80 transition-colors"
                     >
                       <td className="px-6 py-4 text-sm text-gray-700">
                         {meta ? (meta.from || 0) + index : index + 1}
                       </td>
                       <td className="px-6 py-4 text-sm font-semibold text-gray-700">
-                        {unit.nama}
+                        {status.nama}
                       </td>
                       <td className="px-6 py-4 text-right">
                         <div className="flex justify-end gap-1">
@@ -226,7 +226,7 @@ const UnitPage = () => {
                             variant="abu"
                             size="icon"
                             className="w-8 h-8 text-gray-400 hover:text-gray-900 cursor-pointer"
-                            onClick={() => handleEditClick(unit)}
+                            onClick={() => handleEditClick(status)}
                           >
                             <Edit className="w-4 h-4 text-yellow-500" />
                           </Button>
@@ -236,8 +236,8 @@ const UnitPage = () => {
                             className="w-8 h-8 text-gray-400 hover:text-red-500 cursor-pointer"
                             onClick={() =>
                               setDeleteConfirmData({
-                                id: unit.id,
-                                nama: unit.nama,
+                                id: status.id,
+                                nama: status.nama,
                               })
                             }
                           >
@@ -315,7 +315,7 @@ const UnitPage = () => {
                       <button
                         key={i}
                         onClick={() => setCurrentPage(i)}
-                        className={`px-3 py-1.5 rounded-full font-medium transition-colors ${
+                        className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
                           currentPage === i
                             ? "bg-black text-white"
                             : "text-gray-700 hover:bg-gray-100"
@@ -341,9 +341,9 @@ const UnitPage = () => {
                       <button
                         key={totalPages}
                         onClick={() => setCurrentPage(totalPages)}
-                        className={`px-3 py-1.5 rounded-md font-medium transition-colors ${
+                        className={`w-8 h-8 flex items-center justify-center rounded-full transition-all text-[12px] font-bold ${
                           currentPage === totalPages
-                            ? "bg-black text-white"
+                            ? "bg-[#0F172A] text-white shadow-sm"
                             : "text-gray-700 hover:bg-gray-100"
                         }`}
                       >
@@ -370,26 +370,26 @@ const UnitPage = () => {
       </div>
 
       {/* Modals */}
-      <UnitModal
+      <StatusModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSubmit={handleAddSubmit}
         isLoading={addMutation.isPending}
       />
 
-      <UnitModal
+      <StatusModal
         isOpen={showEditModal}
         onClose={() => {
           setShowEditModal(false);
-          setEditingUnit(null);
+          setEditingStatus(null);
         }}
         onSubmit={handleEditSubmit}
         isLoading={updateMutation.isPending}
-        initialData={editingUnit}
+        initialData={editingStatus}
       />
 
       <ConfirmDeleteModal
-        label="unit"
+        label="status"
         isOpen={deleteConfirmData !== null}
         onClose={() => setDeleteConfirmData(null)}
         onConfirm={handleConfirmDelete}
@@ -399,4 +399,4 @@ const UnitPage = () => {
   );
 };
 
-export default UnitPage;
+export default StatusPage;

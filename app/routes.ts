@@ -19,5 +19,6 @@ export default [
     route("mitra", "routes/mitra/index.tsx"),
     route("users", "routes/users/index.tsx"),
     route("unit", "routes/unit/index.tsx"),
+    route("status", "routes/status/index.tsx"),
   ]),
 ] satisfies RouteConfig;
