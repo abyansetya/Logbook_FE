@@ -77,6 +77,8 @@ export const tambahDokumenSchema = z.object({
     .optional()
     .or(z.literal("")),
   tanggal_terbit: z.string().optional().or(z.literal("")),
+  draft_dokumen: z.any().optional(),
+  final_dokumen: z.any().optional(),
 });
 
 export const signInSchema = z.object({

@@ -79,7 +79,34 @@ export const getLogbookDetail = async (
 export const addDokumen = async (
   data: TambahDokumenData,
 ): Promise<AddDokumenResponse> => {
-  return await postData<AddDokumenResponse>("/logbook/dokumen", data);
+  const formData = new FormData();
+  Object.entries(data).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      formData.append(
+        key,
+        value instanceof Date ? value.toISOString().split("T")[0] : value,
+      );
+    }
+  });
+
+  const response = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL}/logbook/dokumen`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Accept: "application/json",
+      },
+      body: formData,
+    },
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Gagal menambahkan dokumen");
+  }
+
+  return await response.json();
 };
 
 export const searchMitra = async (
@@ -113,11 +140,43 @@ export const editDokumen = async ({
   id: number;
   data: TambahDokumenData;
 }): Promise<AddDokumenResponse> => {
-  // Mengarahkan ke endpoint /logbook/{id} sesuai route Laravel yang kita bahas
-  return await updateData<AddDokumenResponse>(
-    `/logbook/edit-dokumen/${id}`,
-    data,
+  const formData = new FormData();
+  Object.entries(data).forEach(([key, value]) => {
+    // Selalu masukkan nilai jika itu draft_dokumen atau final_dokumen (bisa berupa "" untuk hapus)
+    const isFileField = key === "draft_dokumen" || key === "final_dokumen";
+
+    if (
+      isFileField ||
+      (value !== undefined && value !== null && value !== "")
+    ) {
+      formData.append(
+        key,
+        value instanceof Date ? value.toISOString().split("T")[0] : value,
+      );
+    }
+  });
+
+  // Method spoofing for Laravel PUT requests with files
+  formData.append("_method", "PUT");
+
+  const response = await fetch(
+    `${import.meta.env.VITE_API_BASE_URL}/logbook/edit-dokumen/${id}`,
+    {
+      method: "POST", // Use POST for method spoofing
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+        Accept: "application/json",
+      },
+      body: formData,
+    },
   );
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Gagal memperbarui dokumen");
+  }
+
+  return await response.json();
 };
 
 export const deleteDokumen = async ({

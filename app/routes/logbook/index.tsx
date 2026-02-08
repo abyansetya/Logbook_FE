@@ -578,6 +578,30 @@ const Logbook = () => {
                           <div className="text-sm font-semibold text-gray-700 whitespace-normal break-words leading-relaxed">
                             {doc.judul_dokumen}
                           </div>
+                          <div className="flex gap-2 mt-1">
+                            {doc.draft_dokumen && (
+                              <a
+                                href={doc.draft_dokumen}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded font-bold hover:bg-yellow-200"
+                              >
+                                DRAFT
+                              </a>
+                            )}
+                            {doc.final_dokumen && (
+                              <a
+                                href={doc.final_dokumen}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold hover:bg-green-200"
+                              >
+                                FINAL
+                              </a>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4">
                           <Badge

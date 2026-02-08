@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, Loader2, FileText } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -72,37 +72,55 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
     },
   });
 
+  // Ref untuk memastikan form reset hanya sekali per initialData
+  const lastResetId = React.useRef<number | null | undefined>(undefined);
+
   // Reset form dengan data awal saat initialData berubah
   useEffect(() => {
-    if (initialData && isOpen && statuses.length > 0) {
-      // Mapping jenis dokumen (tetap hardcode jika belum ada API-nya)
+    // Only reset if modal is open, statuses are loaded,
+    // AND this initialData hasn't been reset for already
+    if (
+      isOpen &&
+      statuses.length > 0 &&
+      lastResetId.current !== initialData?.id
+    ) {
+      // Mapping jenis dokumen
       const jenisMap: Record<string, number> = {
         "Memorandum of Understanding (MoU)": 1,
         "Memorandum of Agreement (MoA)": 2,
         "Implementation Arrangement (IA)": 3,
       };
 
-      // Mencari ID status berdasarkan nama yang datang dari initialData
-      // Contoh: initialData.status = "Terbit", kita cari di array statuses mana yang namanya "Terbit"
-      const currentStatus = statuses.find((s) => s.nama === initialData.status);
+      const currentStatus = statuses.find(
+        (s) => s.nama === initialData?.status,
+      );
 
       form.reset({
-        mitra_id: initialData.mitra?.id,
-        jenis_dokumen_id: jenisMap[initialData.jenis_dokumen || ""] || 0,
-        nomor_dokumen_mitra: initialData.nomor_dokumen_mitra || "",
-        nomor_dokumen_undip: initialData.nomor_dokumen_undip || "",
-        judul_dokumen: initialData.judul_dokumen || "",
-        tanggal_dokumen: initialData.tanggal_dokumen || "",
-        contact_person: initialData.contact_person || "",
-        status_id: currentStatus ? currentStatus.id : 0, // Gunakan ID dari database
+        mitra_id: initialData?.mitra?.id,
+        jenis_dokumen_id: initialData
+          ? jenisMap[initialData.jenis_dokumen || ""] || 0
+          : 0,
+        nomor_dokumen_mitra: initialData?.nomor_dokumen_mitra || "",
+        nomor_dokumen_undip: initialData?.nomor_dokumen_undip || "",
+        judul_dokumen: initialData?.judul_dokumen || "",
+        tanggal_dokumen: initialData?.tanggal_dokumen || "",
+        contact_person: initialData?.contact_person || "",
+        status_id: currentStatus ? currentStatus.id : 0,
         tanggal_masuk:
-          initialData.tanggal_masuk || new Date().toISOString().split("T")[0],
-        tanggal_terbit: initialData.tanggal_terbit || "",
+          initialData?.tanggal_masuk || new Date().toISOString().split("T")[0],
+        tanggal_terbit: initialData?.tanggal_terbit || "",
+        draft_dokumen: initialData?.draft_dokumen || "",
+        final_dokumen: initialData?.final_dokumen || "",
       });
 
-      setSelectedMitraNama(initialData.mitra?.nama || "");
+      setSelectedMitraNama(initialData?.mitra?.nama || "");
+      lastResetId.current = initialData?.id;
     }
-    // Tambahkan statuses ke dependency agar saat data API datang, form ke-reset dengan ID yang benar
+
+    // Reset ref saat modal ditutup agar bisa dipicu lagi saat dibuka nanti
+    if (!isOpen) {
+      lastResetId.current = undefined;
+    }
   }, [initialData, isOpen, form, statuses]);
 
   const onHandleSubmit = (data: TambahDokumenData) => {
@@ -147,6 +165,141 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                 </FormItem>
               )}
             />
+
+            {/* Draft Dokumen */}
+            <FormField
+              control={form.control}
+              name="draft_dokumen"
+              render={({ field: { value, onChange, ...fieldProps } }) => (
+                <FormItem>
+                  <FormLabel className="font-bold">
+                    Draft Dokumen (PDF, Maks 2MB)
+                  </FormLabel>
+                  <FormControl>
+                    <div className="space-y-2">
+                      {initialData?.draft_dokumen &&
+                      typeof value === "string" &&
+                      value !== "" ? (
+                        <div className="flex items-center justify-between p-2 border-2 border-black bg-yellow-50 rounded-md">
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4 text-yellow-700" />
+                            <span className="text-sm font-medium text-yellow-800 truncate max-w-[200px]">
+                              {initialData.draft_dokumen.split("/").pop()}
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              className="h-8 border-black font-bold"
+                              onClick={() =>
+                                window.open(
+                                  initialData.draft_dokumen!,
+                                  "_blank",
+                                )
+                              }
+                            >
+                              Lihat
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              className="h-8 font-bold"
+                              onClick={() => onChange("")} // Clear value to signify deletion/replacement
+                            >
+                              Hapus
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <Input
+                          type="file"
+                          accept=".pdf"
+                          className="border-2 border-black file:mr-4 file:py-0.5 file:px-4 file:rounded-none file:border-0 file:text-sm file:font-bold file:bg-gray-500 file:text-white hover:file:bg-gray-400 file:cursor-pointer cursor-pointer"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            onChange(file);
+                          }}
+                          {...fieldProps}
+                        />
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Final Dokumen - Muncul hanya jika status adalah "Terbit" */}
+            {statuses.find((s) => s.id === form.watch("status_id"))?.nama ===
+              "Terbit" && (
+              <FormField
+                control={form.control}
+                name="final_dokumen"
+                render={({ field: { value, onChange, ...fieldProps } }) => (
+                  <FormItem>
+                    <FormLabel className="font-bold">
+                      Dokumen Final (PDF, Maks 2MB)
+                    </FormLabel>
+                    <FormControl>
+                      <div className="space-y-2">
+                        {initialData?.final_dokumen &&
+                        typeof value === "string" &&
+                        value !== "" ? (
+                          <div className="flex items-center justify-between p-2 border-2 border-black bg-green-50 rounded-md">
+                            <div className="flex items-center gap-2">
+                              <FileText className="w-4 h-4 text-green-700" />
+                              <span className="text-sm font-medium text-green-800 truncate max-w-[200px]">
+                                {initialData.final_dokumen.split("/").pop()}
+                              </span>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 border-black font-bold"
+                                onClick={() =>
+                                  window.open(
+                                    initialData.final_dokumen!,
+                                    "_blank",
+                                  )
+                                }
+                              >
+                                Lihat
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                className="h-8 font-bold"
+                                onClick={() => onChange("")}
+                              >
+                                Hapus
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <Input
+                            type="file"
+                            accept=".pdf"
+                            className="border-2 border-black file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-sm file:font-bold file:bg-black file:text-white hover:file:bg-gray-800 file:cursor-pointer cursor-pointer"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              onChange(file);
+                            }}
+                            {...fieldProps}
+                          />
+                        )}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {/* Tanggal Dokumen */}
             <FormField

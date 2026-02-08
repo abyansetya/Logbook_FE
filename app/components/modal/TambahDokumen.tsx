@@ -112,6 +112,32 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
               )}
             />
 
+            {/* Draft Dokumen */}
+            <FormField
+              control={form.control}
+              name="draft_dokumen"
+              render={({ field: { value, onChange, ...fieldProps } }) => (
+                <FormItem>
+                  <FormLabel className="font-bold">
+                    Draft Dokumen (PDF, Maks 2MB)
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      type="file"
+                      accept=".pdf"
+                      className="border-2 border-black file:mr-4 file:py-0.5 file:px-4 file:rounded-none file:border-0 file:text-sm file:font-bold file:bg-gray-500 file:text-white hover:file:bg-gray-400 file:cursor-pointer cursor-pointer"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        onChange(file);
+                      }}
+                      {...fieldProps}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             {/* Tanggal Dokumen */}
             <FormField
               control={form.control}

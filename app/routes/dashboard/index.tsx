@@ -19,6 +19,7 @@ import {
   MoreHorizontal,
   Check,
 } from "lucide-react";
+import { Link } from "react-router";
 import {
   Popover,
   PopoverContent,
@@ -386,9 +387,18 @@ export default function Dashboard() {
               {docDistribution.map((doc, index) => (
                 <div key={doc.status} className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-slate-600">
-                      {doc.status}
-                    </span>
+                    <div className="flex items-center gap-2 group/link">
+                      <span className="text-sm font-medium text-slate-600">
+                        {doc.status}
+                      </span>
+                      <Link
+                        to={`/logbook?status=${doc.status_id}${selectedYear !== "all" ? `&tahun=${selectedYear}` : ""}`}
+                        className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-primary transition-all opacity-0 group-hover:opacity-100 group-hover/link:opacity-100"
+                        title={`Lihat logbook ${doc.status}`}
+                      >
+                        <ArrowUpRight className="w-3 h-3" />
+                      </Link>
+                    </div>
                     <div className="flex items-center gap-2">
                       <span className="text-xl font-bold text-slate-900">
                         {doc.count}

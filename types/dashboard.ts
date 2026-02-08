@@ -11,6 +11,7 @@ export interface StatsPeriodic {
 }
 
 export interface DocumentStatus {
+  status_id: number;
   status: string;
   count: number;
   percentage: number;

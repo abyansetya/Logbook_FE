@@ -141,6 +141,47 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
           <p className="text-xs text-gray-500 mt-1 uppercase tracking-wider font-semibold">
             Urutan kronologis pemrosesan dokumen
           </p>
+
+          <div className="flex flex-wrap gap-2 mt-3">
+            {detailData?.data?.draft_dokumen ? (
+              <a
+                href={detailData.data.draft_dokumen}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs bg-yellow-50 text-yellow-700 px-3 py-1.5 rounded-lg border border-yellow-200 font-bold hover:bg-yellow-100 transition-colors flex items-center gap-2"
+              >
+                <ClipboardList className="w-3 h-3" />
+                DRAFT DOKUMEN
+              </a>
+            ) : (
+              <div className="text-xs bg-gray-50 text-gray-400 px-3 py-1.5 rounded-lg border border-gray-200 border-dashed font-bold flex items-center gap-2">
+                <Clock className="w-3 h-3" />
+                DRAFT BELUM DIUNGGAH
+              </div>
+            )}
+
+            {detailData?.data?.final_dokumen ? (
+              <a
+                href={detailData.data.final_dokumen}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs bg-green-50 text-green-700 px-3 py-1.5 rounded-lg border border-green-200 font-bold hover:bg-green-100 transition-colors flex items-center gap-2"
+              >
+                <FileText className="w-3 h-3" />
+                DOKUMEN FINAL
+              </a>
+            ) : detailData?.data?.status === "Terbit" ? (
+              <div className="text-xs bg-red-50 text-red-600 px-3 py-1.5 rounded-lg border border-red-200 border-dashed font-bold flex items-center gap-2 animate-pulse">
+                <FileText className="w-3 h-3" />
+                DOKUMEN FINAL WAJIB DIUNGGAH
+              </div>
+            ) : (
+              <div className="text-xs bg-gray-50 text-gray-400 px-3 py-1.5 rounded-lg border border-gray-200 border-dashed font-bold flex items-center gap-2">
+                <FileText className="w-3 h-3" />
+                DOKUMEN FINAL: -
+              </div>
+            )}
+          </div>
           {detailData?.data?.contact_person && (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg border-2 border-black w-fit mt-3">
               <MessageSquare className="w-4 h-4 text-black" />
