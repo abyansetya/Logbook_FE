@@ -22,6 +22,7 @@ import {
   Loader2,
   Shield,
   ShieldAlert,
+  Users,
   User as UserIcon,
   Trash,
   Search,
@@ -248,6 +249,12 @@ export default function UsersPage() {
                                   <div className="flex items-center gap-2">
                                     <ShieldAlert className="w-3 h-3 text-red-500" />
                                     <span>Admin</span>
+                                  </div>
+                                </SelectItem>
+                                <SelectItem value="Operator">
+                                  <div className="flex items-center gap-2">
+                                    <Users className="w-3 h-3 text-green-500" />
+                                    <span>Operator</span>
                                   </div>
                                 </SelectItem>
                                 <SelectItem value="Viewer">
