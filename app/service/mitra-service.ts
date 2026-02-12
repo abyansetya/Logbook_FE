@@ -6,6 +6,7 @@ export const getMitra = async (
   search = "",
   perPage = 10,
   klasifikasi = "all",
+  status = "approved", // Default to approved
 ): Promise<MitraResponse> => {
   const query = new URLSearchParams({
     page: page.toString(),
@@ -14,6 +15,8 @@ export const getMitra = async (
   if (search) query.append("q", search);
   if (klasifikasi && klasifikasi !== "all")
     query.append("klasifikasi", klasifikasi);
+  if (status && status !== "all") query.append("status", status);
+
   return await fetchData<MitraResponse>(`/mitra?${query.toString()}`);
 };
 
@@ -30,4 +33,12 @@ export const updateMitra = async (
 
 export const deleteMitra = async (id: number): Promise<any> => {
   return await deleteData(`/mitra/${id}`);
+};
+
+export const approveMitra = async (id: number): Promise<any> => {
+  return await updateData(`/mitra/${id}/approve`, {}); // Assuming approve is a PUT request with an empty body
+};
+
+export const rejectMitra = async (id: number): Promise<any> => {
+  return await updateData(`/mitra/${id}/reject`, {}); // Assuming reject is a PUT request with an empty body
 };

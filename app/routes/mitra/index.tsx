@@ -30,6 +30,8 @@ import {
   ChevronDown,
   Filter,
   X,
+  Check,
+  XCircle,
 } from "lucide-react";
 import { useDebounce } from "~/hooks/use-debounce";
 import { useKlasifikasis } from "~/hooks/use-helper";
@@ -45,6 +47,8 @@ import {
   useCreateMitra,
   useUpdateMitra,
   useDeleteMitra,
+  useApproveMitra,
+  useRejectMitra,
 } from "~/hooks/use-mitra";
 import type { Mitra, MitraFull, MitraPayload } from "../../../types/mitra";
 import TambahMitra from "~/components/modal/TambahMitra";
@@ -89,6 +93,10 @@ export default function MitraPage() {
     nama: string;
   } | null>(null);
   const isAdmin = user?.roles?.includes("Admin");
+
+  // Pending Approval State (Admin only)
+  const [pendingPage, setPendingPage] = useState(1);
+
   // Form States
   const [formData, setFormData] = useState<MitraPayload>({
     nama: "",
@@ -98,22 +106,43 @@ export default function MitraPage() {
   });
 
   // Queries & Mutations
+  // 1. Get Approved Mitra (Main Table)
   const {
     data: response,
     isLoading,
     isFetching,
-  } = useGetMitra(currentPage, searchTerm, perPage, currentKlasifikasi);
+  } = useGetMitra(
+    currentPage,
+    searchTerm,
+    perPage,
+    currentKlasifikasi,
+    "approved",
+  );
+
+  // 2. Get Pending Mitra (Admin Only)
+  const { data: pendingResponse, isLoading: isPendingLoading } = useGetMitra(
+    pendingPage,
+    "",
+    5,
+    "all",
+    "pending",
+  );
 
   const { data: klasifikasiResponse } = useKlasifikasis();
   const klasifikasis = klasifikasiResponse?.data || [];
+
   const createMutation = useCreateMitra();
   const updateMutation = useUpdateMitra();
   const deleteMutation = useDeleteMitra();
+  const approveMutation = useApproveMitra();
+  const rejectMutation = useRejectMitra();
 
   // Computed
   const mitraList = response?.data?.data || [];
   const meta = response?.data;
   const links = response?.data?.links;
+
+  const pendingList = pendingResponse?.data?.data || [];
 
   // Handlers
   const handleAddSubmit = (data: MitraFormData) => {
@@ -166,28 +195,168 @@ export default function MitraPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] p-6 lg:p-10">
-      <div className="mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <header>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">
-              Mitra
-            </p>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-              Manajemen Mitra
-            </h1>
-          </header>
-          {isAdmin && (
-            <Button
-              onClick={() => setIsAddOpen(true)}
-              className="bg-black hover:bg-gray-800 text-white rounded-xl px-6 py-6 transition-all shadow-sm cursor-pointer"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              Tambah Mitra
-            </Button>
-          )}
+    <div className="min-h-screen bg-[#F9FAFB] p-6 lg:p-10 space-y-10">
+      <div className="flex items-center justify-between">
+        <header>
+          <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">
+            Mitra
+          </p>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+            Manajemen Mitra
+          </h1>
+        </header>
+        {isAdmin && (
+          <Button
+            onClick={() => setIsAddOpen(true)}
+            className="bg-black hover:bg-gray-800 text-white rounded-xl px-6 py-6 transition-all shadow-sm cursor-pointer"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Tambah Mitra
+          </Button>
+        )}
+      </div>
+
+      {/* Pending Approval Section (Admin Only) */}
+      {isAdmin && (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <div className="h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
+            <h2 className="text-lg font-bold text-gray-900">
+              Menunggu Persetujuan
+            </h2>
+            <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-0.5 rounded-full">
+              {pendingResponse?.data?.total || 0}
+            </span>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-orange-50/50">
+                  <tr className="border-b border-orange-100">
+                    <th className="px-6 py-4 text-left text-[11px] font-bold text-orange-600 uppercase tracking-wider">
+                      Nama Mitra
+                    </th>
+                    <th className="px-6 py-4 text-left text-[11px] font-bold text-orange-600 uppercase tracking-wider">
+                      Klasifikasi
+                    </th>
+                    <th className="px-6 py-4 text-left text-[11px] font-bold text-orange-600 uppercase tracking-wider">
+                      Alamat
+                    </th>
+                    <th className="px-6 py-4 text-left text-[11px] font-bold text-orange-600 uppercase tracking-wider">
+                      Aksi
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-orange-50">
+                  {isPendingLoading ? (
+                    <tr>
+                      <td colSpan={4} className="p-8 text-center">
+                        <Loader2 className="w-6 h-6 animate-spin mx-auto text-orange-300" />
+                      </td>
+                    </tr>
+                  ) : pendingList.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="p-8 text-center text-gray-500 text-sm italic"
+                      >
+                        Tidak ada mitra yang menunggu persetujuan.
+                      </td>
+                    </tr>
+                  ) : (
+                    pendingList.map((mitra: any) => (
+                      <tr
+                        key={mitra.id}
+                        className="hover:bg-orange-50/30 transition-colors"
+                      >
+                        <td className="px-6 py-4 font-medium text-gray-900">
+                          {mitra.nama}
+                        </td>
+                        <td className="px-6 py-4 text-gray-600">
+                          {mitra.klasifikasi_mitra?.nama}
+                        </td>
+                        <td className="px-6 py-4 text-gray-500 text-sm max-w-xs truncate">
+                          {mitra.alamat || "-"}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700 text-white rounded-lg px-3"
+                              onClick={() =>
+                                approveMutation.mutate({
+                                  id: mitra.id,
+                                  nama: mitra.nama,
+                                })
+                              }
+                              disabled={approveMutation.isPending}
+                            >
+                              {approveMutation.isPending ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Check className="w-4 h-4 mr-1" />
+                              )}
+                              Setujui
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="rounded-lg px-3"
+                              onClick={() =>
+                                rejectMutation.mutate({
+                                  id: mitra.id,
+                                  nama: mitra.nama,
+                                })
+                              }
+                              disabled={rejectMutation.isPending}
+                            >
+                              {rejectMutation.isPending ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <X className="w-4 h-4 mr-1" />
+                              )}
+                              Tolak
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {/* Simple Pagination for Pending */}
+            {pendingResponse?.data && pendingResponse.data.last_page > 1 && (
+              <div className="px-6 py-3 border-t border-orange-100 flex justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={pendingPage === 1}
+                  onClick={() => setPendingPage((p) => p - 1)}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={pendingPage === pendingResponse.data.last_page}
+                  onClick={() => setPendingPage((p) => p + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
+      )}
+
+      {/* Main Content (Approved List) */}
+      <div className="space-y-6">
+        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+          <div className="h-2 w-2 rounded-full bg-green-500" />
+          Daftar Mitra Disetujui
+        </h2>
 
         {/* Search & Filter */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-0">
@@ -195,7 +364,7 @@ export default function MitraPage() {
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
-                placeholder="Cari mitra..."
+                placeholder="Cari mitra disetujui..."
                 className="pl-12 py-6 bg-gray-50 border-gray-100 rounded-xl focus-visible:ring-1 focus-visible:ring-gray-300"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
@@ -309,11 +478,11 @@ export default function MitraPage() {
                 ) : mitraList.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-8 text-center text-slate-500">
-                      Tidak ada data mitra.
+                      Tidak ada data mitra disetujui.
                     </td>
                   </tr>
                 ) : (
-                  mitraList.map((mitra) => (
+                  mitraList.map((mitra: any) => (
                     <tr key={mitra.id} className="hover:bg-slate-50/50">
                       <td className="px-6 py-4 font-medium text-slate-900">
                         {mitra.nama}
@@ -361,10 +530,9 @@ export default function MitraPage() {
             </table>
           </div>
 
-          {/* Pagination - Style diperbarui mengikuti Logbook */}
+          {/* Pagination */}
           {!isLoading && meta && links && (
             <div className="px-4 py-4 sm:px-6 border-t border-gray-100 bg-white flex flex-col sm:flex-row items-center justify-between gap-4 text-[13px]">
-              {/* Sisi Kiri: Info Total Data */}
               <div className="text-gray-500 font-medium">
                 Menampilkan{" "}
                 <span className="font-bold text-gray-900 mx-1">
@@ -376,9 +544,7 @@ export default function MitraPage() {
                 </span>
               </div>
 
-              {/* Sisi Kanan: Lines per page & Navigation */}
               <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
-                {/* Lines per page (Dropdown style) */}
                 <div className="hidden sm:flex items-center gap-3">
                   <span className="text-gray-500 font-medium">
                     Lines per page
@@ -403,9 +569,7 @@ export default function MitraPage() {
                   </select>
                 </div>
 
-                {/* Kontrol Navigasi Angka */}
                 <div className="flex items-center gap-1">
-                  {/* Tombol Sebelumnya */}
                   <button
                     disabled={!meta.prev_page_url}
                     onClick={() => {
@@ -419,7 +583,6 @@ export default function MitraPage() {
                     <ChevronLeft className="w-4 h-4" />
                   </button>
 
-                  {/* Mapping Angka Halaman */}
                   {links.map((link: any, index: number) => {
                     const isPrevNext =
                       link.label.toLowerCase().includes("previous") ||
@@ -470,7 +633,6 @@ export default function MitraPage() {
                     );
                   })}
 
-                  {/* Tombol Selanjutnya */}
                   <button
                     disabled={!meta.next_page_url}
                     onClick={() => {

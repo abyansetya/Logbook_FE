@@ -4,6 +4,8 @@ import {
   createMitra,
   updateMitra,
   deleteMitra,
+  approveMitra,
+  rejectMitra,
 } from "../service/mitra-service";
 import type { MitraPayload } from "../../types/mitra";
 import { toast } from "sonner"; // Assuming sonner is used
@@ -15,10 +17,11 @@ export const useGetMitra = (
   search: string,
   perPage: number = 10,
   klasifikasi: string = "all",
+  status: string = "approved",
 ) => {
   return useQuery({
-    queryKey: ["mitra", page, search, perPage, klasifikasi],
-    queryFn: () => getMitra(page, search, perPage, klasifikasi),
+    queryKey: ["mitra", page, search, perPage, klasifikasi, status],
+    queryFn: () => getMitra(page, search, perPage, klasifikasi, status),
     placeholderData: (previousData) => previousData, // Keep previous data while fetching new
   });
 };
@@ -137,10 +140,49 @@ export const useDeleteMitra = () => {
       }
       toast.error(error.response?.data?.message || "Gagal menghapus mitra");
     },
-    onSettled: () => {
+  });
+};
+
+export const useApproveMitra = () => {
+  const queryClient = useQueryClient();
+  const { logActivity } = useAddActivity();
+  return useMutation({
+    mutationFn: ({ id, nama }: { id: number; nama: string }) =>
+      approveMitra(id),
+    onSuccess: (_, variables) => {
+      toast.success("Mitra berhasil disetujui");
+      // Invalidate both lists (approved and pending)
       queryClient.invalidateQueries({ queryKey: ["mitra"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["activities"] });
+      logActivity({
+        action: "Approve Mitra",
+        description: `Menyetujui mitra "${variables.nama}"`,
+        type: "Mitra",
+      });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Gagal menyetujui mitra");
+    },
+  });
+};
+
+export const useRejectMitra = () => {
+  const queryClient = useQueryClient();
+  const { logActivity } = useAddActivity();
+  return useMutation({
+    mutationFn: ({ id, nama }: { id: number; nama: string }) => rejectMitra(id),
+    onSuccess: (_, variables) => {
+      toast.success("Mitra ditolak/dihapus");
+      queryClient.invalidateQueries({ queryKey: ["mitra"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
+      logActivity({
+        action: "Reject Mitra",
+        description: `Menolak mitra "${variables.nama}"`,
+        type: "Mitra",
+      });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Gagal menolak mitra");
     },
   });
 };
