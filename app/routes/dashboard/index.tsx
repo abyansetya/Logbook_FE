@@ -55,24 +55,28 @@ import type { Activity as ActivityType } from "types/activity";
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [selectedYear, setSelectedYear] = useState<string>("all");
-  const { data: apiResponse, isLoading: statsLoading } =
-    useDashboardStats(selectedYear);
+  // State untuk menyimpan status yang aktif di chart (ID status)
+  const [activeStatuses, setActiveStatuses] = useState<number[]>([]);
+
+  const { data: apiResponse, isLoading: statsLoading } = useDashboardStats(
+    selectedYear,
+    activeStatuses.length === 0 ? "all" : activeStatuses.join(","),
+  );
   const { data: activitiesResponse, isLoading: activitiesLoading } =
     useRecentActivities();
-  // State untuk menyimpan status yang aktif di chart
-  const [activeStatuses, setActiveStatuses] = useState<string[]>([]);
 
   const stats = apiResponse?.data;
-  const statusNames = stats?.all_status_names || [];
+  const availableStatuses = stats?.statuses || [];
+  const statusNames = availableStatuses.map((s) => s.nama);
   const docDistribution = stats?.document_status || [];
   const availableYears = stats?.available_years || [];
 
   // Sinkronisasi status aktif saat data pertama kali dimuat
   useEffect(() => {
-    if (statusNames.length > 0) {
-      setActiveStatuses(statusNames);
+    if (availableStatuses.length > 0 && activeStatuses.length === 0) {
+      setActiveStatuses(availableStatuses.map((s) => s.id));
     }
-  }, [statusNames]);
+  }, [availableStatuses]);
 
   const modernColors = [
     "#1E3A8A", // Biru Tua (Navy)
@@ -195,6 +199,26 @@ export default function Dashboard() {
 
                 {/* Action Buttons ala Modern UI */}
                 <div className="flex gap-2">
+                  <Select value={selectedYear} onValueChange={setSelectedYear}>
+                    <SelectTrigger className="w-[110px] h-9 text-xs border-gray-100 rounded-xl font-bold bg-white text-gray-600">
+                      <SelectValue placeholder="Tahun" />
+                    </SelectTrigger>
+                    <SelectContent className="rounded-xl">
+                      <SelectItem value="all" className="text-xs font-semibold">
+                        Semua Tahun
+                      </SelectItem>
+                      {availableYears.map((year) => (
+                        <SelectItem
+                          key={year}
+                          value={year.toString()}
+                          className="text-xs font-semibold"
+                        >
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -202,7 +226,7 @@ export default function Dashboard() {
                         size="sm"
                         className="h-9 rounded-xl border-gray-100 text-xs font-bold gap-2 text-gray-600"
                       >
-                        <Filter className="w-3 h-3" /> Filter
+                        <Filter className="w-3 h-3" /> Status
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -219,38 +243,40 @@ export default function Dashboard() {
                           </span>
                         </div>
                         <div className="grid gap-2">
-                          {statusNames.map((status, index) => (
+                          {availableStatuses.map((status, index) => (
                             <div
-                              key={status}
+                              key={status.id}
                               className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all cursor-pointer hover:bg-slate-50 ${
-                                activeStatuses.includes(status)
+                                activeStatuses.includes(status.id)
                                   ? "border-primary/20 bg-primary/[0.02]"
                                   : "border-gray-100"
                               }`}
                               onClick={() => {
-                                if (activeStatuses.includes(status)) {
+                                if (activeStatuses.includes(status.id)) {
                                   setActiveStatuses(
-                                    activeStatuses.filter((s) => s !== status),
+                                    activeStatuses.filter(
+                                      (id) => id !== status.id,
+                                    ),
                                   );
                                 } else {
                                   setActiveStatuses([
                                     ...activeStatuses,
-                                    status,
+                                    status.id,
                                   ]);
                                 }
                               }}
                             >
                               <Checkbox
-                                id={`status-${status}`}
-                                checked={activeStatuses.includes(status)}
+                                id={`status-${status.id}`}
+                                checked={activeStatuses.includes(status.id)}
                                 onCheckedChange={() => {}} // Controlled by div onClick
                               />
                               <div className="flex-1">
                                 <Label
-                                  htmlFor={`status-${status}`}
+                                  htmlFor={`status-${status.id}`}
                                   className="text-xs font-semibold text-slate-700 cursor-pointer block"
                                 >
-                                  {status}
+                                  {status.nama}
                                 </Label>
                               </div>
                               <div
@@ -268,7 +294,11 @@ export default function Dashboard() {
                             variant="ghost"
                             size="sm"
                             className="w-full h-8 text-[10px] font-bold text-primary hover:bg-primary/5 rounded-lg"
-                            onClick={() => setActiveStatuses(statusNames)}
+                            onClick={() =>
+                              setActiveStatuses(
+                                availableStatuses.map((s) => s.id),
+                              )
+                            }
                           >
                             Reset Filter
                           </Button>
@@ -276,14 +306,6 @@ export default function Dashboard() {
                       </div>
                     </PopoverContent>
                   </Popover>
-
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="h-9 w-9 rounded-xl border-gray-100 text-gray-400"
-                  >
-                    <MoreHorizontal className="w-4 h-4" />
-                  </Button>
                 </div>
               </div>
             </div>
@@ -301,7 +323,7 @@ export default function Dashboard() {
                       vertical={false}
                     />
                     <XAxis
-                      dataKey="month"
+                      dataKey="year"
                       axisLine={false}
                       tickLine={false}
                       fontSize={12}
@@ -334,19 +356,16 @@ export default function Dashboard() {
                       }}
                     />
 
-                    {statusNames.map((name, index) => {
-                      if (!activeStatuses.includes(name)) return null;
-                      return (
-                        <Bar
-                          key={name}
-                          dataKey={name}
-                          name={name}
-                          stackId="a"
-                          fill={modernColors[index % modernColors.length]}
-                          barSize={40}
-                        />
-                      );
-                    })}
+                    {["MoU", "MoA", "IA"].map((type, index) => (
+                      <Bar
+                        key={type}
+                        dataKey={type}
+                        name={type}
+                        fill={modernColors[index % modernColors.length]}
+                        barSize={40}
+                        radius={[4, 4, 0, 0]}
+                      />
+                    ))}
                   </BarChart>
                 </ResponsiveContainer>
               </div>

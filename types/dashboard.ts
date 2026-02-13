@@ -21,8 +21,15 @@ export interface DocumentStatus {
  * kita gunakan Index Signature [key: string]
  */
 export interface LogbookChart {
-  month: string;
-  [statusName: string]: number | string; // Mengizinkan key apapun yang bernilai number (count) atau string (month)
+  year: string;
+  MoU: number;
+  MoA: number;
+  IA: number;
+}
+
+export interface DashboardStatus {
+  id: number;
+  nama: string;
 }
 
 export interface DashboardData {
@@ -30,7 +37,7 @@ export interface DashboardData {
   stats_periodic: StatsPeriodic;
   document_status: DocumentStatus[];
   chart_data: LogbookChart[];
-  all_status_names: string[]; // Tambahkan ini sesuai response backend terbaru
+  statuses: DashboardStatus[]; // Update sesuai response backend terbaru
   available_years: number[];
 }
 
