@@ -234,6 +234,8 @@ const Logbook = () => {
   const meta = response?.data?.meta;
   const links = response?.data?.links;
   const isAdmin = user?.roles?.includes("Admin");
+  const isOperator = user?.roles?.includes("Operator");
+  const canManage = isAdmin || isOperator;
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "-";
@@ -305,7 +307,7 @@ const Logbook = () => {
               Dokumen Kerja Sama
             </h1>
           </header>
-          {isAdmin && (
+          {canManage && (
             <Button
               onClick={() => setShowAddDocModal(true)}
               className="bg-black hover:bg-gray-800 text-white rounded-xl px-6 py-6 transition-all shadow-sm cursor-pointer"
@@ -518,7 +520,7 @@ const Logbook = () => {
                       </div>
                     </div>
                   </th>
-                  {isAdmin && (
+                  {canManage && (
                     <th className="px-6 py-5 text-right text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                       Aksi
                     </th>
@@ -631,13 +633,28 @@ const Logbook = () => {
                           onClick={(e) => e.stopPropagation()}
                         >
                           <div className="flex justify-end gap-1">
-                            {isAdmin && (
+                            {canManage && (
                               <>
                                 <Button
                                   variant="abu"
                                   size="icon"
-                                  className="w-8 h-8 text-gray-400 hover:text-gray-900 cursor-pointer"
-                                  onClick={() => handleEditClick(doc)}
+                                  className={`w-8 h-8 ${
+                                    !isAdmin && doc.status === "Terbit"
+                                      ? "opacity-50 cursor-not-allowed text-gray-300"
+                                      : "text-gray-400 hover:text-gray-900 cursor-pointer"
+                                  }`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (!isAdmin && doc.status === "Terbit")
+                                      return;
+                                    handleEditClick(doc);
+                                  }}
+                                  disabled={!isAdmin && doc.status === "Terbit"}
+                                  title={
+                                    !isAdmin && doc.status === "Terbit"
+                                      ? "Hanya Admin yang dapat mengedit dokumen yang sudah Terbit"
+                                      : "Edit Dokumen"
+                                  }
                                 >
                                   <Edit className="w-4 h-4 text-yellow-500" />
                                 </Button>

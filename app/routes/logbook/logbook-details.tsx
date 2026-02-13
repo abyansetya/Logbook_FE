@@ -32,6 +32,8 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
 }) => {
   const { user } = useAuth();
   const isAdmin = user?.roles?.includes("Admin");
+  const isOperator = user?.roles?.includes("Operator");
+  const canManage = isAdmin || isOperator;
   const { data: detailData, isLoading, isError } = useLogbookDetail(documentId);
 
   // State untuk mengontrol Modal UpdateLog
@@ -195,7 +197,7 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
           )}
         </div>
         <div className="flex flex-col items-end gap-2">
-          {isAdmin && (
+          {canManage && (
             <Button
               onClick={() => onAddLog(documentId)}
               disabled={isTerbit}
@@ -277,7 +279,7 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
                         </div>
 
                         <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {isAdmin && (
+                          {canManage && (
                             <>
                               <Button
                                 variant="ghost"
@@ -325,7 +327,7 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
               Belum ada aktivitas yang tercatat untuk dokumen ini.
             </p>
 
-            {isAdmin && (
+            {canManage && (
               <Button
                 variant="outline"
                 onClick={() => onAddLog(documentId)}

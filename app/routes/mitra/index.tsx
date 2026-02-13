@@ -93,9 +93,12 @@ export default function MitraPage() {
     nama: string;
   } | null>(null);
   const isAdmin = user?.roles?.includes("Admin");
+  const isOperator = user?.roles?.includes("Operator");
+  const canAddMitra = isAdmin || isOperator;
 
   // Pending Approval State (Admin only)
   const [pendingPage, setPendingPage] = useState(1);
+  const [isPendingExpanded, setIsPendingExpanded] = useState(true);
 
   // Form States
   const [formData, setFormData] = useState<MitraPayload>({
@@ -205,7 +208,7 @@ export default function MitraPage() {
             Manajemen Mitra
           </h1>
         </header>
-        {isAdmin && (
+        {canAddMitra && (
           <Button
             onClick={() => setIsAddOpen(true)}
             className="bg-black hover:bg-gray-800 text-white rounded-xl px-6 py-6 transition-all shadow-sm cursor-pointer"
@@ -219,134 +222,162 @@ export default function MitraPage() {
       {/* Pending Approval Section (Admin Only) */}
       {isAdmin && (
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
-            <h2 className="text-lg font-bold text-gray-900">
-              Menunggu Persetujuan
-            </h2>
-            <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-0.5 rounded-full">
-              {pendingResponse?.data?.total || 0}
-            </span>
+          <div
+            className="flex items-center justify-between cursor-pointer group"
+            onClick={() => setIsPendingExpanded(!isPendingExpanded)}
+          >
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-orange-500 animate-pulse" />
+              <h2 className="text-lg font-bold text-gray-900">
+                Menunggu Persetujuan
+              </h2>
+              <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                {pendingResponse?.data?.total || 0}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-gray-400 group-hover:text-gray-900 transition-colors">
+              <span className="text-xs font-semibold">
+                {isPendingExpanded ? "Sembunyikan" : "Tampilkan"}
+              </span>
+              <ChevronDown
+                className={`w-5 h-5 transition-transform duration-300 ${
+                  isPendingExpanded ? "rotate-180" : ""
+                }`}
+              />
+            </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-orange-50/50">
-                  <tr className="border-b border-orange-100">
-                    <th className="px-6 py-4 text-left text-[11px] font-bold text-orange-600 uppercase tracking-wider">
-                      Nama Mitra
-                    </th>
-                    <th className="px-6 py-4 text-left text-[11px] font-bold text-orange-600 uppercase tracking-wider">
-                      Klasifikasi
-                    </th>
-                    <th className="px-6 py-4 text-left text-[11px] font-bold text-orange-600 uppercase tracking-wider">
-                      Alamat
-                    </th>
-                    <th className="px-6 py-4 text-left text-[11px] font-bold text-orange-600 uppercase tracking-wider">
-                      Aksi
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-orange-50">
-                  {isPendingLoading ? (
-                    <tr>
-                      <td colSpan={4} className="p-8 text-center">
-                        <Loader2 className="w-6 h-6 animate-spin mx-auto text-orange-300" />
-                      </td>
-                    </tr>
-                  ) : pendingList.length === 0 ? (
-                    <tr>
-                      <td
-                        colSpan={4}
-                        className="p-8 text-center text-gray-500 text-sm italic"
-                      >
-                        Tidak ada mitra yang menunggu persetujuan.
-                      </td>
-                    </tr>
-                  ) : (
-                    pendingList.map((mitra: any) => (
-                      <tr
-                        key={mitra.id}
-                        className="hover:bg-orange-50/30 transition-colors"
-                      >
-                        <td className="px-6 py-4 font-medium text-gray-900">
-                          {mitra.nama}
-                        </td>
-                        <td className="px-6 py-4 text-gray-600">
-                          {mitra.klasifikasi_mitra?.nama}
-                        </td>
-                        <td className="px-6 py-4 text-gray-500 text-sm max-w-xs truncate">
-                          {mitra.alamat || "-"}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              className="bg-green-600 hover:bg-green-700 text-white rounded-lg px-3"
-                              onClick={() =>
-                                approveMutation.mutate({
-                                  id: mitra.id,
-                                  nama: mitra.nama,
-                                })
-                              }
-                              disabled={approveMutation.isPending}
-                            >
-                              {approveMutation.isPending ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <Check className="w-4 h-4 mr-1" />
-                              )}
-                              Setujui
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              className="rounded-lg px-3"
-                              onClick={() =>
-                                rejectMutation.mutate({
-                                  id: mitra.id,
-                                  nama: mitra.nama,
-                                })
-                              }
-                              disabled={rejectMutation.isPending}
-                            >
-                              {rejectMutation.isPending ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                              ) : (
-                                <X className="w-4 h-4 mr-1" />
-                              )}
-                              Tolak
-                            </Button>
-                          </div>
-                        </td>
+          <div
+            className={`grid transition-all duration-300 ease-in-out ${
+              isPendingExpanded
+                ? "grid-rows-[1fr] opacity-100"
+                : "grid-rows-[0fr] opacity-0"
+            }`}
+          >
+            <div className="overflow-hidden">
+              <div className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-orange-50/50">
+                      <tr className="border-b border-orange-100">
+                        <th className="px-6 py-4 text-left text-[11px] font-bold text-orange-600 uppercase tracking-wider">
+                          Nama Mitra
+                        </th>
+                        <th className="px-6 py-4 text-left text-[11px] font-bold text-orange-600 uppercase tracking-wider">
+                          Klasifikasi
+                        </th>
+                        <th className="px-6 py-4 text-left text-[11px] font-bold text-orange-600 uppercase tracking-wider">
+                          Alamat
+                        </th>
+                        <th className="px-6 py-4 text-left text-[11px] font-bold text-orange-600 uppercase tracking-wider">
+                          Aksi
+                        </th>
                       </tr>
-                    ))
+                    </thead>
+                    <tbody className="divide-y divide-orange-50">
+                      {isPendingLoading ? (
+                        <tr>
+                          <td colSpan={4} className="p-8 text-center">
+                            <Loader2 className="w-6 h-6 animate-spin mx-auto text-orange-300" />
+                          </td>
+                        </tr>
+                      ) : pendingList.length === 0 ? (
+                        <tr>
+                          <td
+                            colSpan={4}
+                            className="p-8 text-center text-gray-500 text-sm italic"
+                          >
+                            Tidak ada mitra yang menunggu persetujuan.
+                          </td>
+                        </tr>
+                      ) : (
+                        pendingList.map((mitra: any) => (
+                          <tr
+                            key={mitra.id}
+                            className="hover:bg-orange-50/30 transition-colors"
+                          >
+                            <td className="px-6 py-4 font-medium text-gray-900">
+                              {mitra.nama}
+                            </td>
+                            <td className="px-6 py-4 text-gray-600">
+                              {mitra.klasifikasi_mitra?.nama}
+                            </td>
+                            <td className="px-6 py-4 text-gray-500 text-sm max-w-xs truncate">
+                              {mitra.alamat || "-"}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  className="bg-green-600 hover:bg-green-700 text-white rounded-lg px-3"
+                                  onClick={() =>
+                                    approveMutation.mutate({
+                                      id: mitra.id,
+                                      nama: mitra.nama,
+                                    })
+                                  }
+                                  disabled={approveMutation.isPending}
+                                >
+                                  {approveMutation.isPending ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Check className="w-4 h-4 mr-1" />
+                                  )}
+                                  Setujui
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  className="rounded-lg px-3"
+                                  onClick={() =>
+                                    rejectMutation.mutate({
+                                      id: mitra.id,
+                                      nama: mitra.nama,
+                                    })
+                                  }
+                                  disabled={rejectMutation.isPending}
+                                >
+                                  {rejectMutation.isPending ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <X className="w-4 h-4 mr-1" />
+                                  )}
+                                  Tolak
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Simple Pagination for Pending */}
+                {pendingResponse?.data &&
+                  pendingResponse.data.last_page > 1 && (
+                    <div className="px-6 py-3 border-t border-orange-100 flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={pendingPage === 1}
+                        onClick={() => setPendingPage((p) => p - 1)}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        disabled={
+                          pendingPage === pendingResponse.data.last_page
+                        }
+                        onClick={() => setPendingPage((p) => p + 1)}
+                      >
+                        Next
+                      </Button>
+                    </div>
                   )}
-                </tbody>
-              </table>
-            </div>
-            {/* Simple Pagination for Pending */}
-            {pendingResponse?.data && pendingResponse.data.last_page > 1 && (
-              <div className="px-6 py-3 border-t border-orange-100 flex justify-end gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={pendingPage === 1}
-                  onClick={() => setPendingPage((p) => p - 1)}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  disabled={pendingPage === pendingResponse.data.last_page}
-                  onClick={() => setPendingPage((p) => p + 1)}
-                >
-                  Next
-                </Button>
               </div>
-            )}
+            </div>
           </div>
         </div>
       )}
@@ -461,7 +492,7 @@ export default function MitraPage() {
                   <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                     Kontak
                   </th>
-                  {isAdmin && (
+                  {canAddMitra && (
                     <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                       Aksi
                     </th>
@@ -496,7 +527,7 @@ export default function MitraPage() {
                       <td className="px-6 py-4 text-slate-600">
                         {mitra.contact_person || "-"}
                       </td>
-                      {isAdmin && (
+                      {canAddMitra && (
                         <td className="px-6 py-4">
                           <div className="flex gap-1">
                             <Button
