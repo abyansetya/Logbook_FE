@@ -104,11 +104,19 @@ const StatusModal: React.FC<StatusModalProps> = ({
               )}
             />
 
-            <DialogFooter className="mt-6">
+            <DialogFooter className="mt-6 gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClose}
+                className="border-2 border-black font-bold"
+              >
+                Batal
+              </Button>
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="bg-black text-white"
+                className="bg-black text-white hover:bg-gray-800 font-bold"
               >
                 {isLoading ? (
                   <>

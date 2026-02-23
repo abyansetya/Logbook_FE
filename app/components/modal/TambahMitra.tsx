@@ -243,7 +243,7 @@ const TambahMitra: React.FC<TambahMitraProps> = ({
               )}
             />
 
-            <DialogFooter className="pt-4">
+            <DialogFooter className="pt-4 gap-3">
               <Button
                 type="button"
                 variant="outline"

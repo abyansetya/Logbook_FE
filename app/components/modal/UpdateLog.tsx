@@ -182,12 +182,12 @@ const UpdateLog: React.FC<UpdateLogProps> = ({
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-3">
           <Button
-            variant="ghost"
+            type="button"
+            variant="outline"
             onClick={handleClose}
-            disabled={isPending}
-            className="font-bold"
+            className="border-2 border-black font-bold"
           >
             Batal
           </Button>

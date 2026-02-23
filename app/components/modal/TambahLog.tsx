@@ -167,7 +167,15 @@ const TambahLog: React.FC<TambahLogProps> = ({
           </div>
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleClose}
+            className="border-2 border-black font-bold"
+          >
+            Batal
+          </Button>
           <Button
             onClick={handleSubmit}
             disabled={isPending}

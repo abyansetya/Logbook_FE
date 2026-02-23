@@ -38,7 +38,7 @@ const ConfirmDeleteModal = ({
         <div className="py-4">
           <p className="text-gray-600">{description}</p>
         </div>
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-3">
           <Button
             variant="outline"
             className="border-2 border-black font-bold mr-2 cursor-pointer hover:bg-black hover:text-white"

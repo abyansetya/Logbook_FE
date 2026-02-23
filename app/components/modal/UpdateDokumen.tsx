@@ -285,7 +285,7 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                           <Input
                             type="file"
                             accept=".pdf"
-                            className="border-2 border-black file:mr-4 file:py-2 file:px-4 file:rounded-none file:border-0 file:text-sm file:font-bold file:bg-black file:text-white hover:file:bg-gray-800 file:cursor-pointer cursor-pointer"
+                            className="border-2 border-black file:mr-4 file:py-0.5 file:px-4 file:rounded-none file:border-0 file:text-sm file:font-bold file:bg-gray-500 file:text-white hover:file:bg-gray-400 file:cursor-pointer cursor-pointer"
                             onChange={(e) => {
                               const file = e.target.files?.[0];
                               onChange(file);
@@ -604,11 +604,19 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
               />
             </div>
 
-            <DialogFooter className="mt-6">
+            <DialogFooter className="mt-6 gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCloseModal}
+                className="border-2 border-black font-bold"
+              >
+                Batal
+              </Button>
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="bg-black text-white"
+                className="bg-black text-white hover:bg-gray-800 font-bold"
               >
                 {isLoading ? (
                   <>

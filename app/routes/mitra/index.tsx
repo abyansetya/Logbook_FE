@@ -693,16 +693,21 @@ export default function MitraPage() {
 
       {/* Edit Modal */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] border-2 border-black max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Data Mitra</DialogTitle>
+            <DialogTitle className="text-2xl font-bold">
+              Edit Data Mitra
+            </DialogTitle>
             <DialogDescription>Perbarui informasi mitra.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleEditSubmit} className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-nama">Nama Mitra</Label>
+              <Label htmlFor="edit-nama" className="font-bold">
+                Nama Mitra
+              </Label>
               <Input
                 id="edit-nama"
+                className="border-2 border-black"
                 value={formData.nama}
                 onChange={(e) =>
                   setFormData({ ...formData, nama: e.target.value })
@@ -710,10 +715,44 @@ export default function MitraPage() {
                 required
               />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="edit-alamat">Alamat</Label>
+              <Label htmlFor="edit-klasifikasi" className="font-bold">
+                Klasifikasi Mitra
+              </Label>
+              <Select
+                value={formData.klasifikasi_mitra_id?.toString()}
+                onValueChange={(val) =>
+                  setFormData({
+                    ...formData,
+                    klasifikasi_mitra_id: Number(val),
+                  })
+                }
+              >
+                <SelectTrigger
+                  id="edit-klasifikasi"
+                  className="w-full flex justify-between border-2 border-black min-w-0 gap-2"
+                >
+                  <div className="truncate flex-1 text-left">
+                    <SelectValue placeholder="Pilih Klasifikasi" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent className="border-2 border-black">
+                  {klasifikasis.map((k: any) => (
+                    <SelectItem key={k.id} value={k.id.toString()}>
+                      <div className="truncate max-w-[300px]">{k.nama}</div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-alamat" className="font-bold">
+                Alamat
+              </Label>
               <Input
                 id="edit-alamat"
+                className="border-2 border-black"
                 value={formData.alamat}
                 onChange={(e) =>
                   setFormData({ ...formData, alamat: e.target.value })
@@ -721,24 +760,32 @@ export default function MitraPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-contact">Contact Person</Label>
+              <Label htmlFor="edit-contact" className="font-bold">
+                Contact Person
+              </Label>
               <Input
                 id="edit-contact"
+                className="border-2 border-black"
                 value={formData.contact_person}
                 onChange={(e) =>
                   setFormData({ ...formData, contact_person: e.target.value })
                 }
               />
             </div>
-            <DialogFooter>
+            <DialogFooter className="pt-4 gap-3">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsEditOpen(false)}
+                className="border-2 border-black"
               >
                 Batal
               </Button>
-              <Button type="submit" disabled={updateMutation.isPending}>
+              <Button
+                type="submit"
+                disabled={updateMutation.isPending}
+                className="bg-black text-white"
+              >
                 {updateMutation.isPending && (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 )}
