@@ -50,6 +50,8 @@ export const tambahLogSchema = z.object({
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Format tanggal tidak valid"),
 });
 
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB
+
 export const tambahDokumenSchema = z.object({
   mitra_id: z.number({ message: "Mitra wajib diisi" }),
   jenis_dokumen_id: z.number({ message: "Jenis dokumen wajib diisi" }),
@@ -77,8 +79,26 @@ export const tambahDokumenSchema = z.object({
     .optional()
     .or(z.literal("")),
   tanggal_terbit: z.string().optional().or(z.literal("")),
-  draft_dokumen: z.any().optional(),
-  final_dokumen: z.any().optional(),
+  draft_dokumen: z
+    .any()
+    .refine(
+      (file) =>
+        !file ||
+        typeof file === "string" ||
+        (file instanceof File && file.size <= MAX_FILE_SIZE),
+      "Ukuran file maksimal 2MB",
+    )
+    .optional(),
+  final_dokumen: z
+    .any()
+    .refine(
+      (file) =>
+        !file ||
+        typeof file === "string" ||
+        (file instanceof File && file.size <= MAX_FILE_SIZE),
+      "Ukuran file maksimal 2MB",
+    )
+    .optional(),
 });
 
 export const signInSchema = z.object({
