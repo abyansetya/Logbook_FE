@@ -6,6 +6,7 @@ import { queryClient } from "./react-query-provider";
 
 import type { LoginResponse } from "../../types/auth";
 import { fetchData, fetchMe } from "~/lib/fetch-util";
+import { logger } from "~/lib/logger";
 
 interface AuthContextType {
   user: User | null;
@@ -46,7 +47,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setUser(user);
         setIsAuthenticated(true);
       } catch (error) {
-        console.log(error);
+        logger.error("checkAuth gagal, membersihkan token stale", error);
+        logout(); // bersihkan token stale jika fetchMe gagal (500/network error)
       } finally {
         setIsLoading(false);
       }

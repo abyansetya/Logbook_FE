@@ -5,7 +5,7 @@ import { useNavigate, Link } from "react-router";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 import { signUpSchema, type SignUpFormData } from "~/lib/schema";
-import { useRegisterMutation } from "~/hooks/use-auth";
+import { useRegisterMutation } from "~/hooks/use-register";
 import {
   Form,
   FormControl,
