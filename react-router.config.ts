@@ -1,7 +1,6 @@
 import type { Config } from "@react-router/dev/config";
 
 export default {
-  // Config options...
-  // Server-side render by default, to enable SPA mode set this to `false`
-  ssr: true,
+  // Serve the app as a static SPA and fetch runtime data from the Laravel API.
+  ssr: false,
 } satisfies Config;
