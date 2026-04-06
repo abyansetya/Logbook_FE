@@ -8,6 +8,7 @@ import {
   Edit,
   Trash2,
   MessageSquare,
+  MessageCircle,
   Clock,
   ClipboardList,
 } from "lucide-react";
@@ -42,6 +43,27 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   const deleteLogMutation = useDeleteLog(documentId);
+
+  const normalizeWhatsAppNumber = (contactPerson: string | null | undefined) => {
+    if (!contactPerson) return null;
+
+    const digits = contactPerson.replace(/\D/g, "");
+    if (!digits) return null;
+
+    let normalized = digits;
+
+    if (normalized.startsWith("0")) {
+      normalized = `62${normalized.slice(1)}`;
+    } else if (normalized.startsWith("8")) {
+      normalized = `62${normalized}`;
+    }
+
+    if (!/^62\d{8,13}$/.test(normalized)) {
+      return null;
+    }
+
+    return normalized;
+  };
 
   // Custom date formatter to avoid hydration mismatches
   const getSafeDateParts = (dateString: string) => {
@@ -131,6 +153,10 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
 
   const logs = detailData?.data?.logs || [];
   const isTerbit = detailData?.data?.status === "Terbit";
+  const whatsappNumber = normalizeWhatsAppNumber(detailData?.data?.contact_person);
+  const whatsappUrl = whatsappNumber
+    ? `https://wa.me/${whatsappNumber}`
+    : null;
 
   return (
     <div className="mx-auto py-4">
@@ -193,6 +219,18 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
                   {detailData.data.contact_person}
                 </span>
               </span>
+              {whatsappUrl && (
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-1 inline-flex h-7 w-7 items-center justify-center rounded-full border border-green-600 bg-green-50 text-green-700 transition-colors hover:bg-green-600 hover:text-white"
+                  title={`Hubungi via WhatsApp: ${whatsappNumber}`}
+                  aria-label={`Hubungi contact person via WhatsApp ke ${whatsappNumber}`}
+                >
+                  <MessageCircle className="h-4 w-4" />
+                </a>
+              )}
             </div>
           )}
         </div>
