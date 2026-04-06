@@ -1,87 +1,61 @@
-# Welcome to React Router!
+# Logbook Frontend
 
-A modern, production-ready template for building full-stack React applications using React Router.
+## Overview
+The Logbook frontend application provides a modern and responsive user interface for managing logbook entries, documents, and partners. It is built using React Router 7, Vite, and Tailwind CSS. The interface components are based on Radix UI, providing accessible and customizable building blocks.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## Technology Stack
+- **Framework:** React and React Router 7
+- **Build Tool:** Vite
+- **Styling:** Tailwind CSS
+- **Components:** Radix UI / Shadcn UI
+- **State Management:** TanStack React Query
+- **Form Handling:** React Hook Form and Zod
+- **Language:** TypeScript
 
-## Features
+## Prerequisites
+Before you begin, ensure you have met the following requirements:
+- Node.js (v22 or higher recommended)
+- npm or yarn package manager
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+## Installation
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
+   ```
+2. Install the necessary dependencies:
+   ```bash
+   npm install
+   ```
 
-## Getting Started
+## Configuration
+Create a `.env` file in the root of the frontend directory. Use the `.env.example` file (if available) as a template. Ensure the following variables are set appropriately for your environment:
 
-### Installation
-
-Install the dependencies:
-
-```bash
-npm install
+```env
+VITE_API_BASE_URL=http://localhost:8000/api/v1
 ```
 
-### Development
-
-Start the development server with HMR:
-
+## Running the Application
+To start the development server, run the following command:
 ```bash
 npm run dev
 ```
-
-Your application will be available at `http://localhost:5173`.
+The application will be available at standard local Vite ports, typically `http://localhost:5173`.
 
 ## Building for Production
-
-Create a production build:
-
+To create a production build of the frontend, execute:
 ```bash
 npm run build
 ```
-
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
-
+Once built, you can serve the application using:
 ```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
+npm run start
 ```
 
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
+## Code Quality
+Run formatting and type checking with the following commands:
+```bash
+npm run typecheck
 ```
 
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
+## License
+Proprietary. All rights reserved.
