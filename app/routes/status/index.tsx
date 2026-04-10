@@ -19,7 +19,8 @@ import {
   useDeleteStatus,
 } from "~/hooks/use-status";
 import type { Status } from "~/service/status-service";
-import StatusModal from "~/components/modal/StatusModal";
+import TambahStatus from "~/components/modal/TambahStatus";
+import UpdateStatus from "~/components/modal/UpdateStatus";
 import ConfirmDeleteModal from "~/components/modal/KonfirmasiDelete";
 import { useAuth } from "~/provider/auth-context";
 
@@ -370,23 +371,25 @@ const StatusPage = () => {
       </div>
 
       {/* Modals */}
-      <StatusModal
+      <TambahStatus
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSubmit={handleAddSubmit}
         isLoading={addMutation.isPending}
       />
 
-      <StatusModal
-        isOpen={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          setEditingStatus(null);
-        }}
-        onSubmit={handleEditSubmit}
-        isLoading={updateMutation.isPending}
-        initialData={editingStatus}
-      />
+      {editingStatus && (
+        <UpdateStatus
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingStatus(null);
+          }}
+          onSubmit={handleEditSubmit}
+          isLoading={updateMutation.isPending}
+          initialData={editingStatus}
+        />
+      )}
 
       <ConfirmDeleteModal
         label="status"

@@ -10,14 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
 import { Label } from "~/components/ui/label";
 import {
   Loader2,
@@ -50,8 +42,10 @@ import {
   useApproveMitra,
   useRejectMitra,
 } from "~/hooks/use-mitra";
-import type { Mitra, MitraFull, MitraPayload } from "../../../types/mitra";
+import type { MitraFull } from "../../../types/mitra";
 import TambahMitra from "~/components/modal/TambahMitra";
+import UpdateMitra from "~/components/modal/UpdateMitra";
+import ConfirmDeleteModal from "~/components/modal/KonfirmasiDelete";
 import type { MitraFormData } from "~/lib/schema";
 
 export default function MitraPage() {
@@ -87,7 +81,7 @@ export default function MitraPage() {
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editingMitra, setEditingMitra] = useState<Mitra | null>(null);
+  const [editingMitra, setEditingMitra] = useState<MitraFull | null>(null);
   const [deleteConfirmData, setDeleteConfirmData] = useState<{
     id: number;
     nama: string;
@@ -99,14 +93,6 @@ export default function MitraPage() {
   // Pending Approval State (Admin only)
   const [pendingPage, setPendingPage] = useState(1);
   const [isPendingExpanded, setIsPendingExpanded] = useState(true);
-
-  // Form States
-  const [formData, setFormData] = useState<MitraPayload>({
-    nama: "",
-    klasifikasi_mitra_id: 16, // Default hardcoded for now
-    alamat: "",
-    contact_person: "",
-  });
 
   // Queries & Mutations
   // 1. Get Approved Mitra (Main Table)
@@ -158,20 +144,13 @@ export default function MitraPage() {
 
   const handleEditClick = (mitra: MitraFull) => {
     setEditingMitra(mitra);
-    setFormData({
-      nama: mitra.nama,
-      klasifikasi_mitra_id: mitra.klasifikasi_mitra_id,
-      alamat: mitra.alamat || "",
-      contact_person: mitra.contact_person || "",
-    });
     setIsEditOpen(true);
   };
 
-  const handleEditSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleEditSubmit = (data: MitraFormData) => {
     if (!editingMitra) return;
     updateMutation.mutate(
-      { id: editingMitra.id, payload: formData },
+      { id: editingMitra.id, payload: data },
       {
         onSuccess: () => {
           setIsEditOpen(false);
@@ -692,143 +671,25 @@ export default function MitraPage() {
       />
 
       {/* Edit Modal */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-[425px] border-2 border-black max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">
-              Edit Data Mitra
-            </DialogTitle>
-            <DialogDescription>Perbarui informasi mitra.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleEditSubmit} className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-nama" className="font-bold">
-                Nama Mitra
-              </Label>
-              <Input
-                id="edit-nama"
-                className="border-2 border-black"
-                value={formData.nama}
-                onChange={(e) =>
-                  setFormData({ ...formData, nama: e.target.value })
-                }
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-klasifikasi" className="font-bold">
-                Klasifikasi Mitra
-              </Label>
-              <Select
-                value={formData.klasifikasi_mitra_id?.toString()}
-                onValueChange={(val) =>
-                  setFormData({
-                    ...formData,
-                    klasifikasi_mitra_id: Number(val),
-                  })
-                }
-              >
-                <SelectTrigger
-                  id="edit-klasifikasi"
-                  className="w-full flex justify-between border-2 border-black min-w-0 gap-2"
-                >
-                  <div className="truncate flex-1 text-left">
-                    <SelectValue placeholder="Pilih Klasifikasi" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent className="border-2 border-black">
-                  {klasifikasis.map((k: any) => (
-                    <SelectItem key={k.id} value={k.id.toString()}>
-                      <div className="truncate max-w-[300px]">{k.nama}</div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-alamat" className="font-bold">
-                Alamat
-              </Label>
-              <Input
-                id="edit-alamat"
-                className="border-2 border-black"
-                value={formData.alamat}
-                onChange={(e) =>
-                  setFormData({ ...formData, alamat: e.target.value })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-contact" className="font-bold">
-                Contact Person
-              </Label>
-              <Input
-                id="edit-contact"
-                className="border-2 border-black"
-                value={formData.contact_person}
-                onChange={(e) =>
-                  setFormData({ ...formData, contact_person: e.target.value })
-                }
-              />
-            </div>
-            <DialogFooter className="pt-4 gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsEditOpen(false)}
-                className="border-2 border-black"
-              >
-                Batal
-              </Button>
-              <Button
-                type="submit"
-                disabled={updateMutation.isPending}
-                className="bg-black text-white"
-              >
-                {updateMutation.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                Simpan Perubahan
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <UpdateMitra
+        isOpen={isEditOpen}
+        onClose={() => {
+          setIsEditOpen(false);
+          setEditingMitra(null);
+        }}
+        onSubmit={handleEditSubmit}
+        isLoading={updateMutation.isPending}
+        initialData={editingMitra}
+      />
 
       {/* Delete Confirm */}
-      <Dialog
-        open={deleteConfirmData !== null}
-        onOpenChange={(open) => !open && setDeleteConfirmData(null)}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Hapus Mitra?</DialogTitle>
-            <DialogDescription>
-              Tindakan ini tidak dapat dibatalkan. Data mitra akan dihapus
-              permanen.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteConfirmData(null)}
-            >
-              Batal
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteConfirm}
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Hapus
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDeleteModal
+        label="mitra"
+        isOpen={deleteConfirmData !== null}
+        onClose={() => setDeleteConfirmData(null)}
+        onConfirm={handleDeleteConfirm}
+        isLoading={deleteMutation.isPending}
+      />
     </div>
   );
 }

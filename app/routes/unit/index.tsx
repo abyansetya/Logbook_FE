@@ -19,7 +19,8 @@ import {
   useDeleteUnit,
 } from "~/hooks/use-unit";
 import type { Unit } from "~/service/unit-service";
-import UnitModal from "~/components/modal/UnitModal";
+import TambahUnit from "~/components/modal/TambahUnit";
+import UpdateUnit from "~/components/modal/UpdateUnit";
 import ConfirmDeleteModal from "~/components/modal/KonfirmasiDelete";
 import { useAuth } from "~/provider/auth-context";
 
@@ -370,23 +371,25 @@ const UnitPage = () => {
       </div>
 
       {/* Modals */}
-      <UnitModal
+      <TambahUnit
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSubmit={handleAddSubmit}
         isLoading={addMutation.isPending}
       />
 
-      <UnitModal
-        isOpen={showEditModal}
-        onClose={() => {
-          setShowEditModal(false);
-          setEditingUnit(null);
-        }}
-        onSubmit={handleEditSubmit}
-        isLoading={updateMutation.isPending}
-        initialData={editingUnit}
-      />
+      {editingUnit && (
+        <UpdateUnit
+          isOpen={showEditModal}
+          onClose={() => {
+            setShowEditModal(false);
+            setEditingUnit(null);
+          }}
+          onSubmit={handleEditSubmit}
+          isLoading={updateMutation.isPending}
+          initialData={editingUnit}
+        />
+      )}
 
       <ConfirmDeleteModal
         label="unit"

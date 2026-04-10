@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
@@ -20,52 +20,42 @@ import {
   FormMessage,
 } from "../ui/form";
 import { z } from "zod";
-import type { Unit } from "~/service/unit-service";
+import type { Status } from "~/service/status-service";
 
-const unitSchema = z.object({
+const statusSchema = z.object({
   nama: z
     .string()
-    .min(1, "Nama unit wajib diisi")
-    .max(255, "Nama unit maksimal 255 karakter"),
+    .min(1, "Nama status wajib diisi")
+    .max(255, "Nama status maksimal 255 karakter"),
 });
 
-type UnitFormData = z.infer<typeof unitSchema>;
+type StatusFormData = z.infer<typeof statusSchema>;
 
-interface UnitModalProps {
+interface UpdateStatusProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: UnitFormData) => void;
+  onSubmit: (data: StatusFormData) => void;
   isLoading: boolean;
-  initialData?: Unit | null;
+  initialData: Status;
 }
 
-const UnitModal: React.FC<UnitModalProps> = ({
+const UpdateStatus: React.FC<UpdateStatusProps> = ({
   isOpen,
   onClose,
   onSubmit,
   isLoading,
-  initialData = null,
+  initialData,
 }) => {
-  const form = useForm<UnitFormData>({
-    resolver: zodResolver(unitSchema),
-    defaultValues: {
-      nama: initialData?.nama || "",
-    },
+  const form = useForm<StatusFormData>({
+    resolver: zodResolver(statusSchema),
+    defaultValues: { nama: initialData.nama },
   });
 
   React.useEffect(() => {
-    if (initialData && isOpen) {
-      form.reset({
-        nama: initialData.nama,
-      });
-    } else if (!isOpen) {
-      form.reset({ nama: "" });
+    if (isOpen) {
+      form.reset({ nama: initialData.nama });
     }
   }, [initialData, isOpen, form]);
-
-  const handleSubmit = (data: UnitFormData) => {
-    onSubmit(data);
-  };
 
   const handleClose = () => {
     form.reset();
@@ -76,14 +66,12 @@ const UnitModal: React.FC<UnitModalProps> = ({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md border-2 border-black">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">
-            {initialData ? "Edit Unit" : "Tambah Unit Baru"}
-          </DialogTitle>
+          <DialogTitle className="text-2xl font-bold">Edit Status</DialogTitle>
         </DialogHeader>
 
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSubmit)}
+            onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-4"
           >
             <FormField
@@ -91,10 +79,10 @@ const UnitModal: React.FC<UnitModalProps> = ({
               name="nama"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="font-bold">Nama Unit</FormLabel>
+                  <FormLabel className="font-bold">Nama Status</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Masukkan nama unit"
+                      placeholder="Masukkan nama status"
                       className="border-2 border-black"
                       {...field}
                     />
@@ -123,10 +111,8 @@ const UnitModal: React.FC<UnitModalProps> = ({
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Menyimpan...
                   </>
-                ) : initialData ? (
-                  "Update Unit"
                 ) : (
-                  "Simpan Unit"
+                  "Update Status"
                 )}
               </Button>
             </DialogFooter>
@@ -137,4 +123,4 @@ const UnitModal: React.FC<UnitModalProps> = ({
   );
 };
 
-export default UnitModal;
+export default UpdateStatus;

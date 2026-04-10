@@ -19,6 +19,18 @@ interface ConfirmDeleteModalProps {
   description?: string;
 }
 
+const getDefaultDescription = (label: string): string => {
+  const descriptions: Record<string, string> = {
+    unit: "Tindakan ini tidak dapat dibatalkan. Data unit akan dihapus permanen.",
+    status: "Tindakan ini tidak dapat dibatalkan. Data status akan dihapus permanen.",
+    dokumen: "Tindakan ini tidak dapat dibatalkan. Seluruh data log terkait dokumen ini juga akan ikut terhapus.",
+    log: "Tindakan ini tidak dapat dibatalkan. Data log akan dihapus permanen.",
+    pengguna: "Tindakan ini tidak dapat dibatalkan. Data pengguna ini akan dihapus secara permanen dari sistem.",
+    mitra: "Tindakan ini tidak dapat dibatalkan. Data mitra akan dihapus permanen.",
+  };
+  return descriptions[label] || `Tindakan ini tidak dapat dibatalkan. Data ${label} akan dihapus permanen.`;
+};
+
 const ConfirmDeleteModal = ({
   label,
   isOpen,
@@ -26,8 +38,7 @@ const ConfirmDeleteModal = ({
   onConfirm,
   isLoading,
   title = `Hapus ${label}?`,
-  description = `Tindakan ini tidak dapat dibatalkan. ${label === "log" ? "Data log terkait akan terhapus" : "Seluruh data log terkait dokumen ini juga akan ikut terhapus."}`,
-  // `Tindakan ini tidak dapat dibatalkan. Seluruh data log terkait ${label} ini juga akan ikut terhapus.`,
+  description = getDefaultDescription(label),
 }: ConfirmDeleteModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
