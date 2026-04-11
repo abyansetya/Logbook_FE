@@ -517,19 +517,21 @@ export default function MitraPage() {
                             >
                               <Edit className="h-4 w-4 text-yellow-500" />
                             </Button>
-                            <Button
-                              variant="abu"
-                              size="icon"
-                              className=" w-8 h-8 text-gray-400 hover:text-red-500 cursor-pointer"
-                              onClick={() =>
-                                setDeleteConfirmData({
-                                  id: mitra.id,
-                                  nama: mitra.nama,
-                                })
-                              }
-                            >
-                              <Trash2 className="h-4 w-4 text-red-500" />
-                            </Button>
+                            {isAdmin && (
+                              <Button
+                                variant="abu"
+                                size="icon"
+                                className=" w-8 h-8 text-gray-400 hover:text-red-500 cursor-pointer"
+                                onClick={() =>
+                                  setDeleteConfirmData({
+                                    id: mitra.id,
+                                    nama: mitra.nama,
+                                  })
+                                }
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                              </Button>
+                            )}
                           </div>
                         </td>
                       )}
