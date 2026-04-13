@@ -113,9 +113,20 @@ export const signUpSchema = z
       .min(1, "Nama wajib diisi")
       .max(255, "Nama maksimal 255 karakter"),
     email: z.string().email({ message: "Format email tidak valid" }),
-    password: z.string().min(8, "Password minimal 8 karakter"),
+    password: z
+      .string()
+      .min(8, "Password minimal 8 karakter")
+      .regex(/[A-Z]/, "Password harus mengandung minimal 1 huruf besar")
+      .regex(/[0-9]/, "Password harus mengandung minimal 1 angka")
+      .regex(
+        /[@$!%*?&#^()_\-+=]/,
+        "Password harus mengandung minimal 1 karakter khusus (@$!%*?&#^()_-+=)",
+      ),
     password_confirmation: z.string().min(1, "Konfirmasi password wajib diisi"),
-    nim_nip: z.string().max(50, "NIM/NIP maksimal 50 karakter").optional(),
+    nim_nip: z
+      .string()
+      .min(1, "NIM / NIP wajib diisi")
+      .max(50, "NIM/NIP maksimal 50 karakter"),
   })
   .refine((data) => data.password === data.password_confirmation, {
     message: "Konfirmasi password tidak sama",
@@ -133,14 +144,25 @@ export const updateProfileSchema = z.object({
     .min(1, "Email wajib diisi")
     .email("Format email tidak valid"),
 
-  nim_nip: z.string().max(50, "NIM/NIP maksimal 50 karakter").optional(),
+  nim_nip: z
+    .string()
+    .min(1, "NIM / NIP wajib diisi")
+    .max(50, "NIM/NIP maksimal 50 karakter"),
 });
 
 export const changePasswordSchema = z
   .object({
     current_password: z.string().min(1, "Password saat ini wajib diisi"),
 
-    new_password: z.string().min(8, "Password baru minimal 8 karakter"),
+    new_password: z
+      .string()
+      .min(8, "Password baru minimal 8 karakter")
+      .regex(/[A-Z]/, "Password baru harus mengandung minimal 1 huruf besar")
+      .regex(/[0-9]/, "Password baru harus mengandung minimal 1 angka")
+      .regex(
+        /[@$!%*?&#^()_\-+=]/,
+        "Password baru harus mengandung minimal 1 karakter khusus (@$!%*?&#^()_-+=)",
+      ),
 
     new_password_confirmation: z
       .string()

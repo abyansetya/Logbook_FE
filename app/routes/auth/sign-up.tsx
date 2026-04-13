@@ -137,7 +137,7 @@ export default function SignUp() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-sm font-semibold text-slate-700">
-                        NIM / NIP (Opsional)
+                        NIM / NIP
                       </FormLabel>
                       <FormControl>
                         <Input
