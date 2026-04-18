@@ -202,8 +202,8 @@ const Logbook = () => {
     searchTerm !== "";
   const meta = response?.data?.meta;
   const links = response?.data?.links;
-  const isAdmin = user?.roles?.includes("Admin");
-  const isOperator = user?.roles?.includes("Operator");
+  const isAdmin = user?.role === "Admin";
+  const isOperator = user?.role === "Operator";
   const canManage = isAdmin || isOperator;
 
   const formatDate = (dateString: string | null) => {

@@ -70,7 +70,7 @@ const StatusPage = () => {
   const statuses = response?.data?.data || [];
   const meta: any = response?.data?.meta || response?.data;
 
-  const isAdmin = user?.roles?.includes("Admin");
+  const isAdmin = user?.role === "Admin";
 
   const handleAddSubmit = (data: { nama: string }) => {
     addMutation.mutate(data, {

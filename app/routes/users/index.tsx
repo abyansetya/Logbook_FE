@@ -51,7 +51,7 @@ export default function UsersPage() {
 
     if (!isAuthenticated) {
       navigate("/sign-in");
-    } else if (user && !user.roles?.includes("Admin")) {
+    } else if (user && user.role !== "Admin") {
       // Redirect non-Admins
       navigate("/dashboard");
     }
@@ -232,7 +232,7 @@ export default function UsersPage() {
                                 updatingId === userData.id ||
                                 userData.id === user?.id
                               }
-                              value={userData.roles?.[0]}
+                              value={userData.role ?? undefined}
                               onValueChange={(val) =>
                                 handleRoleChange(
                                   userData.id,

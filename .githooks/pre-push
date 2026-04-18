@@ -1,0 +1,19 @@
+#!/bin/sh
+z40=0000000000000000000000000000000000000000
+while read local_ref local_sha remote_ref remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main|refs/heads/master)
+      if [ "$remote_sha" = "$z40" ]; then
+        range="$local_sha"
+      else
+        range="$remote_sha..$local_sha"
+      fi
+      if git log --format=%s "$range" 2>/dev/null | grep -q "^\[skripsi\]"; then
+        echo "BLOCKED: push ke $remote_ref mengandung commit [skripsi]"
+        git log --format="  %h %s" "$range" | grep "\[skripsi\]"
+        exit 1
+      fi
+      ;;
+  esac
+done
+exit 0

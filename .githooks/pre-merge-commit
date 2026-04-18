@@ -1,0 +1,11 @@
+#!/bin/sh
+current=$(git rev-parse --abbrev-ref HEAD)
+merging=$(cat .git/MERGE_MSG 2>/dev/null | head -1)
+
+if [ "$current" = "main" ] || [ "$current" = "master" ]; then
+  if echo "$merging" | grep -qi "skripsi"; then
+    echo "BLOCKED: tidak boleh merge branch 'skripsi' ke '$current'"
+    exit 1
+  fi
+fi
+exit 0

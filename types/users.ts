@@ -3,7 +3,7 @@ export interface User {
   nama: string;
   email: string;
   nim_nip: string;
-  roles: string[];
+  role: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -15,7 +15,7 @@ export interface UserResponse {
 
 export interface roleResponse {
   id: number;
-  roles: string[];
+  role: string | null;
 }
 
 export interface updateRoleResponse {

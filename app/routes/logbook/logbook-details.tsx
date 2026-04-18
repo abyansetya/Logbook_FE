@@ -32,8 +32,8 @@ const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
   onDeleteLog,
 }) => {
   const { user } = useAuth();
-  const isAdmin = user?.roles?.includes("Admin");
-  const isOperator = user?.roles?.includes("Operator");
+  const isAdmin = user?.role === "Admin";
+  const isOperator = user?.role === "Operator";
   const canManage = isAdmin || isOperator;
   const { data: detailData, isLoading, isError } = useLogbookDetail(documentId);
 

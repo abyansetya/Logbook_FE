@@ -58,7 +58,7 @@ export const useUpdateUserRole = () => {
           ...old,
           data: old.data.map((user: any) =>
             user.id === newUpdate.userId
-              ? { ...user, roles: [newUpdate.role] }
+              ? { ...user, role: newUpdate.role }
               : user,
           ),
         };

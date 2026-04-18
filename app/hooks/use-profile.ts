@@ -13,7 +13,7 @@ interface ProfileUpdateResponse {
     nama: string;
     email: string;
     nim_nip: string | null;
-    roles: string[];
+    role: string | null;
     created_at: string;
     updated_at: string;
   };

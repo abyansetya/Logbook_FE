@@ -64,15 +64,14 @@ export default function ProfilePage() {
                   {user?.email || "-"}
                 </CardDescription>
                 <div className="flex gap-2">
-                  {user?.roles?.map((role, index) => (
+                  {user?.role && (
                     <Badge
-                      key={index}
                       variant="secondary"
                       className="bg-white border-2 border-black"
                     >
-                      {role}
+                      {user.role}
                     </Badge>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
@@ -130,7 +129,7 @@ export default function ProfilePage() {
                 <span>Role</span>
               </div>
               <p className="text-base font-medium pl-6">
-                {user?.roles?.join(", ") || "-"}
+                {user?.role || "-"}
               </p>
             </div>
           </div>

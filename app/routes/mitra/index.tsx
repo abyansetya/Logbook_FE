@@ -86,8 +86,8 @@ export default function MitraPage() {
     id: number;
     nama: string;
   } | null>(null);
-  const isAdmin = user?.roles?.includes("Admin");
-  const isOperator = user?.roles?.includes("Operator");
+  const isAdmin = user?.role === "Admin";
+  const isOperator = user?.role === "Operator";
   const canAddMitra = isAdmin || isOperator;
 
   // Pending Approval State (Admin only)

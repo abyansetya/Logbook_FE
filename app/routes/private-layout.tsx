@@ -168,7 +168,7 @@ export default function DashboardLayout() {
                 })}
 
                 {/* Admin Menu */}
-                {user?.roles?.includes("Admin") && (
+                {user?.role === "Admin" && (
                   <>
                     <p
                       className={`px-3 text-[11px] font-bold text-gray-400 tracking-wider mb-2 mt-6 uppercase ${sidebarMinimized ? "lg:hidden" : "block"}`}
@@ -230,7 +230,7 @@ export default function DashboardLayout() {
                       {user?.nama || "User"}
                     </p>
                     <p className="text-[11px] text-gray-500 mt-1 capitalize">
-                      {user?.roles?.[0] || "Guest"}
+                      {user?.role || "Guest"}
                     </p>
                   </div>
                   <Avatar className="h-9 w-9 md:h-10 md:w-10 border-2 border-transparent group-hover:border-primary/20 transition-all cursor-pointer">
