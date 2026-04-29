@@ -13,7 +13,7 @@ export const useStatuses = () => {
   return useQuery({
     queryKey: ["statuses"],
     queryFn: getStatuses,
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours (statuses rarely change)
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
 };
 
@@ -21,7 +21,7 @@ export const useUnits = () => {
   return useQuery({
     queryKey: ["units"],
     queryFn: getUnits,
-    staleTime: 24 * 60 * 60 * 1000,
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
 };
 
@@ -29,7 +29,7 @@ export const useKlasifikasis = () => {
   return useQuery({
     queryKey: ["klasifikasis"],
     queryFn: getKlasifikasis,
-    staleTime: 24 * 60 * 60 * 1000,
+    staleTime: 10 * 60 * 1000, // 10 minutes
   });
 };
 
