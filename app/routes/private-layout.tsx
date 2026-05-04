@@ -1,6 +1,6 @@
 // src/layouts/dashboard-layout.tsx
 import React, { useState, useEffect } from "react";
-import { Link, Outlet, useLocation, useNavigate } from "react-router";
+import { Link, Navigate, Outlet, useLocation } from "react-router";
 import { Button } from "../components/ui/button";
 import {
   LayoutDashboard,
@@ -51,19 +51,23 @@ export default function DashboardLayout() {
   const [sidebarMinimized, setSidebarMinimized] = useState(false); // Untuk Desktop
   const { user, logout, isAuthenticated, isLoading: authLoading } = useAuth();
   const location = useLocation();
-  const navigate = useNavigate();
-
-  // Global Auth Guard: Redirect to sign-in if not authenticated
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      navigate("/sign-in");
-    }
-  }, [isAuthenticated, authLoading, navigate]);
 
   // Menutup sidebar otomatis saat pindah rute di mobile
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F9FAFB]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/sign-in" replace />;
+  }
 
   const getInitials = (name?: string) => {
     if (!name) return "??";
@@ -102,9 +106,7 @@ export default function DashboardLayout() {
               className={`flex items-center gap-2 ${sidebarMinimized ? "lg:hidden" : "flex"}`}
             >
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
-                <span className="text-white font-bold text-xl">
-                  <img src={undip} alt="" />
-                </span>
+                <img src={undip} alt="UNDIP" />
               </div>
               <h1 className="text-xl font-bold text-[#1A1D1F] truncate">
                 Logbook

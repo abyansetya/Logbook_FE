@@ -198,11 +198,8 @@ export default function MitraPage() {
         )}
       </div>
 
-
       {/* Main Content (Approved List) */}
       <div className="space-y-6">
-        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-        </h2>
 
         {/* Search & Filter */}
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-0">

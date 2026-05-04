@@ -101,7 +101,7 @@ export default function Dashboard() {
           <p className="text-sm font-bold uppercase tracking-widest">
             Dashboard Overview
           </p>
-          <h1 className="text-4xl font-semibold text-primary tracking-tight text-">
+          <h1 className="text-4xl font-semibold text-primary tracking-tight">
             Selamat datang, {user.nama}
           </h1>
           <p className="text-slate-500">

@@ -1,4 +1,4 @@
-import { deleteData, fetchData, postData, updateData } from "~/lib/fetch-util";
+import { api, deleteData, fetchData, postData, updateData } from "~/lib/fetch-util";
 import {
   type LogbooksResponse,
   type LogbookDetailResponse,
@@ -53,20 +53,12 @@ export const exportLogbook = async (
   if (tahun && tahun !== "all") query.append("tahun", tahun);
   query.append("order", order);
 
-  const response = await fetch(
-    `${import.meta.env.VITE_API_BASE_URL}/logbook/export?${query.toString()}`,
-    {
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`, // Assuming token is here, or handle via axios/fetch-util if it supports blob
-      },
-    },
-  );
+  const response = await api.get("/logbook/export", {
+    params: query,
+    responseType: "blob",
+  });
 
-  if (!response.ok) {
-    throw new Error("Gagal mengunduh file");
-  }
-
-  return await response.blob();
+  return response.data;
 };
 
 export const getLogbookDetail = async (
@@ -89,37 +81,31 @@ export const addDokumen = async (
     }
   });
 
-  const response = await fetch(
-    `${import.meta.env.VITE_API_BASE_URL}/logbook/dokumen`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-        Accept: "application/json",
-      },
-      body: formData,
+  const response = await api.post("/logbook/dokumen", formData, {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "multipart/form-data",
     },
-  );
+  });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || "Gagal menambahkan dokumen");
-  }
-
-  return await response.json();
+  return response.data;
 };
 
 export const searchMitra = async (
   query: string,
 ): Promise<MitraSearchResponse> => {
-  return await fetchData<MitraSearchResponse>(`/mitra/search?q=${query}`);
+  const params = new URLSearchParams({ q: query });
+
+  return await fetchData<MitraSearchResponse>(`/mitra/search?${params}`);
 };
 
 export const searchDocument = async (
   query: string,
 ): Promise<DocumentSearchResponse> => {
+  const params = new URLSearchParams({ q: query });
+
   return await fetchData<DocumentSearchResponse>(
-    `/logbook/search-dokumen?q=${query}`,
+    `/logbook/search-dokumen?${params}`,
   );
 };
 
@@ -159,24 +145,14 @@ export const editDokumen = async ({
   // Method spoofing for Laravel PUT requests with files
   formData.append("_method", "PUT");
 
-  const response = await fetch(
-    `${import.meta.env.VITE_API_BASE_URL}/logbook/edit-dokumen/${id}`,
-    {
-      method: "POST", // Use POST for method spoofing
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`,
-        Accept: "application/json",
-      },
-      body: formData,
+  const response = await api.post(`/logbook/edit-dokumen/${id}`, formData, {
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "multipart/form-data",
     },
-  );
+  });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.message || "Gagal memperbarui dokumen");
-  }
-
-  return await response.json();
+  return response.data;
 };
 
 export const deleteDokumen = async ({
