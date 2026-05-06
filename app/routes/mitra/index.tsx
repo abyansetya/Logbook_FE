@@ -207,7 +207,7 @@ export default function MitraPage() {
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
-                placeholder="Cari mitra disetujui..."
+                placeholder="Cari mitra..."
                 className="pl-12 py-6 bg-gray-50 border-gray-100 rounded-xl focus-visible:ring-1 focus-visible:ring-gray-300"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}

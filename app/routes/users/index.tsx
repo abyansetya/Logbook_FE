@@ -310,7 +310,7 @@ export default function UsersPage() {
       <ConfirmDeleteModal
         label="pengguna"
         title="Hapus Pengguna?"
-        description="Tindakan ini tidak dapat dibatalkan. Data pengguna ini akan dihapus secara permanen dari sistem."
+        description="Pengguna akan dinonaktifkan dan tidak dapat login. Riwayat log tetap tersimpan."
         isOpen={deleteConfirmData !== null}
         onClose={() => setDeleteConfirmData(null)}
         onConfirm={handleConfirmDelete}
