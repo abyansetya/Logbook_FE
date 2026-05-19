@@ -17,7 +17,6 @@ import {
   Filter,
   ArrowUpDown,
   MoreHorizontal,
-  Check,
 } from "lucide-react";
 import { Link } from "react-router";
 import {
@@ -41,7 +40,7 @@ import { useDashboardStats } from "~/hooks/use-dashboard";
 import { useRecentActivities } from "~/hooks/use-helper";
 import { Button } from "~/components/ui/button";
 import DashboardSkeleton from "~/components/skeleton/dashboard-skeleton";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Select,
   SelectContent,
@@ -55,28 +54,19 @@ import type { Activity as ActivityType } from "types/activity";
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [selectedYear, setSelectedYear] = useState<string>("all");
-  // State untuk menyimpan status yang aktif di chart (ID status)
-  const [activeStatuses, setActiveStatuses] = useState<number[]>([]);
+  const documentTypes = ["MoU", "MoA", "IA"];
+  const [activeDocumentTypes, setActiveDocumentTypes] =
+    useState<string[]>(documentTypes);
 
-  const { data: apiResponse, isLoading: statsLoading } = useDashboardStats(
-    selectedYear,
-    activeStatuses.length === 0 ? "all" : activeStatuses.join(","),
-  );
+  const { data: apiResponse, isLoading: statsLoading } =
+    useDashboardStats(selectedYear);
   const { data: activitiesResponse, isLoading: activitiesLoading } =
     useRecentActivities();
 
   const stats = apiResponse?.data;
   const availableStatuses = stats?.statuses || [];
-  const statusNames = availableStatuses.map((s) => s.nama);
   const docDistribution = stats?.document_status || [];
   const availableYears = stats?.available_years || [];
-
-  // Sinkronisasi status aktif saat data pertama kali dimuat
-  useEffect(() => {
-    if (availableStatuses.length > 0 && activeStatuses.length === 0) {
-      setActiveStatuses(availableStatuses.map((s) => s.id));
-    }
-  }, [availableStatuses]);
 
   const modernColors = [
     "#1E3A8A", // Biru Tua (Navy)
@@ -226,7 +216,7 @@ export default function Dashboard() {
                         size="sm"
                         className="h-9 rounded-xl border-gray-100 text-xs font-bold gap-2 text-gray-600"
                       >
-                        <Filter className="w-3 h-3" /> Status
+                        <Filter className="w-3 h-3" /> Jenis
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -236,47 +226,47 @@ export default function Dashboard() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between px-1">
                           <p className="text-sm font-bold text-slate-800">
-                            Filter Status
+                            Filter Jenis Dokumen
                           </p>
                           <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full text-slate-500 font-bold">
-                            {activeStatuses.length} Terpilih
+                            {activeDocumentTypes.length} Terpilih
                           </span>
                         </div>
                         <div className="grid gap-2">
-                          {availableStatuses.map((status, index) => (
+                          {documentTypes.map((type, index) => (
                             <div
-                              key={status.id}
+                              key={type}
                               className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all cursor-pointer hover:bg-slate-50 ${
-                                activeStatuses.includes(status.id)
+                                activeDocumentTypes.includes(type)
                                   ? "border-primary/20 bg-primary/[0.02]"
                                   : "border-gray-100"
                               }`}
                               onClick={() => {
-                                if (activeStatuses.includes(status.id)) {
-                                  setActiveStatuses(
-                                    activeStatuses.filter(
-                                      (id) => id !== status.id,
+                                if (activeDocumentTypes.includes(type)) {
+                                  setActiveDocumentTypes(
+                                    activeDocumentTypes.filter(
+                                      (item) => item !== type,
                                     ),
                                   );
                                 } else {
-                                  setActiveStatuses([
-                                    ...activeStatuses,
-                                    status.id,
+                                  setActiveDocumentTypes([
+                                    ...activeDocumentTypes,
+                                    type,
                                   ]);
                                 }
                               }}
                             >
                               <Checkbox
-                                id={`status-${status.id}`}
-                                checked={activeStatuses.includes(status.id)}
+                                id={`jenis-${type}`}
+                                checked={activeDocumentTypes.includes(type)}
                                 onCheckedChange={() => {}} // Controlled by div onClick
                               />
                               <div className="flex-1">
                                 <Label
-                                  htmlFor={`status-${status.id}`}
+                                  htmlFor={`jenis-${type}`}
                                   className="text-xs font-semibold text-slate-700 cursor-pointer block"
                                 >
-                                  {status.nama}
+                                  {type}
                                 </Label>
                               </div>
                               <div
@@ -295,9 +285,7 @@ export default function Dashboard() {
                             size="sm"
                             className="w-full h-8 text-[10px] font-bold text-primary hover:bg-primary/5 rounded-lg"
                             onClick={() =>
-                              setActiveStatuses(
-                                availableStatuses.map((s) => s.id),
-                              )
+                              setActiveDocumentTypes(documentTypes)
                             }
                           >
                             Reset Filter
@@ -356,16 +344,18 @@ export default function Dashboard() {
                       }}
                     />
 
-                    {["MoU", "MoA", "IA"].map((type, index) => (
-                      <Bar
-                        key={type}
-                        dataKey={type}
-                        name={type}
-                        fill={modernColors[index % modernColors.length]}
-                        barSize={40}
-                        radius={[4, 4, 0, 0]}
-                      />
-                    ))}
+                    {documentTypes
+                      .filter((type) => activeDocumentTypes.includes(type))
+                      .map((type, index) => (
+                        <Bar
+                          key={type}
+                          dataKey={type}
+                          name={type}
+                          fill={modernColors[index % modernColors.length]}
+                          barSize={40}
+                          radius={[4, 4, 0, 0]}
+                        />
+                      ))}
                   </BarChart>
                 </ResponsiveContainer>
               </div>

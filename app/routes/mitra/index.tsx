@@ -90,7 +90,7 @@ export default function MitraPage() {
   const isOperator = user?.roles?.includes("Operator");
   const canAddMitra = isAdmin || isOperator;
 
-  // Pending Approval State (Admin only)
+  // Pending Approval State
   const [pendingPage, setPendingPage] = useState(1);
   const [isPendingExpanded, setIsPendingExpanded] = useState(true);
 
@@ -108,7 +108,7 @@ export default function MitraPage() {
     "approved",
   );
 
-  // 2. Get Pending Mitra (Admin Only)
+  // 2. Get Pending Mitra
   const { data: pendingResponse, isLoading: isPendingLoading } = useGetMitra(
     pendingPage,
     "",
@@ -198,8 +198,8 @@ export default function MitraPage() {
         )}
       </div>
 
-      {/* Pending Approval Section (Admin Only) */}
-      {isAdmin && (
+      {/* Pending Approval Section */}
+      {(isAdmin || isOperator) && (
         <div className="space-y-4">
           <div
             className="flex items-center justify-between cursor-pointer group"
@@ -248,22 +248,27 @@ export default function MitraPage() {
                         <th className="px-6 py-4 text-left text-[11px] font-bold text-orange-600 uppercase tracking-wider">
                           Alamat
                         </th>
-                        <th className="px-6 py-4 text-left text-[11px] font-bold text-orange-600 uppercase tracking-wider">
-                          Aksi
-                        </th>
+                        {isAdmin && (
+                          <th className="px-6 py-4 text-left text-[11px] font-bold text-orange-600 uppercase tracking-wider">
+                            Aksi
+                          </th>
+                        )}
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-orange-50">
                       {isPendingLoading ? (
                         <tr>
-                          <td colSpan={4} className="p-8 text-center">
+                          <td
+                            colSpan={isAdmin ? 4 : 3}
+                            className="p-8 text-center"
+                          >
                             <Loader2 className="w-6 h-6 animate-spin mx-auto text-orange-300" />
                           </td>
                         </tr>
                       ) : pendingList.length === 0 ? (
                         <tr>
                           <td
-                            colSpan={4}
+                            colSpan={isAdmin ? 4 : 3}
                             className="p-8 text-center text-gray-500 text-sm italic"
                           >
                             Tidak ada mitra yang menunggu persetujuan.
@@ -284,47 +289,49 @@ export default function MitraPage() {
                             <td className="px-6 py-4 text-gray-500 text-sm max-w-xs truncate">
                               {mitra.alamat || "-"}
                             </td>
-                            <td className="px-6 py-4">
-                              <div className="flex gap-2">
-                                <Button
-                                  size="sm"
-                                  className="bg-green-600 hover:bg-green-700 text-white rounded-lg px-3"
-                                  onClick={() =>
-                                    approveMutation.mutate({
-                                      id: mitra.id,
-                                      nama: mitra.nama,
-                                    })
-                                  }
-                                  disabled={approveMutation.isPending}
-                                >
-                                  {approveMutation.isPending ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                  ) : (
-                                    <Check className="w-4 h-4 mr-1" />
-                                  )}
-                                  Setujui
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  className="rounded-lg px-3"
-                                  onClick={() =>
-                                    rejectMutation.mutate({
-                                      id: mitra.id,
-                                      nama: mitra.nama,
-                                    })
-                                  }
-                                  disabled={rejectMutation.isPending}
-                                >
-                                  {rejectMutation.isPending ? (
-                                    <Loader2 className="w-4 h-4 animate-spin" />
-                                  ) : (
-                                    <X className="w-4 h-4 mr-1" />
-                                  )}
-                                  Tolak
-                                </Button>
-                              </div>
-                            </td>
+                            {isAdmin && (
+                              <td className="px-6 py-4">
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    className="bg-green-600 hover:bg-green-700 text-white rounded-lg px-3"
+                                    onClick={() =>
+                                      approveMutation.mutate({
+                                        id: mitra.id,
+                                        nama: mitra.nama,
+                                      })
+                                    }
+                                    disabled={approveMutation.isPending}
+                                  >
+                                    {approveMutation.isPending ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Check className="w-4 h-4 mr-1" />
+                                    )}
+                                    Setujui
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    className="rounded-lg px-3"
+                                    onClick={() =>
+                                      rejectMutation.mutate({
+                                        id: mitra.id,
+                                        nama: mitra.nama,
+                                      })
+                                    }
+                                    disabled={rejectMutation.isPending}
+                                  >
+                                    {rejectMutation.isPending ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <X className="w-4 h-4 mr-1" />
+                                    )}
+                                    Tolak
+                                  </Button>
+                                </div>
+                              </td>
+                            )}
                           </tr>
                         ))
                       )}
