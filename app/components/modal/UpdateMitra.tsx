@@ -75,6 +75,10 @@ const UpdateMitra: React.FC<UpdateMitraProps> = ({
     onClose();
   };
 
+  const onHandleSubmit = (data: MitraFormData) => {
+    onSubmit(data);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px] border-2 border-black max-h-[90vh] overflow-y-auto">
@@ -87,7 +91,7 @@ const UpdateMitra: React.FC<UpdateMitraProps> = ({
 
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(onHandleSubmit)}
             className="space-y-4 py-4"
           >
             <FormField

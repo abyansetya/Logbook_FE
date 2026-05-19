@@ -56,6 +56,25 @@ const UpdateLog: React.FC<UpdateLogProps> = ({
 
   const { data: unitResponse } = useUnits();
   const units = unitResponse?.data || [];
+  const unitOptions = React.useMemo(() => {
+    if (!logData?.unit_id || !logData.unit_name) {
+      return units;
+    }
+
+    const currentUnitExists = units.some((unit) => unit.id === logData.unit_id);
+
+    if (currentUnitExists) {
+      return units;
+    }
+
+    return [
+      ...units,
+      {
+        id: logData.unit_id,
+        nama: `${logData.unit_name} (diarsipkan)`,
+      },
+    ];
+  }, [logData?.unit_id, logData?.unit_name, units]);
 
   // Integrasi Hook useEditLog
   const { mutate: updateLogMutation, isPending } = useEditLog();
@@ -76,7 +95,7 @@ const UpdateLog: React.FC<UpdateLogProps> = ({
     onClose();
   };
 
-  const handleSubmit = () => {
+  const onHandleSubmit = () => {
     if (!date || !keterangan) {
       toast.error("Mohon lengkapi semua field");
       return;
@@ -160,7 +179,7 @@ const UpdateLog: React.FC<UpdateLogProps> = ({
                 <SelectValue placeholder="Pilih Unit" />
               </SelectTrigger>
               <SelectContent>
-                {units.map((unit) => (
+                {unitOptions.map((unit) => (
                   <SelectItem key={unit.id} value={unit.id.toString()}>
                     {unit.nama}
                   </SelectItem>
@@ -192,7 +211,7 @@ const UpdateLog: React.FC<UpdateLogProps> = ({
             Batal
           </Button>
           <Button
-            onClick={handleSubmit}
+            onClick={onHandleSubmit}
             disabled={isPending}
             className="bg-black text-white hover:bg-gray-800 font-bold px-8 min-w-[140px]"
           >

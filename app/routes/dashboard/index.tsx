@@ -15,9 +15,7 @@ import {
   Activity,
   Info,
   Filter,
-  ArrowUpDown,
-  MoreHorizontal,
-  Check,
+  Loader2,
 } from "lucide-react";
 import { Link } from "react-router";
 import {
@@ -41,7 +39,7 @@ import { useDashboardStats } from "~/hooks/use-dashboard";
 import { useRecentActivities } from "~/hooks/use-helper";
 import { Button } from "~/components/ui/button";
 import DashboardSkeleton from "~/components/skeleton/dashboard-skeleton";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Select,
   SelectContent,
@@ -49,34 +47,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "~/components/ui/dialog";
 import { formatDistanceToNow } from "date-fns";
 import { id } from "date-fns/locale";
 import type { Activity as ActivityType } from "types/activity";
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const [selectedYear, setSelectedYear] = useState<string>("all");
-  // State untuk menyimpan status yang aktif di chart (ID status)
-  const [activeStatuses, setActiveStatuses] = useState<number[]>([]);
+  const [activeDocumentTypes, setActiveDocumentTypes] = useState<
+    string[] | null
+  >(null);
 
-  const { data: apiResponse, isLoading: statsLoading } = useDashboardStats(
-    selectedYear,
-    activeStatuses.length === 0 ? "all" : activeStatuses.join(","),
-  );
+  const {
+    data: apiResponse,
+    isLoading: statsLoading,
+    isFetching: statsFetching,
+  } = useDashboardStats(selectedYear);
   const { data: activitiesResponse, isLoading: activitiesLoading } =
     useRecentActivities();
 
   const stats = apiResponse?.data;
-  const availableStatuses = stats?.statuses || [];
-  const statusNames = availableStatuses.map((s) => s.nama);
   const docDistribution = stats?.document_status || [];
   const availableYears = stats?.available_years || [];
-
-  // Sinkronisasi status aktif saat data pertama kali dimuat
-  useEffect(() => {
-    if (availableStatuses.length > 0 && activeStatuses.length === 0) {
-      setActiveStatuses(availableStatuses.map((s) => s.id));
-    }
-  }, [availableStatuses]);
+  const isDashboardRefreshing = statsFetching && !statsLoading;
+  const documentTypes = ["MoU", "MoA", "IA"];
+  const selectedDocumentTypes = activeDocumentTypes ?? documentTypes;
 
   const modernColors = [
     "#1E3A8A", // Biru Tua (Navy)
@@ -94,23 +96,99 @@ export default function Dashboard() {
   if (!isAuthenticated || !user) return null;
 
   return (
-    <div className="min-h-screen p-6 lg:p-10 bg-[#F8FAFC]">
-      <div className=" mx-auto space-y-8">
+    <div className="min-h-full bg-[#F8FAFC] lg:h-full lg:overflow-hidden">
+      <div className="mx-auto flex h-full min-h-0 flex-col gap-3">
         {/* Welcome Section */}
-        <header className="space-y-1">
-          <p className="text-sm font-bold uppercase tracking-widest">
-            Dashboard Overview
-          </p>
-          <h1 className="text-4xl font-semibold text-primary tracking-tight">
-            Selamat datang, {user.nama}
-          </h1>
-          <p className="text-slate-500">
-            Ringkasan aktivitas dan statistik sistem Anda
-          </p>
+        <header className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+              Dashboard Overview
+            </p>
+            <h1 className="text-xl font-semibold tracking-tight text-primary lg:text-2xl">
+              Selamat datang, {user.nama}
+            </h1>
+            <p className="text-sm text-slate-500">
+              Ringkasan aktivitas dan statistik sistem Anda
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <p className="hidden text-xs font-medium text-slate-400 sm:block">
+              Terakhir diperbarui: {new Date().toLocaleDateString()}
+            </p>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 rounded-xl border-gray-100 bg-white text-xs font-bold text-slate-600"
+                >
+                  <Activity className="h-3.5 w-3.5" />
+                  Aktivitas
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-h-[82vh] max-w-4xl overflow-hidden p-0">
+                <DialogHeader className="border-b border-slate-100 p-5 pr-12">
+                  <DialogTitle>Aktivitas Terbaru</DialogTitle>
+                  <DialogDescription>Log aktivitas terkini</DialogDescription>
+                </DialogHeader>
+                <div className="max-h-[64vh] divide-y divide-slate-50 overflow-y-auto">
+                  {(activitiesResponse?.data || []).map(
+                    (activity: ActivityType) => (
+                      <div
+                        key={activity.id}
+                        className="group flex items-start gap-3 p-4 transition-colors hover:bg-slate-50/70"
+                      >
+                        <div
+                          className={`mt-0.5 shrink-0 rounded-lg p-2 text-white ${
+                            activity.type.toLowerCase() === "logbook"
+                              ? "bg-[#1E3A8A]"
+                              : activity.type.toLowerCase() === "dokumen"
+                                ? "bg-[#3B82F6]"
+                                : "bg-[#EAB308]"
+                          }`}
+                        >
+                          {activity.type.toLowerCase() === "logbook" ? (
+                            <BookOpen className="h-4 w-4" />
+                          ) : activity.type.toLowerCase() === "dokumen" ? (
+                            <FileText className="h-4 w-4" />
+                          ) : (
+                            <Users className="h-4 w-4" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-semibold text-slate-800 group-hover:text-[#1E3A8A]">
+                            {activity.action}{" "}
+                            <span className="text-xs font-normal text-slate-400">
+                              oleh {activity.user?.nama || "System"}
+                            </span>
+                          </p>
+                          <p className="mt-0.5 text-sm text-slate-500">
+                            {activity.description}
+                          </p>
+                        </div>
+                        <span className="shrink-0 text-right text-[10px] font-bold uppercase leading-tight text-slate-400">
+                          {formatDistanceToNow(new Date(activity.created_at), {
+                            addSuffix: true,
+                            locale: id,
+                          })}
+                        </span>
+                      </div>
+                    ),
+                  )}
+                  {(activitiesResponse?.data || []).length === 0 && (
+                    <div className="p-10 text-center text-slate-400">
+                      <Activity className="mx-auto mb-2 h-10 w-10 opacity-20" />
+                      <p className="text-sm">Belum ada aktivitas</p>
+                    </div>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
         </header>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-3">
           {[
             {
               label: "Total Mitra",
@@ -139,67 +217,72 @@ export default function Dashboard() {
           ].map((stat, index) => (
             <Card
               key={index}
-              className="relative overflow-hidden bg-white border border-gray-100 shadow-sm rounded-2xl transition-all duration-300 hover:shadow-md group"
+              className="relative overflow-hidden rounded-lg border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:shadow-md"
             >
-              <CardContent className="py-2 px-6">
-                {/* Baris Atas: Ikon + Label dan Ikon Info */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 bg-gray-50 rounded-md border border-gray-100">
-                      <stat.icon className="w-4 h-4 text-gray-400" />
-                    </div>
-                    <p className="text-sm font-medium text-gray-600">
+              <CardContent className="flex items-center justify-between gap-3 px-3 py-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <div className="rounded-md border border-gray-100 bg-gray-50 p-1.5">
+                    <stat.icon className="h-3.5 w-3.5 text-gray-400" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-medium text-gray-600">
                       {stat.label}
                     </p>
+                    {stat.growth !== 0 && (
+                      <p
+                        className={`truncate text-[10px] font-bold ${
+                          typeof stat?.growth === "number" && stat.growth > 0
+                            ? "text-[#34C759]"
+                            : "text-[#FF3B30]"
+                        }`}
+                      >
+                        {typeof stat?.growth === "number" && stat.growth > 0
+                          ? "+"
+                          : ""}
+                        {stat.growth} {stat.desc}
+                      </p>
+                    )}
                   </div>
-
-                  <Info className="w-5 h-5 text-gray-300 cursor-help" />
                 </div>
-
-                {/* Baris Bawah: Nilai Utama + Badge Pertumbuhan */}
-                <div className="flex items-center gap-3 px-2">
-                  <p className="text-3xl font-bold tracking-tight text-gray-900">
+                <div className="flex shrink-0 items-center gap-2">
+                  <p className="text-xl font-bold tracking-tight text-gray-900">
                     {stat.val}
                   </p>
-                  {stat.growth !== 0 && (
-                    <div
-                      className={`flex items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-bold ${
-                        typeof stat?.growth === "number" && stat.growth > 0
-                          ? "bg-[#E8F8F0] text-[#34C759]"
-                          : "bg-[#FEEBF0] text-[#FF3B30]"
-                      }`}
-                    >
-                      {typeof stat?.growth === "number" && stat.growth > 0
-                        ? "+"
-                        : ""}
-                      {stat.growth} {stat.desc}
-                    </div>
-                  )}
+                  <Info className="h-3.5 w-3.5 cursor-help text-gray-300" />
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-5">
+        <div className="grid flex-1 gap-3 overflow-hidden lg:min-h-0 lg:grid-cols-12">
           {/* Chart Section */}
-          <Card className="lg:col-span-3 bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
-            <div className="p-6 pb-0">
-              <div className="flex flex-row items-start justify-between">
+          <Card className="relative overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm lg:col-span-7 lg:flex lg:min-h-0 lg:flex-col">
+            {isDashboardRefreshing && (
+              <div className="absolute inset-x-0 top-0 z-20 h-1 overflow-hidden bg-slate-100">
+                <div className="h-full w-1/3 animate-pulse rounded-r-full bg-primary" />
+              </div>
+            )}
+            <div className="p-3 pb-0">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="space-y-1">
-                  <div className="flex items-center gap-2 flex-col">
+                  <div>
                     <CardTitle className="text-lg font-semibold text-slate-800">
-                      Status Logbook
+                      Jenis Dokumen
                     </CardTitle>
                     <CardDescription className="text-slate-400">
-                      Data 6 bulan terakhir
+                      Jumlah dokumen berdasarkan jenis
                     </CardDescription>
                   </div>
                 </div>
 
                 {/* Action Buttons ala Modern UI */}
-                <div className="flex gap-2">
-                  <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <div className="flex shrink-0 gap-2">
+                  <Select
+                    value={selectedYear}
+                    onValueChange={setSelectedYear}
+                    disabled={isDashboardRefreshing}
+                  >
                     <SelectTrigger className="w-[110px] h-9 text-xs border-gray-100 rounded-xl font-bold bg-white text-gray-600">
                       <SelectValue placeholder="Tahun" />
                     </SelectTrigger>
@@ -224,9 +307,10 @@ export default function Dashboard() {
                       <Button
                         variant="outline"
                         size="sm"
+                        disabled={isDashboardRefreshing}
                         className="h-9 rounded-xl border-gray-100 text-xs font-bold gap-2 text-gray-600"
                       >
-                        <Filter className="w-3 h-3" /> Status
+                        <Filter className="w-3 h-3" /> Jenis
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent
@@ -236,47 +320,47 @@ export default function Dashboard() {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between px-1">
                           <p className="text-sm font-bold text-slate-800">
-                            Filter Status
+                            Filter Jenis
                           </p>
                           <span className="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full text-slate-500 font-bold">
-                            {activeStatuses.length} Terpilih
+                            {selectedDocumentTypes.length} Terpilih
                           </span>
                         </div>
                         <div className="grid gap-2">
-                          {availableStatuses.map((status, index) => (
+                          {documentTypes.map((type, index) => (
                             <div
-                              key={status.id}
+                              key={type}
                               className={`flex items-center gap-3 p-2.5 rounded-xl border transition-all cursor-pointer hover:bg-slate-50 ${
-                                activeStatuses.includes(status.id)
+                                selectedDocumentTypes.includes(type)
                                   ? "border-primary/20 bg-primary/[0.02]"
                                   : "border-gray-100"
                               }`}
                               onClick={() => {
-                                if (activeStatuses.includes(status.id)) {
-                                  setActiveStatuses(
-                                    activeStatuses.filter(
-                                      (id) => id !== status.id,
+                                if (selectedDocumentTypes.includes(type)) {
+                                  setActiveDocumentTypes(
+                                    selectedDocumentTypes.filter(
+                                      (selectedType) => selectedType !== type,
                                     ),
                                   );
                                 } else {
-                                  setActiveStatuses([
-                                    ...activeStatuses,
-                                    status.id,
+                                  setActiveDocumentTypes([
+                                    ...selectedDocumentTypes,
+                                    type,
                                   ]);
                                 }
                               }}
                             >
                               <Checkbox
-                                id={`status-${status.id}`}
-                                checked={activeStatuses.includes(status.id)}
+                                id={`document-type-${type}`}
+                                checked={selectedDocumentTypes.includes(type)}
                                 onCheckedChange={() => {}} // Controlled by div onClick
                               />
                               <div className="flex-1">
                                 <Label
-                                  htmlFor={`status-${status.id}`}
+                                  htmlFor={`document-type-${type}`}
                                   className="text-xs font-semibold text-slate-700 cursor-pointer block"
                                 >
-                                  {status.nama}
+                                  {type}
                                 </Label>
                               </div>
                               <div
@@ -294,11 +378,7 @@ export default function Dashboard() {
                             variant="ghost"
                             size="sm"
                             className="w-full h-8 text-[10px] font-bold text-primary hover:bg-primary/5 rounded-lg"
-                            onClick={() =>
-                              setActiveStatuses(
-                                availableStatuses.map((s) => s.id),
-                              )
-                            }
+                            onClick={() => setActiveDocumentTypes(null)}
                           >
                             Reset Filter
                           </Button>
@@ -310,8 +390,16 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <CardContent className="px-6 pb-8 pt-10">
-              <div className="h-[320px] w-full">
+            <CardContent className="relative flex-1 px-3 pb-3 pt-3 lg:min-h-0">
+              {isDashboardRefreshing && (
+                <div className="absolute inset-3 z-10 flex items-center justify-center rounded-lg bg-white/70 backdrop-blur-[1px]">
+                  <div className="flex items-center gap-2 rounded-full border border-slate-100 bg-white px-3 py-2 text-xs font-bold text-slate-600 shadow-sm">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                    Memuat data
+                  </div>
+                </div>
+              )}
+              <div className="h-[220px] w-full lg:h-full lg:min-h-[180px]">
                 <ResponsiveContainer width="100%" height="100%" debounce={50}>
                   <BarChart
                     data={stats?.chart_data || []}
@@ -349,31 +437,38 @@ export default function Dashboard() {
                       iconType="circle"
                       iconSize={8}
                       wrapperStyle={{
-                        paddingTop: "40px",
+                        paddingTop: "12px",
                         fontSize: "12px",
                         fontWeight: 600,
                         color: "#6F767E",
                       }}
                     />
 
-                    {["MoU", "MoA", "IA"].map((type, index) => (
-                      <Bar
-                        key={type}
-                        dataKey={type}
-                        name={type}
-                        fill={modernColors[index % modernColors.length]}
-                        barSize={40}
-                        radius={[4, 4, 0, 0]}
-                      />
-                    ))}
+                    {documentTypes
+                      .filter((type) => selectedDocumentTypes.includes(type))
+                      .map((type, index) => (
+                        <Bar
+                          key={type}
+                          dataKey={type}
+                          name={type}
+                          fill={modernColors[index % modernColors.length]}
+                          barSize={30}
+                          radius={[4, 4, 0, 0]}
+                        />
+                      ))}
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="lg:col-span-2 bg-white border-0 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+          <Card className="relative rounded-xl border border-gray-100 bg-white shadow-sm lg:col-span-5 lg:flex lg:min-h-0 lg:flex-col lg:overflow-hidden">
+            {isDashboardRefreshing && (
+              <div className="absolute inset-x-0 top-0 z-20 h-1 overflow-hidden bg-slate-100">
+                <div className="h-full w-1/3 animate-pulse rounded-r-full bg-primary" />
+              </div>
+            )}
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-2">
               <div className="space-y-1">
                 <CardTitle className="text-lg font-semibold text-slate-800">
                   Status Dokumen
@@ -382,184 +477,91 @@ export default function Dashboard() {
                   Distribusi status saat ini
                 </CardDescription>
               </div>
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-[110px] h-8 text-xs border-slate-100 rounded-xl font-bold bg-slate-50/50">
-                  <SelectValue placeholder="Tahun" />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  <SelectItem value="all" className="text-xs font-semibold">
-                    Tahun
-                  </SelectItem>
-                  {availableYears.map((year) => (
-                    <SelectItem
-                      key={year}
-                      value={year.toString()}
-                      className="text-xs font-semibold"
-                    >
-                      {year}
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-slate-50 px-3 py-1.5 text-right">
+                  <p className="text-[10px] font-bold uppercase leading-none text-slate-400">
+                    Total
+                  </p>
+                  <p className="mt-1 text-lg font-bold leading-none text-slate-900">
+                    {stats?.totals.dokumen || 0}
+                  </p>
+                </div>
+                <Select
+                  value={selectedYear}
+                  onValueChange={setSelectedYear}
+                  disabled={isDashboardRefreshing}
+                >
+                  <SelectTrigger className="w-[110px] h-8 text-xs border-slate-100 rounded-xl font-bold bg-slate-50/50">
+                    <SelectValue placeholder="Tahun" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl">
+                    <SelectItem value="all" className="text-xs font-semibold">
+                      Tahun
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {docDistribution.map((doc, index) => (
-                <div key={doc.status} className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 group/link">
-                      <span className="text-sm font-medium text-slate-600">
-                        {doc.status}
-                      </span>
-                      <Link
-                        to={`/logbook?status=${doc.status_id}${selectedYear !== "all" ? `&tahun=${selectedYear}` : ""}`}
-                        className="p-1 rounded-md hover:bg-slate-100 text-slate-400 hover:text-primary transition-all opacity-0 group-hover:opacity-100 group-hover/link:opacity-100"
-                        title={`Lihat logbook ${doc.status}`}
+                    {availableYears.map((year) => (
+                      <SelectItem
+                        key={year}
+                        value={year.toString()}
+                        className="text-xs font-semibold"
                       >
-                        <ArrowUpRight className="w-3 h-3" />
-                      </Link>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl font-bold text-slate-900">
-                        {doc.count}
-                      </span>
-                      <span className="text-[10px] font-bold text-secondary px-2 py-0.5 rounded-full uppercase">
-                        {doc.percentage}%
-                      </span>
-                    </div>
-                  </div>
-                  <div className="relative h-2.5 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className="absolute inset-y-0 left-0 rounded-full transition-all duration-700 bg-primary"
-                      style={{
-                        width: `${doc.percentage}%`,
-                      }}
-                    />
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent className="relative flex-1 p-3 pt-2 lg:min-h-0">
+              {isDashboardRefreshing && (
+                <div className="absolute inset-3 z-10 flex items-center justify-center rounded-lg bg-white/70 backdrop-blur-[1px]">
+                  <div className="flex items-center gap-2 rounded-full border border-slate-100 bg-white px-3 py-2 text-xs font-bold text-slate-600 shadow-sm">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                    Memuat data
                   </div>
                 </div>
-              ))}
-
-              {/* Summary Circle */}
-              <div className="pt-4 mt-4 border-t border-slate-50">
-                <div className="flex items-center justify-center">
-                  <div className="relative w-32 h-32">
-                    <svg
-                      className="w-full h-full -rotate-90"
-                      viewBox="0 0 100 100"
-                    >
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="none"
-                        stroke="#F1F5F9"
-                        strokeWidth="10"
+              )}
+              <div className="grid h-full content-start gap-2 lg:grid-cols-2">
+                {docDistribution.map((doc, index) => (
+                  <div
+                    key={doc.status}
+                    className="rounded-lg border border-slate-100 bg-white p-2.5"
+                  >
+                    <div className="mb-2 flex items-start justify-between gap-2">
+                      <div className="flex min-w-0 items-center gap-2 group/link">
+                        <span className="truncate text-sm font-medium text-slate-600">
+                          {doc.status}
+                        </span>
+                        <Link
+                          to={`/logbook?status=${doc.status_id}${selectedYear !== "all" ? `&tahun=${selectedYear}` : ""}`}
+                          className="shrink-0 rounded-md p-1 text-slate-400 opacity-0 transition-all hover:bg-slate-100 hover:text-primary group-hover/link:opacity-100"
+                          title={`Lihat logbook ${doc.status}`}
+                        >
+                          <ArrowUpRight className="h-3 w-3" />
+                        </Link>
+                      </div>
+                      <div className="shrink-0 text-right">
+                        <p className="text-base font-bold leading-none text-slate-900">
+                          {doc.count}
+                        </p>
+                        <p className="mt-0.5 text-[10px] font-bold uppercase text-secondary">
+                          {doc.percentage}%
+                        </p>
+                      </div>
+                    </div>
+                    <div className="relative h-1.5 overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className="absolute inset-y-0 left-0 rounded-full transition-all duration-700 bg-primary"
+                        style={{
+                          width: `${doc.percentage}%`,
+                        }}
                       />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="none"
-                        stroke="#1E3A8A"
-                        strokeWidth="10"
-                        strokeDasharray={`${(docDistribution[0]?.percentage || 0) * 2.51} 251`}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-2xl font-bold text-slate-900">
-                        {stats?.totals.dokumen || 0}
-                      </span>
-                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-tighter">
-                        Total
-                      </span>
                     </div>
                   </div>
-                </div>
+                ))}
               </div>
             </CardContent>
           </Card>
         </div>
-
-        {/* Recent Activity */}
-        <Card className="bg-white border-0 shadow-sm">
-          <CardHeader className="border-b border-slate-50">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-semibold text-slate-800">
-                  Aktivitas Terbaru
-                </CardTitle>
-                <CardDescription className="text-slate-400">
-                  Log aktivitas terkini
-                </CardDescription>
-              </div>
-              <Activity className="w-5 h-5 text-slate-300" />
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="divide-y divide-slate-50">
-              {(activitiesResponse?.data || []).map(
-                (activity: ActivityType) => (
-                  <div
-                    key={activity.id}
-                    className="flex items-start gap-4 p-5 hover:bg-slate-50/50 transition-colors cursor-pointer group"
-                  >
-                    <div
-                      className={`mt-0.5 p-2.5 rounded-xl text-white ${
-                        activity.type.toLowerCase() === "logbook"
-                          ? "bg-[#1E3A8A]"
-                          : activity.type.toLowerCase() === "dokumen"
-                            ? "bg-[#3B82F6]"
-                            : "bg-[#EAB308]"
-                      }`}
-                    >
-                      {activity.type.toLowerCase() === "logbook" ? (
-                        <BookOpen className="h-4 w-4" />
-                      ) : activity.type.toLowerCase() === "dokumen" ? (
-                        <FileText className="h-4 w-4" />
-                      ) : (
-                        <Users className="h-4 w-4" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 group-hover:text-[#1E3A8A]">
-                        {activity.action} •{" "}
-                        <span className="text-xs text-slate-400">
-                          ditambahkan oleh: {activity.user?.nama || "System"}
-                        </span>
-                      </p>
-                      <p className="text-sm text-slate-500 mt-0.5 truncate">
-                        {activity.description}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase">
-                        {formatDistanceToNow(new Date(activity.created_at), {
-                          addSuffix: true,
-                          locale: id,
-                        })}
-                      </span>
-                      <ArrowUpRight className="w-4 h-4 text-slate-200 group-hover:text-[#1E3A8A] transition-colors" />
-                    </div>
-                  </div>
-                ),
-              )}
-              {(activitiesResponse?.data || []).length === 0 && (
-                <div className="p-10 text-center text-slate-400">
-                  <Activity className="w-10 h-10 mx-auto mb-2 opacity-20" />
-                  <p className="text-sm">Belum ada aktivitas</p>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Footer */}
-        <footer className="text-center py-6">
-          <p className="text-xs font-medium text-slate-400">
-            © 2026 Dashboard System • Terakhir diperbarui:{" "}
-            {new Date().toLocaleDateString()}
-          </p>
-        </footer>
       </div>
     </div>
   );

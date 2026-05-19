@@ -31,6 +31,8 @@ export interface Document {
   jenis_dokumen_id: number;
   status_id: number;
   mitra_id: number;
+  user_id: number | null;
+  created_by?: Admin;
   mitra: MitraBrief;
   created_at: string;
 }
@@ -110,6 +112,8 @@ export interface DokumenData {
   jenis_dokumen_id: number;
   status_id: number;
   mitra_id: number;
+  user_id: number | null;
+  created_by?: Admin;
   mitra: MitraBrief;
   created_at: string;
 }

@@ -63,7 +63,7 @@ const TambahLog: React.FC<TambahLogProps> = ({
     onClose();
   };
 
-  const handleSubmit = () => {
+  const onHandleSubmit = () => {
     if (!date || !keterangan || !unitId) {
       toast.error("Mohon lengkapi semua field");
       return;
@@ -177,7 +177,7 @@ const TambahLog: React.FC<TambahLogProps> = ({
             Batal
           </Button>
           <Button
-            onClick={handleSubmit}
+            onClick={onHandleSubmit}
             disabled={isPending}
             className="bg-black text-white hover:bg-gray-800 font-bold px-8 min-w-[140px]"
           >

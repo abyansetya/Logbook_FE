@@ -1,19 +1,22 @@
 const DashboardSkeleton = () => (
-  <div className="min-h-screen p-6 lg:p-10 bg-[#F8FAFC] animate-pulse">
-    <div className="mx-auto space-y-8">
+  <div className="min-h-full bg-[#F8FAFC] animate-pulse lg:h-full lg:overflow-hidden">
+    <div className="mx-auto flex h-full min-h-0 flex-col gap-3">
       {/* Header Skeleton */}
-      <header className="space-y-3">
-        <div className="h-4 w-32 bg-gray-200 rounded" />
-        <div className="h-10 w-64 bg-gray-300 rounded" />
-        <div className="h-4 w-80 bg-gray-200 rounded" />
+      <header className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <div className="h-3 w-32 rounded bg-gray-200" />
+          <div className="h-8 w-64 rounded bg-gray-300" />
+          <div className="h-4 w-80 rounded bg-gray-200" />
+        </div>
+        <div className="h-3 w-40 rounded bg-gray-200" />
       </header>
 
       {/* Stats Cards Skeleton */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-3">
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className="h-32 bg-white border border-gray-100 rounded-2xl p-6 space-y-4"
+            className="h-20 space-y-2 rounded-xl border border-gray-100 bg-white p-4"
           >
             <div className="flex justify-between">
               <div className="h-4 w-24 bg-gray-200 rounded" />
@@ -24,10 +27,10 @@ const DashboardSkeleton = () => (
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-5">
+      <div className="grid flex-1 gap-3 overflow-hidden lg:min-h-0 lg:grid-cols-12">
         {/* Chart Skeleton */}
-        <div className="lg:col-span-3 h-[450px] bg-white border border-gray-100 rounded-2xl p-6">
-          <div className="flex justify-between mb-8">
+        <div className="rounded-xl border border-gray-100 bg-white p-3 lg:col-span-7 lg:flex lg:min-h-0 lg:flex-col">
+          <div className="mb-6 flex justify-between">
             <div className="space-y-2">
               <div className="h-5 w-40 bg-gray-200 rounded" />
               <div className="h-4 w-32 bg-gray-100 rounded" />
@@ -37,7 +40,7 @@ const DashboardSkeleton = () => (
               <div className="h-9 w-20 bg-gray-100 rounded-xl" />
             </div>
           </div>
-          <div className="h-64 w-full bg-gray-50 rounded-lg flex items-end justify-around p-4">
+          <div className="flex h-56 w-full items-end justify-around rounded-lg bg-gray-50 p-4 lg:h-full lg:min-h-[180px]">
             {[1, 2, 3, 4, 5, 6].map((b) => (
               <div
                 key={b}
@@ -49,38 +52,23 @@ const DashboardSkeleton = () => (
         </div>
 
         {/* Status Dokumen Skeleton */}
-        <div className="lg:col-span-2 h-[450px] bg-white border border-gray-100 rounded-2xl p-6 space-y-6">
-          <div className="h-5 w-40 bg-gray-200 rounded mb-8" />
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="space-y-2">
-              <div className="flex justify-between">
-                <div className="h-4 w-20 bg-gray-200 rounded" />
-                <div className="h-4 w-10 bg-gray-200 rounded" />
+        <div className="space-y-3 rounded-xl border border-gray-100 bg-white p-3 lg:col-span-5 lg:flex lg:min-h-0 lg:flex-col">
+          <div className="mb-1 flex items-center justify-between">
+            <div className="h-5 w-40 rounded bg-gray-200" />
+            <div className="h-10 w-24 rounded-lg bg-gray-100" />
+          </div>
+          <div className="grid gap-2 lg:grid-cols-2">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="rounded-lg border border-slate-100 p-2.5">
+                <div className="mb-2 flex justify-between">
+                  <div className="h-4 w-20 rounded bg-gray-200" />
+                  <div className="h-4 w-10 rounded bg-gray-200" />
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-gray-100" />
               </div>
-              <div className="h-2.5 w-full bg-gray-100 rounded-full" />
-            </div>
-          ))}
-          <div className="flex justify-center pt-8">
-            <div className="h-32 w-32 rounded-full border-8 border-gray-100" />
+            ))}
           </div>
         </div>
-      </div>
-
-      {/* Activity Skeleton */}
-      <div className="h-64 bg-white border border-gray-100 rounded-2xl p-6 space-y-4">
-        <div className="h-5 w-40 bg-gray-200 rounded mb-4" />
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="flex gap-4 items-center border-b border-gray-50 pb-4"
-          >
-            <div className="h-10 w-10 bg-gray-100 rounded-xl" />
-            <div className="flex-1 space-y-2">
-              <div className="h-4 w-1/3 bg-gray-200 rounded" />
-              <div className="h-3 w-1/2 bg-gray-100 rounded" />
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   </div>

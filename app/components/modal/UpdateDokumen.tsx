@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { CalendarIcon, Loader2, FileText } from "lucide-react";
+import { CalendarIcon, Info, Loader2, FileText } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +36,20 @@ import type { Document } from "../../../types/logbook";
 import { useStatuses } from "~/hooks/use-helper";
 import { JENIS_DOKUMEN } from "~/lib/constanst";
 
+const normalizeDateValue = (value?: string | null) => {
+  return value ? value.slice(0, 10) : "";
+};
+
+const parseDateOnly = (value?: string | null) => {
+  if (!value) return undefined;
+
+  const [year, month, day] = normalizeDateValue(value).split("-").map(Number);
+
+  if (!year || !month || !day) return undefined;
+
+  return new Date(year, month - 1, day);
+};
+
 interface UpdateDokumenProps {
   isOpen: boolean;
   onClose: () => void;
@@ -55,6 +69,27 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
   const [isCalendarOpen, setIsCalendarOpen] = React.useState(false);
   const { data: statusResponse, isLoading: isLoadingStatus } = useStatuses();
   const statuses = statusResponse?.data || [];
+  const statusOptions = React.useMemo(() => {
+    if (!initialData?.status_id || !initialData.status) {
+      return statuses;
+    }
+
+    const currentStatusExists = statuses.some(
+      (status) => status.id === initialData.status_id,
+    );
+
+    if (currentStatusExists) {
+      return statuses;
+    }
+
+    return [
+      ...statuses,
+      {
+        id: initialData.status_id,
+        nama: `${initialData.status} (diarsipkan)`,
+      },
+    ];
+  }, [initialData?.status, initialData?.status_id, statuses]);
 
   const form = useForm<TambahDokumenData>({
     resolver: zodResolver(tambahDokumenSchema),
@@ -72,17 +107,29 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
     },
   });
 
-  // Ref untuk memastikan form reset hanya sekali per initialData
-  const lastResetId = React.useRef<number | null | undefined>(undefined);
+  // Ref untuk memastikan form reset hanya saat dokumen awal benar-benar berubah.
+  const lastResetKey = React.useRef<string | undefined>(undefined);
 
   // Reset form dengan data awal saat initialData berubah
   useEffect(() => {
+    const resetKey = initialData
+      ? [
+          initialData.id,
+          initialData.judul_dokumen,
+          initialData.tanggal_dokumen,
+          initialData.tanggal_masuk,
+          initialData.tanggal_terbit,
+          initialData.status,
+        ].join("|")
+      : undefined;
+
     // Only reset if modal is open, statuses are loaded,
-    // AND this initialData hasn't been reset for already
+    // AND this initialData snapshot hasn't been reset already.
     if (
       isOpen &&
       statuses.length > 0 &&
-      lastResetId.current !== initialData?.id
+      resetKey &&
+      lastResetKey.current !== resetKey
     ) {
       // Mapping jenis dokumen
       const jenisMap: Record<string, number> = {
@@ -91,7 +138,7 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
         "Implementation Arrangement (IA)": 3,
       };
 
-      const currentStatus = statuses.find(
+      const currentStatus = statusOptions.find(
         (s) => s.nama === initialData?.status,
       );
 
@@ -103,25 +150,26 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
         nomor_dokumen_mitra: initialData?.nomor_dokumen_mitra || "",
         nomor_dokumen_undip: initialData?.nomor_dokumen_undip || "",
         judul_dokumen: initialData?.judul_dokumen || "",
-        tanggal_dokumen: initialData?.tanggal_dokumen || "",
+        tanggal_dokumen: normalizeDateValue(initialData?.tanggal_dokumen),
         contact_person: initialData?.contact_person || "",
-        status_id: currentStatus ? currentStatus.id : 0,
+        status_id: currentStatus ? currentStatus.id : initialData?.status_id || 0,
         tanggal_masuk:
-          initialData?.tanggal_masuk || new Date().toISOString().split("T")[0],
-        tanggal_terbit: initialData?.tanggal_terbit || "",
+          normalizeDateValue(initialData?.tanggal_masuk) ||
+          new Date().toISOString().split("T")[0],
+        tanggal_terbit: normalizeDateValue(initialData?.tanggal_terbit),
         draft_dokumen: initialData?.draft_dokumen || "",
         final_dokumen: initialData?.final_dokumen || "",
       });
 
       setSelectedMitraNama(initialData?.mitra?.nama || "");
-      lastResetId.current = initialData?.id;
+      lastResetKey.current = resetKey;
     }
 
     // Reset ref saat modal ditutup agar bisa dipicu lagi saat dibuka nanti
     if (!isOpen) {
-      lastResetId.current = undefined;
+      lastResetKey.current = undefined;
     }
-  }, [initialData, isOpen, form, statuses]);
+  }, [initialData, isOpen, form, statuses, statusOptions]);
 
   const onHandleSubmit = (data: TambahDokumenData) => {
     console.log("Submitting data:", { ...data, mitra_nama: selectedMitraNama });
@@ -233,8 +281,9 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
             />
 
             {/* Final Dokumen - Muncul hanya jika status adalah "Terbit" */}
-            {statuses.find((s) => s.id === form.watch("status_id"))?.nama ===
-              "Terbit" && (
+            {statusOptions
+              .find((s) => s.id === form.watch("status_id"))
+              ?.nama.startsWith("Terbit") && (
               <FormField
                 control={form.control}
                 name="final_dokumen"
@@ -307,7 +356,19 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
               name="tanggal_dokumen"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel className="font-bold">Tanggal Dokumen</FormLabel>
+                  <FormLabel className="flex items-center gap-1 font-bold">
+                    Tanggal Dokumen
+                    <span className="group relative inline-flex">
+                      <Info
+                        className="h-3.5 w-3.5 cursor-help text-gray-500"
+                        aria-label="Tanggal dokumen merupakan tanggal yang tercantum pada dokumen"
+                      />
+                      <span className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 w-56 -translate-x-1/2 rounded-md bg-gray-900 px-3 py-2 text-center text-xs font-medium text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                        Tanggal dokumen merupakan tanggal yang tercantum pada
+                        dokumen
+                      </span>
+                    </span>
+                  </FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
@@ -320,7 +381,7 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                           )}
                         >
                           {field.value ? (
-                            format(new Date(field.value), "dd MMMM yyyy")
+                            format(parseDateOnly(field.value)!, "dd MMMM yyyy")
                           ) : (
                             <span>Pilih tanggal</span>
                           )}
@@ -331,12 +392,10 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={
-                          field.value ? new Date(field.value) : undefined
-                        }
+                        selected={parseDateOnly(field.value)}
                         onSelect={(date) => {
                           field.onChange(
-                            date ? format(date, "yyyy-MM-dd") : null,
+                            date ? format(date, "yyyy-MM-dd") : "",
                           );
                         }}
                         initialFocus
@@ -446,7 +505,7 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {statuses.map((status) => (
+                      {statusOptions.map((status) => (
                         <SelectItem
                           key={status.id}
                           value={status.id.toString()}
@@ -512,7 +571,18 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                 name="tanggal_masuk"
                 render={({ field }) => (
                   <FormItem className="flex flex-col">
-                    <FormLabel className="font-bold">Tanggal Masuk</FormLabel>
+                    <FormLabel className="flex items-center gap-1 font-bold">
+                      Tanggal Masuk
+                      <span className="group relative inline-flex">
+                        <Info
+                          className="h-3.5 w-3.5 cursor-help text-gray-500"
+                          aria-label="Tanggal masuk merupakan tanggal awal dokumen diproses"
+                        />
+                        <span className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 w-56 -translate-x-1/2 rounded-md bg-gray-900 px-3 py-2 text-center text-xs font-medium text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+                          Tanggal masuk merupakan tanggal awal dokumen diproses
+                        </span>
+                      </span>
+                    </FormLabel>
                     <Popover
                       open={isCalendarOpen}
                       onOpenChange={setIsCalendarOpen}
@@ -527,7 +597,10 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                             )}
                           >
                             {field.value ? (
-                              format(new Date(field.value), "dd MMMM yyyy")
+                              format(
+                                parseDateOnly(field.value)!,
+                                "dd MMMM yyyy",
+                              )
                             ) : (
                               <span>Pilih tanggal</span>
                             )}
@@ -538,9 +611,7 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
-                          selected={
-                            field.value ? new Date(field.value) : undefined
-                          }
+                          selected={parseDateOnly(field.value)}
                           onSelect={(date) => {
                             field.onChange(
                               date ? format(date, "yyyy-MM-dd") : "",
@@ -574,7 +645,10 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                             )}
                           >
                             {field.value ? (
-                              format(new Date(field.value), "dd MMMM yyyy")
+                              format(
+                                parseDateOnly(field.value)!,
+                                "dd MMMM yyyy",
+                              )
                             ) : (
                               <span>Pilih tanggal</span>
                             )}
@@ -585,12 +659,10 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                       <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
                           mode="single"
-                          selected={
-                            field.value ? new Date(field.value) : undefined
-                          }
+                          selected={parseDateOnly(field.value)}
                           onSelect={(date) => {
                             field.onChange(
-                              date ? format(date, "yyyy-MM-dd") : null,
+                              date ? format(date, "yyyy-MM-dd") : "",
                             );
                             setIsCalendarOpen(false);
                           }}

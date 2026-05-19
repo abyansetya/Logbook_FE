@@ -21,14 +21,14 @@ interface ConfirmDeleteModalProps {
 
 const getDefaultDescription = (label: string): string => {
   const descriptions: Record<string, string> = {
-    unit: "Tindakan ini tidak dapat dibatalkan. Data unit akan dihapus permanen.",
-    status: "Tindakan ini tidak dapat dibatalkan. Data status akan dihapus permanen.",
+    unit: "Data unit akan dihapus dari daftar aktif. Dokumen dan log lama tetap tersimpan.",
+    status: "Data status akan dihapus dari daftar aktif. Dokumen lama tetap tersimpan.",
     dokumen: "Tindakan ini tidak dapat dibatalkan. Seluruh data log terkait dokumen ini juga akan ikut terhapus.",
-    log: "Tindakan ini tidak dapat dibatalkan. Data log akan dihapus permanen.",
-    pengguna: "Tindakan ini tidak dapat dibatalkan. Data pengguna ini akan dihapus secara permanen dari sistem.",
-    mitra: "Tindakan ini tidak dapat dibatalkan. Data mitra akan dihapus permanen.",
+    log: "Tindakan ini tidak dapat dibatalkan. Data log akan dihapus dari sistem.",
+    pengguna: "Data pengguna akan dihapus dari daftar aktif.",
+    mitra: "Data mitra akan dihapus dari daftar aktif. Dokumen dan log lama tetap tersimpan.",
   };
-  return descriptions[label] || `Tindakan ini tidak dapat dibatalkan. Data ${label} akan dihapus permanen.`;
+  return descriptions[label] || `Data ${label} akan dihapus dari daftar aktif.`;
 };
 
 const ConfirmDeleteModal = ({

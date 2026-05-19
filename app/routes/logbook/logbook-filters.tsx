@@ -28,8 +28,25 @@ interface LogbookFiltersProps {
   onJenisChange: (val: string) => void;
   currentTahun: string;
   onTahunChange: (val: string) => void;
+  currentBulan: string;
+  onBulanChange: (val: string) => void;
   clearFilters: () => void;
 }
+
+const MONTH_OPTIONS = [
+  { value: "1", label: "Januari" },
+  { value: "2", label: "Februari" },
+  { value: "3", label: "Maret" },
+  { value: "4", label: "April" },
+  { value: "5", label: "Mei" },
+  { value: "6", label: "Juni" },
+  { value: "7", label: "Juli" },
+  { value: "8", label: "Agustus" },
+  { value: "9", label: "September" },
+  { value: "10", label: "Oktober" },
+  { value: "11", label: "November" },
+  { value: "12", label: "Desember" },
+];
 
 export function LogbookFilters({
   searchInput,
@@ -47,6 +64,8 @@ export function LogbookFilters({
   onJenisChange,
   currentTahun,
   onTahunChange,
+  currentBulan,
+  onBulanChange,
   clearFilters,
 }: LogbookFiltersProps) {
   return (
@@ -159,6 +178,25 @@ export function LogbookFilters({
                     ).map((year) => (
                       <SelectItem key={year} value={year.toString()}>
                         {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex-1 min-w-[200px] space-y-2">
+                <Label className="text-gray-500 font-semibold text-xs uppercase tracking-wider">
+                  Bulan Dokumen
+                </Label>
+                <Select value={currentBulan} onValueChange={onBulanChange}>
+                  <SelectTrigger className="rounded-xl border-gray-100 bg-gray-50 py-6">
+                    <SelectValue placeholder="Pilih Bulan" />
+                  </SelectTrigger>
+                  <SelectContent className="rounded-xl border-gray-100 shadow-xl">
+                    <SelectItem value="all">Semua Bulan</SelectItem>
+                    {MONTH_OPTIONS.map((month) => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label}
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -62,6 +62,10 @@ const UpdateStatus: React.FC<UpdateStatusProps> = ({
     onClose();
   };
 
+  const onHandleSubmit = (data: StatusFormData) => {
+    onSubmit(data);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md border-2 border-black">
@@ -71,7 +75,7 @@ const UpdateStatus: React.FC<UpdateStatusProps> = ({
 
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(onHandleSubmit)}
             className="space-y-4"
           >
             <FormField

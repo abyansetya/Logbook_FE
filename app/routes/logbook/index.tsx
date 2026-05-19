@@ -7,6 +7,7 @@ import TambahLog from "~/components/modal/TambahLog";
 import {
   useLogbooks,
   useAddDokumen,
+  useLogbookDetail,
   useEditDokumen,
   useDeleteDokumen,
   useExportLogbook,
@@ -33,6 +34,7 @@ const Logbook = () => {
   const currentJenis = searchParams.get("jenis_dokumen") || "all";
   const currentOrder = (searchParams.get("order") as "asc" | "desc") || "desc";
   const currentTahun = searchParams.get("tahun") || "all";
+  const currentBulan = searchParams.get("bulan") || "all";
 
   const { user, isAuthenticated } = useAuth();
 
@@ -66,6 +68,9 @@ const Logbook = () => {
   // Data-related States
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [editingDocument, setEditingDocument] = useState<Document | null>(null);
+  const [editingDocumentId, setEditingDocumentId] = useState<number | null>(
+    null,
+  );
   const [selectedMitraId, setSelectedMitraId] = useState<number | null>(null);
 
   // Fetch Statuses from Backend
@@ -86,6 +91,7 @@ const Logbook = () => {
     currentJenis,
     currentOrder,
     currentTahun,
+    currentBulan,
   );
 
   // --- 3. MUTATIONS (CUD Operations) ---
@@ -93,6 +99,7 @@ const Logbook = () => {
   const editDocMutation = useEditDokumen();
   const deleteDocMutation = useDeleteDokumen();
   const exportMutation = useExportLogbook();
+  const { data: editingDocumentDetail } = useLogbookDetail(editingDocumentId);
 
   const handleExport = () => {
     exportMutation.mutate({
@@ -101,6 +108,7 @@ const Logbook = () => {
       jenisDokumen: currentJenis,
       order: currentOrder,
       tahun: currentTahun,
+      bulan: currentBulan,
     });
   };
 
@@ -120,6 +128,7 @@ const Logbook = () => {
 
   const handleEditClick = (doc: Document) => {
     setEditingDocument(doc);
+    setEditingDocumentId(doc.id);
     setShowUpdateDocModal(true);
   };
 
@@ -132,6 +141,7 @@ const Logbook = () => {
         onSuccess: () => {
           setShowUpdateDocModal(false);
           setEditingDocument(null);
+          setEditingDocumentId(null);
         },
       },
     );
@@ -140,6 +150,7 @@ const Logbook = () => {
   const handleCloseUpdateModal = () => {
     setShowUpdateDocModal(false);
     setEditingDocument(null);
+    setEditingDocumentId(null);
   };
 
   // Delete Handlers
@@ -171,6 +182,7 @@ const Logbook = () => {
       prev.delete("status");
       prev.delete("jenis_dokumen");
       prev.delete("tahun");
+      prev.delete("bulan");
       prev.delete("q");
       prev.set("page", "1");
       return prev;
@@ -199,6 +211,7 @@ const Logbook = () => {
     currentStatus !== "all" ||
     currentJenis !== "all" ||
     currentTahun !== "all" ||
+    currentBulan !== "all" ||
     searchTerm !== "";
   const meta = response?.data?.meta;
   const links = response?.data?.links;
@@ -325,6 +338,15 @@ const Logbook = () => {
               return prev;
             });
           }}
+          currentBulan={currentBulan}
+          onBulanChange={(val) => {
+            setSearchParams((prev) => {
+              if (val === "all") prev.delete("bulan");
+              else prev.set("bulan", val);
+              prev.set("page", "1");
+              return prev;
+            });
+          }}
           clearFilters={clearFilters}
         />
 
@@ -364,7 +386,7 @@ const Logbook = () => {
         onClose={handleCloseUpdateModal}
         onSubmit={handleEditDocumentSubmit}
         isLoading={editDocMutation.isPending}
-        initialData={editingDocument}
+        initialData={editingDocumentDetail?.data || editingDocument}
       />
 
       {/* Modal Tambah Dokumen */}

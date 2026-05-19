@@ -59,6 +59,10 @@ const TambahStatus: React.FC<TambahStatusProps> = ({
     onClose();
   };
 
+  const onHandleSubmit = (data: StatusFormData) => {
+    onSubmit(data);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-md border-2 border-black">
@@ -70,7 +74,7 @@ const TambahStatus: React.FC<TambahStatusProps> = ({
 
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(onHandleSubmit)}
             className="space-y-4"
           >
             <FormField
