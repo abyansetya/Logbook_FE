@@ -34,6 +34,8 @@ import { tambahDokumenSchema, type TambahDokumenData } from "~/lib/schema";
 import MitraAutocomplete from "./MitraAutoComplete";
 import { JENIS_DOKUMEN } from "~/lib/constanst";
 
+const MAX_FILE_SIZE = 2 * 1024 * 1024;
+
 interface TambahDokumenProps {
   isOpen: boolean;
   onClose: () => void;
@@ -65,13 +67,32 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
       contact_person: "",
       status_id: 1,
       tanggal_masuk: new Date().toISOString().split("T")[0],
-      tanggal_terbit: "",
     },
   });
 
   const onHandleSubmit = (data: TambahDokumenData) => {
     console.log("Submitting data:", { ...data, mitra_nama: selectedMitraNama });
     onSubmit(data);
+  };
+
+  const handlePdfChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    onChange: (value: File | undefined) => void,
+  ) => {
+    const file = e.target.files?.[0];
+
+    if (file && file.size > MAX_FILE_SIZE) {
+      e.target.value = "";
+      onChange(undefined);
+      form.setError("draft_dokumen", {
+        type: "manual",
+        message: "Ukuran file maksimal 2MB",
+      });
+      return;
+    }
+
+    form.clearErrors("draft_dokumen");
+    onChange(file);
   };
 
   const handleCloseModal = () => {
@@ -126,10 +147,7 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                       type="file"
                       accept=".pdf"
                       className="border-2 border-black file:mr-4 file:py-0.5 file:px-4 file:rounded-none file:border-0 file:text-sm file:font-bold file:bg-gray-500 file:text-white hover:file:bg-gray-400 file:cursor-pointer cursor-pointer"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        onChange(file);
-                      }}
+                      onChange={(e) => handlePdfChange(e, onChange)}
                       {...fieldProps}
                     />
                   </FormControl>
@@ -315,103 +333,53 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              {/* Tanggal Masuk */}
-              <FormField
-                control={form.control}
-                name="tanggal_masuk"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="font-bold">Tanggal Masuk</FormLabel>
-                    <Popover
-                      open={isCalendarOpen}
-                      onOpenChange={setIsCalendarOpen}
-                    >
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal border-2 border-black",
-                              !field.value && "text-muted-foreground",
-                            )}
-                          >
-                            {field.value ? (
-                              format(new Date(field.value), "dd MMMM yyyy")
-                            ) : (
-                              <span>Pilih tanggal</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={
-                            field.value ? new Date(field.value) : undefined
-                          }
-                          onSelect={(date) => {
-                            field.onChange(
-                              date ? format(date, "yyyy-MM-dd") : "",
-                            );
-                          }}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Tanggal Terbit */}
-              <FormField
-                control={form.control}
-                name="tanggal_terbit"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="font-bold">Tanggal Terbit</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal border-2 border-black",
-                              !field.value && "text-muted-foreground",
-                            )}
-                          >
-                            {field.value ? (
-                              format(new Date(field.value), "dd MMMM yyyy")
-                            ) : (
-                              <span>Pilih tanggal</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={
-                            field.value ? new Date(field.value) : undefined
-                          }
-                          onSelect={(date) => {
-                            field.onChange(
-                              date ? format(date, "yyyy-MM-dd") : null,
-                            );
-                            setIsCalendarOpen(false);
-                          }}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+            {/* Tanggal Masuk */}
+            <FormField
+              control={form.control}
+              name="tanggal_masuk"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel className="font-bold">Tanggal Masuk</FormLabel>
+                  <Popover
+                    open={isCalendarOpen}
+                    onOpenChange={setIsCalendarOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full pl-3 text-left font-normal border-2 border-black",
+                            !field.value && "text-muted-foreground",
+                          )}
+                        >
+                          {field.value ? (
+                            format(new Date(field.value), "dd MMMM yyyy")
+                          ) : (
+                            <span>Pilih tanggal</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={
+                          field.value ? new Date(field.value) : undefined
+                        }
+                        onSelect={(date) => {
+                          field.onChange(
+                            date ? format(date, "yyyy-MM-dd") : "",
+                          );
+                        }}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <DialogFooter className="mt-6 gap-3">
               <Button

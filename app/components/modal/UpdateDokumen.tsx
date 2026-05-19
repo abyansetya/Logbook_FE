@@ -36,6 +36,8 @@ import type { Document } from "../../../types/logbook";
 import { useStatuses } from "~/hooks/use-helper";
 import { JENIS_DOKUMEN } from "~/lib/constanst";
 
+const MAX_FILE_SIZE = 2 * 1024 * 1024;
+
 interface UpdateDokumenProps {
   isOpen: boolean;
   onClose: () => void;
@@ -74,6 +76,10 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
 
   // Ref untuk memastikan form reset hanya sekali per initialData
   const lastResetId = React.useRef<number | null | undefined>(undefined);
+  const selectedStatusName = statuses.find(
+    (s) => s.id === form.watch("status_id"),
+  )?.nama;
+  const isTerbit = selectedStatusName === "Terbit";
 
   // Reset form dengan data awal saat initialData berubah
   useEffect(() => {
@@ -123,9 +129,40 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
     }
   }, [initialData, isOpen, form, statuses]);
 
+  useEffect(() => {
+    if (isOpen && statuses.length > 0 && !isTerbit) {
+      form.setValue("tanggal_terbit", "");
+    }
+  }, [form, isOpen, isTerbit, statuses.length]);
+
   const onHandleSubmit = (data: TambahDokumenData) => {
-    console.log("Submitting data:", { ...data, mitra_nama: selectedMitraNama });
-    onSubmit(data);
+    const payload = isTerbit ? data : { ...data, tanggal_terbit: "" };
+    console.log("Submitting data:", {
+      ...payload,
+      mitra_nama: selectedMitraNama,
+    });
+    onSubmit(payload);
+  };
+
+  const handlePdfChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    fieldName: "draft_dokumen" | "final_dokumen",
+    onChange: (value: File | undefined) => void,
+  ) => {
+    const file = e.target.files?.[0];
+
+    if (file && file.size > MAX_FILE_SIZE) {
+      e.target.value = "";
+      onChange(undefined);
+      form.setError(fieldName, {
+        type: "manual",
+        message: "Ukuran file maksimal 2MB",
+      });
+      return;
+    }
+
+    form.clearErrors(fieldName);
+    onChange(file);
   };
 
   const handleCloseModal = () => {
@@ -218,10 +255,9 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                           type="file"
                           accept=".pdf"
                           className="border-2 border-black file:mr-4 file:py-0.5 file:px-4 file:rounded-none file:border-0 file:text-sm file:font-bold file:bg-gray-500 file:text-white hover:file:bg-gray-400 file:cursor-pointer cursor-pointer"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            onChange(file);
-                          }}
+                          onChange={(e) =>
+                            handlePdfChange(e, "draft_dokumen", onChange)
+                          }
                           {...fieldProps}
                         />
                       )}
@@ -233,8 +269,7 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
             />
 
             {/* Final Dokumen - Muncul hanya jika status adalah "Terbit" */}
-            {statuses.find((s) => s.id === form.watch("status_id"))?.nama ===
-              "Terbit" && (
+            {isTerbit && (
               <FormField
                 control={form.control}
                 name="final_dokumen"
@@ -286,10 +321,9 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                             type="file"
                             accept=".pdf"
                             className="border-2 border-black file:mr-4 file:py-0.5 file:px-4 file:rounded-none file:border-0 file:text-sm file:font-bold file:bg-gray-500 file:text-white hover:file:bg-gray-400 file:cursor-pointer cursor-pointer"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              onChange(file);
-                            }}
+                            onChange={(e) =>
+                              handlePdfChange(e, "final_dokumen", onChange)
+                            }
                             {...fieldProps}
                           />
                         )}
@@ -555,53 +589,56 @@ const UpdateDokumen: React.FC<UpdateDokumenProps> = ({
                 )}
               />
 
-              {/* Tanggal Terbit */}
-              <FormField
-                control={form.control}
-                name="tanggal_terbit"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel className="font-bold">Tanggal Terbit</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal border-2 border-black",
-                              !field.value && "text-muted-foreground",
-                            )}
-                          >
-                            {field.value ? (
-                              format(new Date(field.value), "dd MMMM yyyy")
-                            ) : (
-                              <span>Pilih tanggal</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={
-                            field.value ? new Date(field.value) : undefined
-                          }
-                          onSelect={(date) => {
-                            field.onChange(
-                              date ? format(date, "yyyy-MM-dd") : null,
-                            );
-                            setIsCalendarOpen(false);
-                          }}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {isTerbit && (
+                <FormField
+                  control={form.control}
+                  name="tanggal_terbit"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel className="font-bold">
+                        Tanggal Terbit
+                      </FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className={cn(
+                                "w-full pl-3 text-left font-normal border-2 border-black",
+                                !field.value && "text-muted-foreground",
+                              )}
+                            >
+                              {field.value ? (
+                                format(new Date(field.value), "dd MMMM yyyy")
+                              ) : (
+                                <span>Pilih tanggal</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={
+                              field.value ? new Date(field.value) : undefined
+                            }
+                            onSelect={(date) => {
+                              field.onChange(
+                                date ? format(date, "yyyy-MM-dd") : null,
+                              );
+                              setIsCalendarOpen(false);
+                            }}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
             <DialogFooter className="mt-6 gap-3">

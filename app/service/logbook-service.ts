@@ -127,10 +127,7 @@ export const addMitraQuick = async (data: {
   nama: string;
   klasifikasi_mitra_id: number;
 }): Promise<MitraCreateResponse> => {
-  return await postData<MitraCreateResponse>(
-    "/mitra/addMitraWithoutClass",
-    data,
-  );
+  return await postData<MitraCreateResponse>("/mitra/quick", data);
 };
 
 export const editDokumen = async ({

@@ -21,7 +21,6 @@ export const mitraSchema = z.object({
 });
 
 export const updateLogSchema = z.object({
-  user_id: z.number({ message: "User ID Wajib diisi" }),
   unit_id: z.number().nullable().optional(),
   keterangan: z
     .string()

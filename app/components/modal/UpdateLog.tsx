@@ -51,7 +51,6 @@ const UpdateLog: React.FC<UpdateLogProps> = ({
   // State untuk form
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [keterangan, setKeterangan] = useState("");
-  const [userId, setUserId] = useState<number>(0);
   const [unitId, setUnitId] = useState<string>("");
 
   const { data: unitResponse } = useUnits();
@@ -64,7 +63,6 @@ const UpdateLog: React.FC<UpdateLogProps> = ({
   useEffect(() => {
     if (isOpen && logData) {
       setKeterangan(logData.keterangan);
-      setUserId(logData.admin.id);
       setUnitId(logData.unit_id ? logData.unit_id.toString() : "");
 
       const parsedDate = new Date(logData.tanggal_log);
@@ -93,7 +91,6 @@ const UpdateLog: React.FC<UpdateLogProps> = ({
         id: logData.id,
         dokumen_id: documentId,
         data: {
-          user_id: userId,
           unit_id: unitId ? Number(unitId) : null,
           keterangan: keterangan,
           tanggal_log: format(date, "yyyy-MM-dd"),
