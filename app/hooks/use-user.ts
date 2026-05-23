@@ -5,6 +5,8 @@ import {
   searchUser,
   updateUserRole,
   deleteUser,
+  approveUser,
+  rejectUser,
 } from "~/service/user-service";
 import { useAddActivity } from "./use-helper";
 
@@ -117,6 +119,54 @@ export const useDeleteUser = () => {
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Gagal menghapus user");
+    },
+  });
+};
+
+export const useApproveUser = () => {
+  const queryClient = useQueryClient();
+  const { logActivity } = useAddActivity();
+
+  return useMutation({
+    mutationFn: ({ userId }: { userId: number; nama: string }) =>
+      approveUser(userId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["user-search"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+      toast.success("Akun pengguna berhasil disetujui");
+      logActivity({
+        action: "Setujui User",
+        description: `Menyetujui akun user "${variables.nama}" (ID: ${variables.userId})`,
+        type: "User",
+      });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Gagal menyetujui user");
+    },
+  });
+};
+
+export const useRejectUser = () => {
+  const queryClient = useQueryClient();
+  const { logActivity } = useAddActivity();
+
+  return useMutation({
+    mutationFn: ({ userId }: { userId: number; nama: string }) =>
+      rejectUser(userId),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["user-search"] });
+      queryClient.invalidateQueries({ queryKey: ["activities"] });
+      toast.success("Akun pengguna berhasil ditolak");
+      logActivity({
+        action: "Tolak User",
+        description: `Menolak akun user "${variables.nama}" (ID: ${variables.userId})`,
+        type: "User",
+      });
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || "Gagal menolak user");
     },
   });
 };

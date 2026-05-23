@@ -1,5 +1,9 @@
 import { fetchData, updateData, deleteData } from "../lib/fetch-util";
-import type { updateRoleResponse, UserResponse } from "../../types/users";
+import type {
+  updateAccountStatusResponse,
+  updateRoleResponse,
+  UserResponse,
+} from "../../types/users";
 
 export const searchUser = async (query: string): Promise<UserResponse> => {
   return await fetchData<UserResponse>(`/users/search?q=${query}`);
@@ -16,6 +20,24 @@ export const updateUserRole = async (
   return await updateData<updateRoleResponse>(`/users/${userId}/role`, {
     role: newRole,
   });
+};
+
+export const approveUser = async (
+  userId: number,
+): Promise<updateAccountStatusResponse> => {
+  return await updateData<updateAccountStatusResponse>(
+    `/users/${userId}/approve`,
+    {},
+  );
+};
+
+export const rejectUser = async (
+  userId: number,
+): Promise<updateAccountStatusResponse> => {
+  return await updateData<updateAccountStatusResponse>(
+    `/users/${userId}/reject`,
+    {},
+  );
 };
 
 export const deleteUser = async (userId: number): Promise<any> => {

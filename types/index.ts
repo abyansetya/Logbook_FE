@@ -3,6 +3,7 @@ export interface User {
   nama: string;
   email: string;
   nim_nip: string;
+  account_status: "pending" | "approved" | "rejected";
   roles: string[];
   created_at: string;
   updated_at: string;

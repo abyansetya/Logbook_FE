@@ -40,7 +40,7 @@ export default function SignUp() {
   const handleSubmit = (values: SignUpFormData) => {
     mutate(values, {
       onSuccess: () => {
-        toast.success("Registrasi berhasil, silakan login");
+        toast.success("Registrasi berhasil. Akun menunggu persetujuan admin.");
         navigate("/sign-in");
       },
       onError: (error: any) => {

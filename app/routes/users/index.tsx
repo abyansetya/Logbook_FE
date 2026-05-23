@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "~/provider/auth-context";
 import { useNavigate } from "react-router";
 import { Button } from "~/components/ui/button";
-import { fetchData, updateData, deleteData } from "~/lib/fetch-util";
+import { Badge } from "~/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -26,16 +26,19 @@ import {
   User as UserIcon,
   Trash,
   Search,
+  Check,
+  X,
 } from "lucide-react";
 import { Input } from "~/components/ui/input";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "~/hooks/use-debounce";
 import {
   useGetUsers,
   useSearchUser,
   useUpdateUserRole,
   useDeleteUser,
+  useApproveUser,
+  useRejectUser,
 } from "~/hooks/use-user";
 import type { User } from "../../../types/users";
 import ConfirmDeleteModal from "~/components/modal/KonfirmasiDelete";
@@ -67,18 +70,16 @@ export default function UsersPage() {
   } | null>(null);
 
   // --- 3. DATA FETCHING (QUERIES) ---
-  const queryClient = useQueryClient();
-
-  // Ambil semua user
   const { data: usersData, isLoading: isAllUsersLoading } = useGetUsers();
 
   // Ambil hasil pencarian (Hanya jalan jika search >= 3 char)
   const { data: searchResponse, isLoading: isSearchLoading } =
     useSearchUser(debouncedSearch);
 
-  // Mutations
   const updateRole = useUpdateUserRole();
   const deleteUser = useDeleteUser();
+  const approveUser = useApproveUser();
+  const rejectUser = useRejectUser();
 
   // --- 4. COMPUTED LOGIC ---
   const isSearching = debouncedSearch.length >= 3;
@@ -104,6 +105,14 @@ export default function UsersPage() {
     setDeleteConfirmData(user);
   };
 
+  const handleApproveUser = (userData: User) => {
+    approveUser.mutate({ userId: userData.id, nama: userData.nama });
+  };
+
+  const handleRejectUser = (userData: User) => {
+    rejectUser.mutate({ userId: userData.id, nama: userData.nama });
+  };
+
   const handleConfirmDelete = async () => {
     if (!deleteConfirmData) return;
     deleteUser.mutate(
@@ -126,6 +135,30 @@ export default function UsersPage() {
       .join("")
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const getAccountStatusBadge = (status: User["account_status"]) => {
+    if (status === "approved") {
+      return (
+        <Badge className="border-emerald-200 bg-emerald-50 text-emerald-700">
+          Disetujui
+        </Badge>
+      );
+    }
+
+    if (status === "rejected") {
+      return (
+        <Badge className="border-red-200 bg-red-50 text-red-700">
+          Ditolak
+        </Badge>
+      );
+    }
+
+    return (
+      <Badge className="border-amber-200 bg-amber-50 text-amber-700">
+        Menunggu
+      </Badge>
+    );
   };
 
   // --- 7. RENDER LOADING ---
@@ -178,6 +211,7 @@ export default function UsersPage() {
                   <tr>
                     <th className="px-4 py-3 font-medium">Pengguna</th>
                     <th className="px-4 py-3 font-medium">NIM/NIP</th>
+                    <th className="px-4 py-3 font-medium">Status Akun</th>
                     <th className="px-4 py-3 font-medium">Role</th>
                     <th className="px-4 py-3 font-medium">Bergabung</th>
                     <th className="px-4 py-3 font-medium text-right">Aksi</th>
@@ -186,7 +220,7 @@ export default function UsersPage() {
                 <tbody className="divide-y divide-slate-100">
                   {isSearching && isSearchLoading ? (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center">
+                      <td colSpan={6} className="py-8 text-center">
                         <div className="flex justify-center items-center gap-2 text-slate-500">
                           <Loader2 className="h-5 w-5 animate-spin" />
                           <span>Mencari pengguna...</span>
@@ -196,7 +230,7 @@ export default function UsersPage() {
                   ) : displayUsers.length === 0 ? (
                     <tr>
                       <td
-                        colSpan={5}
+                        colSpan={6}
                         className="py-8 text-center text-slate-500"
                       >
                         Tidak ada pengguna ditemukan.
@@ -226,22 +260,36 @@ export default function UsersPage() {
                           {userData.nim_nip || "-"}
                         </td>
                         <td className="px-4 py-3">
+                          {getAccountStatusBadge(userData.account_status)}
+                        </td>
+                        <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <Select
                               disabled={
                                 updatingId === userData.id ||
-                                userData.id === user?.id
+                                userData.id === user?.id ||
+                                userData.account_status !== "approved"
                               }
                               value={userData.roles?.[0]}
-                              onValueChange={(val) =>
+                              onValueChange={(val) => {
+                                if (userData.account_status !== "approved")
+                                  return;
+
                                 handleRoleChange(
                                   userData.id,
                                   val,
                                   userData.nama,
-                                )
-                              }
+                                );
+                              }}
                             >
-                              <SelectTrigger className="w-[130px] h-8 text-xs">
+                              <SelectTrigger
+                                disabled={
+                                  updatingId === userData.id ||
+                                  userData.id === user?.id ||
+                                  userData.account_status !== "approved"
+                                }
+                                className="w-[130px] h-8 text-xs"
+                              >
                                 <SelectValue placeholder="Pilih Role" />
                               </SelectTrigger>
                               <SelectContent>
@@ -278,24 +326,59 @@ export default function UsersPage() {
                           )}
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <Button
-                            variant="destructive"
-                            size="icon"
-                            className="h-8 w-8 cursor-pointer"
-                            disabled={
-                              updatingId === userData.id ||
-                              userData.id === user?.id
-                            }
-                            onClick={() =>
-                              handleDeleteClick({
-                                id: userData.id,
-                                nama: userData.nama,
-                              })
-                            }
-                            title="Hapus User"
-                          >
-                            <Trash className="h-4 w-4" />
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            {userData.account_status !== "approved" && (
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8 cursor-pointer border-emerald-200 text-emerald-700 hover:bg-emerald-50"
+                                disabled={
+                                  approveUser.isPending ||
+                                  rejectUser.isPending ||
+                                  userData.id === user?.id
+                                }
+                                onClick={() => handleApproveUser(userData)}
+                                title="Setujui User"
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {userData.account_status !== "rejected" && (
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-8 w-8 cursor-pointer border-red-200 text-red-700 hover:bg-red-50"
+                                disabled={
+                                  approveUser.isPending ||
+                                  rejectUser.isPending ||
+                                  userData.id === user?.id
+                                }
+                                onClick={() => handleRejectUser(userData)}
+                                title="Tolak User"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button
+                              variant="destructive"
+                              size="icon"
+                              className="h-8 w-8 cursor-pointer"
+                              disabled={
+                                updatingId === userData.id ||
+                                userData.id === user?.id ||
+                                userData.account_status !== "approved"
+                              }
+                              onClick={() =>
+                                handleDeleteClick({
+                                  id: userData.id,
+                                  nama: userData.nama,
+                                })
+                              }
+                              title="Hapus User"
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))

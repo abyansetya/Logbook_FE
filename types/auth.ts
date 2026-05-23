@@ -14,8 +14,5 @@ export interface RegisterResponse {
   message: string;
   data: {
     user: User;
-    token: string;
-    token_type: string;
-    expires_in: number;
   };
 }
