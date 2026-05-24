@@ -25,6 +25,10 @@ import { toast } from "sonner";
 import type { updateLogData } from "~/lib/schema";
 import { useAddActivity } from "./use-helper";
 
+const getErrorMessage = (error: any, fallback = "Terjadi kesalahan") => {
+  return error?.response?.data?.message || error?.message || fallback;
+};
+
 // Hook untuk list logbook
 export const useLogbooks = (
   page: number,
@@ -205,8 +209,7 @@ export const useEditDokumen = () => {
         );
       }
       toast.error(
-        "Gagal memperbarui dokumen: " +
-          (error.response?.data?.message || "Terjadi kesalahan"),
+        "Gagal memperbarui dokumen: " + getErrorMessage(error),
       );
     },
     onSettled: (response, error, variables) => {
