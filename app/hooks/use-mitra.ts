@@ -79,7 +79,7 @@ export const useUpdateMitra = () => {
       return { previousMitra };
     },
     onSuccess: (data) => {
-      toast.success("Mitra berhasil diperbarui");
+      toast.success(data.message || "Mitra berhasil diperbarui");
       logActivity({
         action: "Edit Mitra",
         description: `Memperbarui mitra "${data.data.nama}"`,

@@ -268,7 +268,7 @@ export default function UsersPage() {
                               disabled={
                                 updatingId === userData.id ||
                                 userData.id === user?.id ||
-                                userData.account_status !== "approved"
+                                userData.account_status === "pending"
                               }
                               value={userData.roles?.[0]}
                               onValueChange={(val) => {
@@ -365,8 +365,7 @@ export default function UsersPage() {
                               className="h-8 w-8 cursor-pointer"
                               disabled={
                                 updatingId === userData.id ||
-                                userData.id === user?.id ||
-                                userData.account_status !== "approved"
+                                userData.id === user?.id
                               }
                               onClick={() =>
                                 handleDeleteClick({
