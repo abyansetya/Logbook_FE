@@ -264,22 +264,22 @@ const Logbook = () => {
   if (!isAuthenticated || !user) return null;
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] p-6 lg:p-10">
+    <div className="min-h-screen bg-[#F9FAFB] p-4 md:p-6 xl:p-10">
       <div className=" mx-auto space-y-6">
         {/* Header Section */}
-        <div className="flex items-center justify-between ">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <header>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">
               Logbook
             </p>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900">
               Dokumen Kerja Sama
             </h1>
           </header>
           {canManage && (
             <Button
               onClick={() => setShowAddDocModal(true)}
-              className="bg-black hover:bg-gray-800 text-white rounded-xl px-6 py-6 transition-all shadow-sm cursor-pointer"
+              className="bg-black hover:bg-gray-800 text-white rounded-xl h-11 md:h-12 px-4 md:px-6 transition-all shadow-sm cursor-pointer w-full sm:w-auto"
             >
               <Plus className="w-5 h-5 mr-2" />
               Tambah Dokumen

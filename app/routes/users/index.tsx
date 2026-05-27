@@ -171,11 +171,11 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] p-6 lg:p-10">
+    <div className="min-h-screen bg-[#F9FAFB] p-4 md:p-6 xl:p-10">
       <div className=" mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900">
               Manajemen Pengguna
             </h2>
             <p className="text-slate-500">
@@ -184,7 +184,7 @@ export default function UsersPage() {
           </div>
 
           {/* Search Input */}
-          <div className="relative w-72">
+          <div className="relative w-full md:w-72">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
             <Input
               placeholder="Cari user (min. 3 karakter)..."
@@ -205,8 +205,8 @@ export default function UsersPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="rounded-md border border-slate-200">
-              <table className="w-full text-sm text-left">
+            <div className="rounded-md border border-slate-200 overflow-x-auto">
+              <table className="w-full min-w-[860px] text-sm text-left">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-500">
                   <tr>
                     <th className="px-4 py-3 font-medium">Pengguna</th>

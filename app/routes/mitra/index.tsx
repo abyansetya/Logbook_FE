@@ -177,20 +177,20 @@ export default function MitraPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] p-6 lg:p-10 space-y-10">
-      <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-[#F9FAFB] p-4 md:p-6 xl:p-10 space-y-6 xl:space-y-10">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <header>
           <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">
             Mitra
           </p>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900">
             Manajemen Mitra
           </h1>
         </header>
         {canAddMitra && (
           <Button
             onClick={() => setIsAddOpen(true)}
-            className="bg-black hover:bg-gray-800 text-white rounded-xl px-6 py-6 transition-all shadow-sm cursor-pointer"
+            className="bg-black hover:bg-gray-800 text-white rounded-xl h-11 md:h-12 px-4 md:px-6 transition-all shadow-sm cursor-pointer w-full sm:w-auto"
           >
             <Plus className="w-5 h-5 mr-2" />
             Tambah Mitra
@@ -236,7 +236,7 @@ export default function MitraPage() {
             <div className="overflow-hidden">
               <div className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full">
+                  <table className="w-full min-w-[720px]">
                     <thead className="bg-orange-50/50">
                       <tr className="border-b border-orange-100">
                         <th className="px-6 py-4 text-left text-[11px] font-bold text-orange-600 uppercase tracking-wider">
@@ -376,13 +376,13 @@ export default function MitraPage() {
         </h2>
 
         {/* Search & Filter */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm space-y-0">
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm space-y-0">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
                 placeholder="Cari mitra disetujui..."
-                className="pl-12 py-6 bg-gray-50 border-gray-100 rounded-xl focus-visible:ring-1 focus-visible:ring-gray-300"
+                className="pl-12 h-11 md:h-12 bg-gray-50 border-gray-100 rounded-xl focus-visible:ring-1 focus-visible:ring-gray-300"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
               />
@@ -394,7 +394,7 @@ export default function MitraPage() {
             <Button
               variant="outline"
               onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-              className={`rounded-xl px-6 py-6 border-gray-100 cursor-pointer text-gray-600 font-semibold gap-2 transition-all ${
+              className={`rounded-xl h-11 md:h-12 px-4 md:px-6 border-gray-100 cursor-pointer text-gray-600 font-semibold gap-2 transition-all ${
                 showFilterDropdown ? "bg-gray-100 border-gray-200" : ""
               }`}
             >
@@ -416,8 +416,8 @@ export default function MitraPage() {
           >
             <div className="overflow-hidden">
               <div className="pt-6 border-t border-gray-100">
-                <div className="flex flex-wrap gap-6 items-end">
-                  <div className="flex-1 min-w-[200px] space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_auto] gap-4 md:gap-6 items-end">
+                  <div className="space-y-2">
                     <Label className="text-gray-500 font-semibold text-xs uppercase tracking-wider">
                       Klasifikasi Mitra
                     </Label>
@@ -432,7 +432,7 @@ export default function MitraPage() {
                         });
                       }}
                     >
-                      <SelectTrigger className="rounded-xl border-gray-100 bg-gray-50 py-6">
+                      <SelectTrigger className="rounded-xl border-gray-100 bg-gray-50 h-11 md:h-12 w-full">
                         <SelectValue placeholder="Pilih Klasifikasi" />
                       </SelectTrigger>
                       <SelectContent className="rounded-xl border-gray-100 shadow-xl">
@@ -449,7 +449,7 @@ export default function MitraPage() {
                   <Button
                     onClick={clearFilters}
                     variant="ghost"
-                    className="rounded-xl px-6 py-6 text-gray-400 hover:text-gray-900 hover:bg-gray-50 font-semibold gap-2 cursor-pointer"
+                    className="rounded-xl h-11 md:h-12 px-4 md:px-6 text-gray-400 hover:text-gray-900 hover:bg-gray-50 font-semibold gap-2 cursor-pointer w-full sm:w-auto"
                   >
                     <X className="w-4 h-4" />
                     Reset Filter
@@ -463,23 +463,23 @@ export default function MitraPage() {
         {/* Table */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[820px]">
               <thead>
                 <tr className="bg-gray-50/50 border-b border-gray-100">
-                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-4 md:py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                     Nama Mitra
                   </th>
-                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-4 md:py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                     Klasifikasi Mitra
                   </th>
-                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-4 md:py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                     Alamat
                   </th>
-                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-4 md:py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                     Kontak
                   </th>
                   {canAddMitra && (
-                    <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                    <th className="px-4 md:px-6 py-4 md:py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                       Aksi
                     </th>
                   )}

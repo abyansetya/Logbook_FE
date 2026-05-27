@@ -84,14 +84,14 @@ export default function Dashboard() {
   if (!isAuthenticated || !user) return null;
 
   return (
-    <div className="min-h-screen p-6 lg:p-10 bg-[#F8FAFC]">
-      <div className=" mx-auto space-y-8">
+    <div className="min-h-screen p-4 md:p-6 xl:p-10 bg-[#F8FAFC]">
+      <div className="mx-auto space-y-6 md:space-y-8">
         {/* Welcome Section */}
         <header className="space-y-1">
           <p className="text-sm font-bold uppercase tracking-widest">
             Dashboard Overview
           </p>
-          <h1 className="text-4xl font-semibold text-primary tracking-tight text-">
+          <h1 className="text-2xl md:text-3xl xl:text-4xl font-semibold text-primary tracking-tight">
             Selamat datang, {user.nama}
           </h1>
           <p className="text-slate-500">
@@ -100,7 +100,7 @@ export default function Dashboard() {
         </header>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {[
             {
               label: "Total Mitra",
@@ -131,7 +131,7 @@ export default function Dashboard() {
               key={index}
               className="relative overflow-hidden bg-white border border-gray-100 shadow-sm rounded-2xl transition-all duration-300 hover:shadow-md group"
             >
-              <CardContent className="py-2 px-6">
+              <CardContent className="py-3 px-4 md:px-6">
                 {/* Baris Atas: Ikon + Label dan Ikon Info */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -148,7 +148,7 @@ export default function Dashboard() {
 
                 {/* Baris Bawah: Nilai Utama + Badge Pertumbuhan */}
                 <div className="flex items-center gap-3 px-2">
-                  <p className="text-3xl font-bold tracking-tight text-gray-900">
+                  <p className="text-2xl md:text-3xl font-bold tracking-tight text-gray-900">
                     {stat.val}
                   </p>
                   {stat.growth !== 0 && (
@@ -171,9 +171,9 @@ export default function Dashboard() {
           ))}
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-5">
+        <div className="grid gap-6 xl:grid-cols-5">
           {/* Chart Section */}
-          <Card className="lg:col-span-3 bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
+          <Card className="xl:col-span-3 bg-white border border-gray-100 shadow-sm rounded-2xl overflow-hidden">
             <div className="p-6 pb-0">
               <div className="flex flex-row items-start justify-between">
                 <div className="space-y-1">
@@ -362,7 +362,7 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="lg:col-span-2 bg-white border-0 shadow-sm">
+          <Card className="xl:col-span-2 bg-white border-0 shadow-sm">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <div className="space-y-1">
                 <CardTitle className="text-lg font-semibold text-slate-800">

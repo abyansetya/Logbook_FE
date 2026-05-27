@@ -147,7 +147,10 @@ export const useDeleteStatus = () => {
         });
       }
       toast.error(
-        "Gagal menghapus status: " + (error.message || "Terjadi kesalahan"),
+        "Gagal menghapus status: " +
+          (error.response?.data?.message ||
+            error.message ||
+            "Terjadi kesalahan"),
       );
     },
     onSettled: () => {

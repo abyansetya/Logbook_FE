@@ -1,5 +1,5 @@
 const DashboardSkeleton = () => (
-  <div className="min-h-screen p-6 lg:p-10 bg-[#F8FAFC] animate-pulse">
+  <div className="min-h-screen p-4 md:p-6 xl:p-10 bg-[#F8FAFC] animate-pulse">
     <div className="mx-auto space-y-8">
       {/* Header Skeleton */}
       <header className="space-y-3">
@@ -24,9 +24,9 @@ const DashboardSkeleton = () => (
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-5">
+      <div className="grid gap-6 xl:grid-cols-5">
         {/* Chart Skeleton */}
-        <div className="lg:col-span-3 h-[450px] bg-white border border-gray-100 rounded-2xl p-6">
+        <div className="xl:col-span-3 h-[450px] bg-white border border-gray-100 rounded-2xl p-6">
           <div className="flex justify-between mb-8">
             <div className="space-y-2">
               <div className="h-5 w-40 bg-gray-200 rounded" />
@@ -49,7 +49,7 @@ const DashboardSkeleton = () => (
         </div>
 
         {/* Status Dokumen Skeleton */}
-        <div className="lg:col-span-2 h-[450px] bg-white border border-gray-100 rounded-2xl p-6 space-y-6">
+        <div className="xl:col-span-2 h-[450px] bg-white border border-gray-100 rounded-2xl p-6 space-y-6">
           <div className="h-5 w-40 bg-gray-200 rounded mb-8" />
           {[1, 2, 3].map((i) => (
             <div key={i} className="space-y-2">

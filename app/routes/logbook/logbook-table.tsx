@@ -63,27 +63,27 @@ export function LogbookTable({
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full min-w-[920px]">
           <thead>
             <tr className="bg-gray-50/50 border-b border-gray-100">
-              <th className="px-6 py-5 w-12"></th>
-              <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[150px]">
+              <th className="px-4 md:px-6 py-4 md:py-5 w-12"></th>
+              <th className="px-4 md:px-6 py-4 md:py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[150px]">
                 Nomor Dokumen
               </th>
-              <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[150px]">
+              <th className="px-4 md:px-6 py-4 md:py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[150px]">
                 Tanggal Dokumen
               </th>
-              <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[200px]">
+              <th className="px-4 md:px-6 py-4 md:py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[220px]">
                 Judul Dokumen
               </th>
-              <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[120px]">
+              <th className="px-4 md:px-6 py-4 md:py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[120px]">
                 Jenis
               </th>
-              <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[120px]">
+              <th className="px-4 md:px-6 py-4 md:py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[130px]">
                 Status
               </th>
               <th
-                className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer group/sort hover:text-gray-900 transition-colors"
+                className="px-4 md:px-6 py-4 md:py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer group/sort hover:text-gray-900 transition-colors min-w-[150px]"
                 onClick={toggleSortOrder}
               >
                 <div className="flex items-center gap-1">
@@ -103,7 +103,7 @@ export function LogbookTable({
                 </div>
               </th>
               {canManage && (
-                <th className="px-6 py-5 text-right text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                <th className="px-4 md:px-6 py-4 md:py-5 text-right text-[11px] font-bold text-gray-400 uppercase tracking-wider min-w-[90px]">
                   Aksi
                 </th>
               )}
@@ -138,14 +138,14 @@ export function LogbookTable({
                     className="hover:bg-gray-50/80 transition-colors cursor-pointer group"
                     onClick={() => toggleRow(doc.id)}
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-4 md:px-6 py-4">
                       {expandedRows.has(doc.id) ? (
                         <ChevronDown className="w-4 h-4 text-gray-400" />
                       ) : (
                         <ChevronRight className="w-4 h-4 text-gray-400" />
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm">
+                    <td className="px-4 md:px-6 py-4 text-sm">
                       <div className="font-semibold text-gray-700">
                         {doc.nomor_dokumen_undip}
                       </div>
@@ -153,12 +153,12 @@ export function LogbookTable({
                         {doc.nomor_dokumen_mitra}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm">
+                    <td className="px-4 md:px-6 py-4 text-sm">
                       <div className="text-gray-700 font-medium">
                         {formatDate(doc.tanggal_dokumen)}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 md:px-6 py-4">
                       <div className="text-sm font-semibold text-gray-700 whitespace-normal break-words leading-relaxed">
                         {doc.judul_dokumen}
                       </div>
@@ -187,7 +187,7 @@ export function LogbookTable({
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 md:px-6 py-4">
                       <Badge
                         variant="outline"
                         className={`rounded-lg w-full font-semibold px-2 py-1 lg:px-3 lg:py-1.5 whitespace-normal wrap-break-word text-center text-[10px] lg:text-sm ${getJenisStyle(
@@ -197,7 +197,7 @@ export function LogbookTable({
                         {doc.jenis_dokumen}
                       </Badge>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 md:px-6 py-4">
                       <Badge
                         className={`rounded-lg w-full px-2 py-1 lg:px-3 lg:py-1.5 font-semibold whitespace-normal wrap-break-word text-center text-[10px] lg:text-sm ${getStatusStyle(
                           doc.status ?? "-",
@@ -206,7 +206,7 @@ export function LogbookTable({
                         {doc.status}
                       </Badge>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 md:px-6 py-4">
                       <div className="text-gray-700 font-medium text-[10px] lg:text-sm">
                         {formatDate(doc.tanggal_masuk)}
                       </div>
@@ -215,7 +215,7 @@ export function LogbookTable({
                       </div>
                     </td>
                     <td
-                      className="px-6 py-4 text-right"
+                      className="px-4 md:px-6 py-4 text-right"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <div className="flex justify-end gap-1">
@@ -266,7 +266,7 @@ export function LogbookTable({
                     <tr className="bg-gray-50/50">
                       <td
                         colSpan={8}
-                        className="px-8 py-8 border-l-2 border-black ml-4"
+                        className="px-4 md:px-8 py-5 md:py-8 border-l-2 border-black ml-4"
                       >
                         <DocumentLogDetails
                           documentId={doc.id}

@@ -144,7 +144,7 @@ export default function EditProfilePage() {
           </Button>
 
           <div className="space-y-2">
-            <h1 className="text-4xl font-bold tracking-tight text-black">
+            <h1 className="text-2xl md:text-4xl font-bold tracking-tight text-black">
               Edit Profil
             </h1>
             <p className="text-lg text-gray-600">

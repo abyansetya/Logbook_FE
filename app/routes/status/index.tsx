@@ -133,21 +133,21 @@ const StatusPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] p-6 lg:p-10">
+    <div className="min-h-screen bg-[#F9FAFB] p-4 md:p-6 xl:p-10">
       <div className="mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <header>
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">
               Manajemen
             </p>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900">
               Status
             </h1>
           </header>
           <Button
             onClick={() => setShowAddModal(true)}
-            className="bg-black hover:bg-gray-800 text-white rounded-xl px-6 py-6 transition-all shadow-sm cursor-pointer"
+            className="bg-black hover:bg-gray-800 text-white rounded-xl h-11 md:h-12 px-4 md:px-6 transition-all shadow-sm cursor-pointer w-full sm:w-auto"
           >
             <Plus className="w-5 h-5 mr-2" />
             Tambah Status
@@ -155,14 +155,14 @@ const StatusPage = () => {
         </div>
 
         {/* Search Bar */}
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
+        <div className="bg-white rounded-2xl border border-gray-100 p-4 md:p-6 shadow-sm">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
               placeholder="Cari status..."
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              className="pl-12 py-6 bg-gray-50 border-gray-100 rounded-xl focus-visible:ring-1 focus-visible:ring-gray-300"
+              className="pl-12 h-11 md:h-12 bg-gray-50 border-gray-100 rounded-xl focus-visible:ring-1 focus-visible:ring-gray-300"
             />
             {isLoading && (
               <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-gray-400" />
@@ -173,16 +173,16 @@ const StatusPage = () => {
         {/* Table */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[520px]">
               <thead>
                 <tr className="bg-gray-50/50 border-b border-gray-100">
-                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-4 md:py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                     No
                   </th>
-                  <th className="px-6 py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-4 md:py-5 text-left text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                     Nama Status
                   </th>
-                  <th className="px-6 py-5 text-right text-[11px] font-bold text-gray-400 uppercase tracking-wider">
+                  <th className="px-4 md:px-6 py-4 md:py-5 text-right text-[11px] font-bold text-gray-400 uppercase tracking-wider">
                     Aksi
                   </th>
                 </tr>

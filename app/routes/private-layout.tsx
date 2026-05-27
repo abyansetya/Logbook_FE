@@ -80,7 +80,7 @@ export default function DashboardLayout() {
       {/* --- OVERLAY UNTUK MOBILE --- */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 lg:hidden transition-opacity"
+          className="fixed inset-0 z-40 bg-black/40 xl:hidden transition-opacity"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -89,9 +89,9 @@ export default function DashboardLayout() {
       <aside
         className={`
           fixed inset-y-0 left-0 z-50 bg-white border-r border-gray-200 transition-all duration-300 ease-in-out
-          lg:static lg:translate-x-0 
+          xl:static xl:translate-x-0
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
-          ${sidebarMinimized ? "lg:w-20" : "lg:w-64"}
+          ${sidebarMinimized ? "xl:w-20" : "xl:w-64"}
           w-64
         `}
       >
@@ -99,7 +99,7 @@ export default function DashboardLayout() {
           {/* Logo Section */}
           <div className="flex items-center justify-between h-20 px-6">
             <div
-              className={`flex items-center gap-2 ${sidebarMinimized ? "lg:hidden" : "flex"}`}
+              className={`flex items-center gap-2 ${sidebarMinimized ? "xl:hidden" : "flex"}`}
             >
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center shrink-0">
                 <span className="text-white font-bold text-xl">
@@ -115,7 +115,7 @@ export default function DashboardLayout() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setSidebarMinimized(!sidebarMinimized)}
-                className="hidden lg:flex p-1 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
+                className="hidden xl:flex p-1 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
               >
                 {sidebarMinimized ? (
                   <ChevronRight className="h-4 w-4 text-gray-500" />
@@ -125,7 +125,7 @@ export default function DashboardLayout() {
               </button>
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="lg:hidden p-1 text-gray-500 hover:bg-gray-100 rounded-md"
+                className="xl:hidden p-1 text-gray-500 hover:bg-gray-100 rounded-md"
               >
                 <X className="h-6 w-6" />
               </button>
@@ -136,7 +136,7 @@ export default function DashboardLayout() {
           <nav className="flex-1 overflow-y-auto px-3 space-y-8 mt-4">
             <div>
               <p
-                className={`px-3 text-[11px] font-bold text-gray-400 tracking-wider mb-4 uppercase ${sidebarMinimized ? "lg:hidden" : "block"}`}
+                className={`px-3 text-[11px] font-bold text-gray-400 tracking-wider mb-4 uppercase ${sidebarMinimized ? "xl:hidden" : "block"}`}
               >
                 General
               </p>
@@ -151,7 +151,7 @@ export default function DashboardLayout() {
                       to={item.href}
                       className={`flex items-center gap-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all
                         ${isActive ? "bg-[#F4F4F4] text-primary" : "text-[#6F767E] hover:bg-gray-50 hover:text-gray-900"}
-                        ${sidebarMinimized ? "lg:justify-center" : "justify-start"}
+                        ${sidebarMinimized ? "xl:justify-center" : "justify-start"}
                       `}
                       title={sidebarMinimized ? item.name : ""}
                     >
@@ -159,7 +159,7 @@ export default function DashboardLayout() {
                         className={`h-5 w-5 shrink-0 ${isActive ? "text-primary" : "text-[#6F767E]"}`}
                       />
                       <span
-                        className={`${sidebarMinimized ? "lg:hidden" : "block"}`}
+                        className={`${sidebarMinimized ? "xl:hidden" : "block"}`}
                       >
                         {item.name}
                       </span>
@@ -171,7 +171,7 @@ export default function DashboardLayout() {
                 {user?.roles?.includes("Admin") && (
                   <>
                     <p
-                      className={`px-3 text-[11px] font-bold text-gray-400 tracking-wider mb-2 mt-6 uppercase ${sidebarMinimized ? "lg:hidden" : "block"}`}
+                      className={`px-3 text-[11px] font-bold text-gray-400 tracking-wider mb-2 mt-6 uppercase ${sidebarMinimized ? "xl:hidden" : "block"}`}
                     >
                       Admin
                     </p>
@@ -185,7 +185,7 @@ export default function DashboardLayout() {
                           to={item.href}
                           className={`flex items-center gap-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all
                                 ${isActive ? "bg-[#F4F4F4] text-primary" : "text-[#6F767E] hover:bg-gray-50 hover:text-gray-900"}
-                                ${sidebarMinimized ? "lg:justify-center" : "justify-start"}
+                                ${sidebarMinimized ? "xl:justify-center" : "justify-start"}
                             `}
                           title={sidebarMinimized ? item.name : ""}
                         >
@@ -193,7 +193,7 @@ export default function DashboardLayout() {
                             className={`h-5 w-5 shrink-0 ${isActive ? "text-primary" : "text-[#6F767E]"}`}
                           />
                           <span
-                            className={`${sidebarMinimized ? "lg:hidden" : "block"}`}
+                            className={`${sidebarMinimized ? "xl:hidden" : "block"}`}
                           >
                             {item.name}
                           </span>
@@ -215,7 +215,7 @@ export default function DashboardLayout() {
           {/* Hamburger Menu Mobile */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
+            className="xl:hidden p-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors"
           >
             <Menu className="h-6 w-6" />
           </button>
@@ -268,7 +268,7 @@ export default function DashboardLayout() {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 xl:p-8">
           <Outlet />
         </main>
       </div>
