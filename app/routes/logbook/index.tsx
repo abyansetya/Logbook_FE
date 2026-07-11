@@ -17,7 +17,7 @@ import TambahDokumen from "~/components/modal/TambahDokumen";
 import { useDebounce } from "~/hooks/use-debounce";
 import UpdateDokumen from "~/components/modal/UpdateDokumen";
 import type { TambahDokumenData } from "~/lib/schema";
-import { JENIS_DOKUMEN } from "~/lib/constanst";
+import { JENIS_DOKUMEN } from "~/lib/constants";
 import ConfirmDeleteModal from "~/components/modal/KonfirmasiDelete";
 import { useAuth } from "~/provider/auth-context";
 import { LogbookFilters } from "./logbook-filters";

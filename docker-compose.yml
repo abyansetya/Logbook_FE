@@ -9,7 +9,7 @@ services:
       - "5173:5173"
     environment:
       - VITE_API_URL=http://127.0.0.1:8000/api/v1
-    command: sh -c "npm ci && npm run dev" -- --host 0.0.00"
+    command: sh -c "npm ci && npm run dev -- --host 0.0.0.0"
 
 volumes:
   frontend_node_modules:

@@ -32,7 +32,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { cn } from "~/lib/utils";
 import { tambahDokumenSchema, type TambahDokumenData } from "~/lib/schema";
 import MitraAutocomplete from "./MitraAutoComplete";
-import { JENIS_DOKUMEN } from "~/lib/constanst";
+import { JENIS_DOKUMEN } from "~/lib/constants";
 import { useStatuses } from "~/hooks/use-helper";
 
 interface TambahDokumenProps {

@@ -1,5 +1,3 @@
-// ~/lib/constants.ts
-
 export const JENIS_DOKUMEN = [
   { id: 1, nama: "Memorandum of Understanding (MoU)" },
   { id: 2, nama: "Memorandum of Agreement (MoA)" },

@@ -34,7 +34,7 @@ import { tambahDokumenSchema, type TambahDokumenData } from "~/lib/schema";
 import MitraAutocomplete from "./MitraAutoComplete";
 import type { Document } from "../../../types/logbook";
 import { useStatuses } from "~/hooks/use-helper";
-import { JENIS_DOKUMEN } from "~/lib/constanst";
+import { JENIS_DOKUMEN } from "~/lib/constants";
 
 const normalizeDateValue = (value?: string | null) => {
   return value ? value.slice(0, 10) : "";

@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { JENIS_DOKUMEN } from "~/lib/constanst";
+import { JENIS_DOKUMEN } from "~/lib/constants";
 
 interface LogbookFiltersProps {
   searchInput: string;
