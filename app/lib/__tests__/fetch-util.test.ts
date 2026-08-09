@@ -2,12 +2,18 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 // vi.hoisted: definisikan data mock SEBELUM vi.mock di-hoist ke atas
 const mocks = vi.hoisted(() => {
-  const requestInterceptor: ((config: any) => any) | undefined = undefined;
-  const responseInterceptor: ((error: any) => any) | undefined = undefined;
+  type Interceptor<T> = ((arg: T) => any) | undefined;
+
+  const requestInterceptorRef: { value: Interceptor<{ headers: any }> } = {
+    value: undefined,
+  };
+  const responseInterceptorRef: { value: Interceptor<any> } = {
+    value: undefined,
+  };
 
   return {
-    requestInterceptorRef: { value: requestInterceptor },
-    responseInterceptorRef: { value: responseInterceptor },
+    requestInterceptorRef,
+    responseInterceptorRef,
     mockInstance: {
       get: vi.fn(),
       post: vi.fn(),
@@ -16,13 +22,13 @@ const mocks = vi.hoisted(() => {
       delete: vi.fn(),
       interceptors: {
         request: {
-          use: vi.fn((fn: any) => {
-            mocks.requestInterceptorRef.value = fn;
+          use: vi.fn((fn: Interceptor<{ headers: any }>) => {
+            requestInterceptorRef.value = fn;
           }),
         },
         response: {
-          use: vi.fn((fn: any, errFn: any) => {
-            mocks.responseInterceptorRef.value = errFn;
+          use: vi.fn((fn: any, errFn: Interceptor<any>) => {
+            responseInterceptorRef.value = errFn;
           }),
         },
       },
