@@ -1,23 +1,10 @@
 import React, { useState } from "react";
-import {
-  Loader2,
-  Search,
-  Plus,
-  Edit,
-  Trash2,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Loader2, Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { useSearchParams } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { useDebounce } from "~/hooks/use-debounce";
-import {
-  useStatuses,
-  useAddStatus,
-  useUpdateStatus,
-  useDeleteStatus,
-} from "~/hooks/use-status";
+import { useStatuses, useAddStatus, useUpdateStatus, useDeleteStatus } from "~/hooks/use-status";
 import type { Status } from "~/service/status-service";
 import TambahStatus from "~/components/modal/TambahStatus";
 import UpdateStatus from "~/components/modal/UpdateStatus";
@@ -58,7 +45,6 @@ const StatusPage = () => {
   const {
     data: response,
     isLoading,
-    isFetching,
     isError,
     error,
   } = useStatuses(currentPage, searchTerm, perPage);
@@ -115,9 +101,7 @@ const StatusPage = () => {
   if (!isAdmin) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-red-600 font-bold">
-          Akses ditolak. Halaman ini hanya untuk Admin.
-        </p>
+        <p className="text-red-600 font-bold">Akses ditolak. Halaman ini hanya untuk Admin.</p>
       </div>
     );
   }
@@ -141,9 +125,7 @@ const StatusPage = () => {
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">
               Manajemen
             </p>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">
-              Status
-            </h1>
+            <h1 className="text-2xl font-bold tracking-tight text-gray-900">Status</h1>
           </header>
           <Button
             onClick={() => setShowAddModal(true)}
@@ -190,10 +172,7 @@ const StatusPage = () => {
               <tbody className="divide-y divide-gray-50">
                 {isLoading ? (
                   <tr>
-                    <td
-                      colSpan={3}
-                      className="px-6 py-20 text-center text-gray-400 font-medium"
-                    >
+                    <td colSpan={3} className="px-6 py-20 text-center text-gray-400 font-medium">
                       <div className="flex flex-col items-center gap-2">
                         <Loader2 className="w-6 h-6 animate-spin" />
                         <span>Memuat data...</span>
@@ -202,19 +181,13 @@ const StatusPage = () => {
                   </tr>
                 ) : statuses.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={3}
-                      className="px-6 py-20 text-center text-gray-400 font-medium"
-                    >
+                    <td colSpan={3} className="px-6 py-20 text-center text-gray-400 font-medium">
                       Data tidak ditemukan
                     </td>
                   </tr>
                 ) : (
                   statuses.map((status, index) => (
-                    <tr
-                      key={status.id}
-                      className="hover:bg-gray-50/80 transition-colors"
-                    >
+                    <tr key={status.id} className="hover:bg-gray-50/80 transition-colors">
                       <td className="px-6 py-4 text-sm text-gray-700">
                         {meta ? (meta.from || 0) + index : index + 1}
                       </td>
@@ -261,10 +234,7 @@ const StatusPage = () => {
                 <span className="font-bold text-gray-900 mx-1">
                   {meta.from || 0} - {meta.to || 0}
                 </span>{" "}
-                dari{" "}
-                <span className="font-bold text-gray-900 ml-1">
-                  {meta.total}
-                </span>
+                dari <span className="font-bold text-gray-900 ml-1">{meta.total}</span>
               </div>
 
               <div className="flex items-center gap-2">

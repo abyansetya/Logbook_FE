@@ -5,7 +5,7 @@ import { publicRoutes } from "~/lib";
 import { queryClient } from "./react-query-provider";
 
 import type { LoginResponse } from "../../types/auth";
-import { fetchData, fetchMe } from "~/lib/fetch-util";
+import { fetchMe } from "~/lib/fetch-util";
 import { logger } from "~/lib/logger";
 
 interface AuthContextType {
@@ -27,6 +27,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const currentPath = useLocation().pathname;
   const isPublicRoute = publicRoutes.includes(currentPath);
+
+  const login = (data: LoginResponse) => {
+    localStorage.setItem("token", data.data.token);
+    localStorage.setItem("user", JSON.stringify(data.data.user));
+
+    setUser(data.data.user);
+    setIsAuthenticated(true);
+  };
+
+  const logout = async () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+
+    setUser(null);
+    setIsAuthenticated(false);
+    queryClient.clear();
+  };
+
+  const updateUser = (updatedUser: User) => {
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    setUser(updatedUser);
+  };
 
   //check if user authenticated
   useEffect(() => {
@@ -63,7 +85,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         navigate("/sign-in");
       }
     }
-  }, [isLoading, isAuthenticated, currentPath, isPublicRoute]);
+  }, [isLoading, isAuthenticated, currentPath, isPublicRoute, navigate]);
 
   useEffect(() => {
     const handleLogout = () => {
@@ -72,29 +94,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
     window.addEventListener("force-logout", handleLogout);
     return () => window.removeEventListener("force-logout", handleLogout);
-  }, []);
-
-  const login = (data: LoginResponse) => {
-    localStorage.setItem("token", data.data.token);
-    localStorage.setItem("user", JSON.stringify(data.data.user));
-
-    setUser(data.data.user);
-    setIsAuthenticated(true);
-  };
-
-  const logout = async () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-
-    setUser(null);
-    setIsAuthenticated(false);
-    queryClient.clear();
-  };
-
-  const updateUser = (updatedUser: User) => {
-    localStorage.setItem("user", JSON.stringify(updatedUser));
-    setUser(updatedUser);
-  };
+  }, [logout, navigate]);
 
   const values = {
     user,

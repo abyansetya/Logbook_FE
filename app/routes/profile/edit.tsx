@@ -45,7 +45,7 @@ type UpdateProfileFormData = z.infer<typeof updateProfileSchema>;
 type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
 
 export default function EditProfilePage() {
-  const { user, login, updateUser, logout } = useAuth();
+  const { user, updateUser, logout } = useAuth();
   const navigate = useNavigate();
 
   // Mutations

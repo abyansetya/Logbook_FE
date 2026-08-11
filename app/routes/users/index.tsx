@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "~/provider/auth-context";
 import { useNavigate } from "react-router";
 import { Button } from "~/components/ui/button";
-import { fetchData, updateData, deleteData } from "~/lib/fetch-util";
 import {
   Card,
   CardContent,
@@ -20,7 +19,6 @@ import {
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import {
   Loader2,
-  Shield,
   ShieldAlert,
   Users,
   User as UserIcon,
@@ -29,7 +27,6 @@ import {
 } from "lucide-react";
 import { Input } from "~/components/ui/input";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "~/hooks/use-debounce";
 import {
   useGetUsers,
@@ -39,7 +36,6 @@ import {
 } from "~/hooks/use-user";
 import type { User } from "../../../types/users";
 import ConfirmDeleteModal from "~/components/modal/KonfirmasiDelete";
-import { toast } from "sonner";
 
 export default function UsersPage() {
   // --- 1. AUTH & NAVIGATION ---
@@ -58,7 +54,7 @@ export default function UsersPage() {
   }, [authLoading, isAuthenticated, user, navigate]);
 
   // --- 2. STATES ---
-  const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [updatingId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearch = useDebounce(searchTerm, 500);
   const [deleteConfirmData, setDeleteConfirmData] = useState<{
@@ -67,7 +63,6 @@ export default function UsersPage() {
   } | null>(null);
 
   // --- 3. DATA FETCHING (QUERIES) ---
-  const queryClient = useQueryClient();
 
   // Ambil semua user
   const { data: usersData, isLoading: isAllUsersLoading } = useGetUsers();

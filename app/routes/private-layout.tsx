@@ -1,7 +1,6 @@
 // src/layouts/dashboard-layout.tsx
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Link, Navigate, Outlet, useLocation } from "react-router";
-import { Button } from "../components/ui/button";
 import {
   LayoutDashboard,
   BookOpen,
@@ -27,12 +26,6 @@ import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { useAuth } from "~/provider/auth-context";
 import undip from "../assets/undip.png";
 
-interface NavItem {
-  name: string;
-  href: string;
-  icon: React.ElementType;
-}
-
 const navGroups = {
   GENERAL: [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -53,9 +46,12 @@ export default function DashboardLayout() {
   const location = useLocation();
 
   // Menutup sidebar otomatis saat pindah rute di mobile
-  useEffect(() => {
+  // (adjust state during render, bukan setState di dalam effect)
+  const [prevPathname, setPrevPathname] = useState(location.pathname);
+  if (prevPathname !== location.pathname) {
+    setPrevPathname(location.pathname);
     setSidebarOpen(false);
-  }, [location.pathname]);
+  }
 
   if (authLoading) {
     return (

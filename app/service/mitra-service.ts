@@ -1,5 +1,5 @@
 import { fetchData, postData, updateData, deleteData } from "../lib/fetch-util";
-import type { Mitra, MitraResponse, MitraPayload } from "../../types/mitra";
+import type { MitraResponse, MitraPayload } from "../../types/mitra";
 
 export const getMitra = async (
   page = 1,

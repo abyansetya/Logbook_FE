@@ -105,7 +105,7 @@ export const useDeleteMitra = () => {
   const queryClient = useQueryClient();
   const { logActivity } = useAddActivity();
   return useMutation({
-    mutationFn: ({ id, nama }: { id: number; nama: string }) => deleteMitra(id),
+    mutationFn: ({ id }: { id: number; nama: string }) => deleteMitra(id),
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: ["mitra"] });
       const previousMitra = queryClient.getQueriesData({ queryKey: ["mitra"] });
@@ -147,7 +147,7 @@ export const useApproveMitra = () => {
   const queryClient = useQueryClient();
   const { logActivity } = useAddActivity();
   return useMutation({
-    mutationFn: ({ id, nama }: { id: number; nama: string }) =>
+    mutationFn: ({ id }: { id: number; nama: string }) =>
       approveMitra(id),
     onSuccess: (_, variables) => {
       toast.success("Mitra berhasil disetujui");
@@ -170,7 +170,7 @@ export const useRejectMitra = () => {
   const queryClient = useQueryClient();
   const { logActivity } = useAddActivity();
   return useMutation({
-    mutationFn: ({ id, nama }: { id: number; nama: string }) => rejectMitra(id),
+    mutationFn: ({ id }: { id: number; nama: string }) => rejectMitra(id),
     onSuccess: (_, variables) => {
       toast.success("Mitra ditolak/dihapus");
       queryClient.invalidateQueries({ queryKey: ["mitra"] });

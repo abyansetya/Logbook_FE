@@ -58,7 +58,6 @@ const UnitPage = () => {
   const {
     data: response,
     isLoading,
-    isFetching,
     isError,
     error,
   } = useUnits(currentPage, searchTerm, perPage);

@@ -46,18 +46,24 @@ const MitraAutocomplete: React.FC<MitraAutocompleteProps> = ({
   const filteredMitra = data?.data || [];
 
   // SINKRONISASI: Set nilai input jika ada initialDisplayValue (Mode Edit)
-  useEffect(() => {
+  // (adjust state during render, bukan setState di dalam effect)
+  const [prevValue, setPrevValue] = useState(value);
+  const [prevInitialDisplayValue, setPrevInitialDisplayValue] = useState(
+    initialDisplayValue,
+  );
+  if (prevValue !== value || prevInitialDisplayValue !== initialDisplayValue) {
+    setPrevValue(value);
+    setPrevInitialDisplayValue(initialDisplayValue);
     if (initialDisplayValue) {
       setSearchQuery(initialDisplayValue);
       if (value) {
         setSelectedMitra({ id: value, nama: initialDisplayValue });
       }
     } else if (!value) {
-      // Reset hanya jika tidak ada value
       setSearchQuery("");
       setSelectedMitra(null);
     }
-  }, [initialDisplayValue, value]);
+  }
 
   // Handle klik di luar untuk menutup dropdown
   useEffect(() => {

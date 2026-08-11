@@ -1,15 +1,8 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "~/provider/auth-context";
-import { useNavigate, useSearchParams } from "react-router";
+import { useSearchParams } from "react-router";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
 import { Label } from "~/components/ui/label";
 import {
   Loader2,
@@ -19,11 +12,8 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
-  ChevronDown,
   Filter,
   X,
-  Check,
-  XCircle,
 } from "lucide-react";
 import { useDebounce } from "~/hooks/use-debounce";
 import { useKlasifikasis } from "~/hooks/use-helper";
@@ -39,8 +29,6 @@ import {
   useCreateMitra,
   useUpdateMitra,
   useDeleteMitra,
-  useApproveMitra,
-  useRejectMitra,
 } from "~/hooks/use-mitra";
 import type { MitraFull } from "../../../types/mitra";
 import TambahMitra from "~/components/modal/TambahMitra";
@@ -49,8 +37,7 @@ import ConfirmDeleteModal from "~/components/modal/KonfirmasiDelete";
 import type { MitraFormData } from "~/lib/schema";
 
 export default function MitraPage() {
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
 
   // States
   const [searchParams, setSearchParams] = useSearchParams();
@@ -90,10 +77,6 @@ export default function MitraPage() {
   const isOperator = user?.role === "Operator";
   const canAddMitra = isAdmin || isOperator;
 
-  // Pending Approval State (Admin only)
-  const [pendingPage, setPendingPage] = useState(1);
-  const [isPendingExpanded, setIsPendingExpanded] = useState(true);
-
   // Queries & Mutations
   // 1. Get Approved Mitra (Main Table)
   const {
@@ -108,30 +91,17 @@ export default function MitraPage() {
     "approved",
   );
 
-  // 2. Get Pending Mitra (Admin Only)
-  const { data: pendingResponse, isLoading: isPendingLoading } = useGetMitra(
-    pendingPage,
-    "",
-    5,
-    "all",
-    "pending",
-  );
-
   const { data: klasifikasiResponse } = useKlasifikasis();
   const klasifikasis = klasifikasiResponse?.data || [];
 
   const createMutation = useCreateMitra();
   const updateMutation = useUpdateMitra();
   const deleteMutation = useDeleteMitra();
-  const approveMutation = useApproveMitra();
-  const rejectMutation = useRejectMitra();
 
   // Computed
   const mitraList = response?.data?.data || [];
   const meta = response?.data;
   const links = response?.data?.links;
-
-  const pendingList = pendingResponse?.data?.data || [];
 
   // Handlers
   const handleAddSubmit = (data: MitraFormData) => {

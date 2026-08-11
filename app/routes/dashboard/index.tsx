@@ -521,7 +521,7 @@ export default function Dashboard() {
                 </div>
               )}
               <div className="grid h-full content-start gap-2 lg:grid-cols-2">
-                {docDistribution.map((doc, index) => (
+                {docDistribution.map((doc) => (
                   <div
                     key={doc.status}
                     className="rounded-lg border border-slate-100 bg-white p-2.5"

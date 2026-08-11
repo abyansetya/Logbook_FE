@@ -280,13 +280,8 @@ export const useDeleteDokumen = () => {
   const { logActivity } = useAddActivity();
 
   return useMutation({
-    mutationFn: ({
-      id,
-      judul_dokumen,
-    }: {
-      id: number;
-      judul_dokumen: string;
-    }) => deleteDokumen({ id }),
+    mutationFn: ({ id }: { id: number; judul_dokumen: string }) =>
+      deleteDokumen({ id }),
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: ["logbooks"] });
       const previousLogbooks = queryClient.getQueriesData({

@@ -33,7 +33,6 @@ export const useUpdateUserRole = () => {
     mutationFn: ({
       userId,
       role,
-      nama,
     }: {
       userId: number;
       role: string;
@@ -103,7 +102,7 @@ export const useDeleteUser = () => {
   const { logActivity } = useAddActivity();
 
   return useMutation({
-    mutationFn: ({ userId, nama }: { userId: number; nama: string }) =>
+    mutationFn: ({ userId }: { userId: number; nama: string }) =>
       deleteUser(userId),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["users"] });

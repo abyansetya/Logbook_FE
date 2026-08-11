@@ -107,7 +107,7 @@ export const useDeleteStatus = () => {
   const { logActivity } = useAddActivity();
 
   return useMutation({
-    mutationFn: ({ id, nama }: { id: number; nama: string }) =>
+    mutationFn: ({ id }: { id: number; nama: string }) =>
       deleteStatus({ id }),
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: ["statuses"] });

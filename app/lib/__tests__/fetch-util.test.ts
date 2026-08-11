@@ -42,7 +42,8 @@ vi.mock("axios", () => ({
   },
 }));
 
-import { fetchData } from "../fetch-util";
+// Side-effect import: mengeksekusi fetch-util.ts agar interceptor ter-register pada mock axios
+import "../fetch-util";
 
 describe("fetch-util", () => {
   beforeEach(() => {

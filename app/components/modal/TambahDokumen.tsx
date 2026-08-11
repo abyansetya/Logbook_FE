@@ -129,7 +129,7 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
             <FormField
               control={form.control}
               name="draft_dokumen"
-              render={({ field: { value, onChange, ...fieldProps } }) => (
+              render={({ field: { onChange, ...fieldProps } }) => (
                 <FormItem>
                   <FormLabel className="font-bold">
                     Draft Dokumen (PDF, Maks 2MB)
@@ -341,7 +341,7 @@ const TambahDokumen: React.FC<TambahDokumenProps> = ({
                 <FormField
                   control={form.control}
                   name="final_dokumen"
-                  render={({ field: { value, onChange, ...fieldProps } }) => (
+                  render={({ field: { onChange, ...fieldProps } }) => (
                     <FormItem>
                       <FormLabel className="font-bold">
                         Dokumen Final (PDF, Maks 2MB)

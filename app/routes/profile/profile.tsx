@@ -1,23 +1,8 @@
 // src/routes/profile.tsx
-import React from "react";
-import {
-  Mail,
-  IdCard,
-  Shield,
-  Edit,
-  BookOpen,
-  Clock,
-  Users,
-} from "lucide-react";
+import { Mail, IdCard, Shield, Edit } from "lucide-react";
 import { useAuth } from "~/provider/auth-context";
 import { Button } from "~/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Badge } from "~/components/ui/badge";
 import { Separator } from "~/components/ui/separator";
@@ -41,9 +26,7 @@ export default function ProfilePage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Profil Saya</h1>
-        <p className="text-muted-foreground">
-          Kelola informasi profil dan preferensi akun Anda
-        </p>
+        <p className="text-muted-foreground">Kelola informasi profil dan preferensi akun Anda</p>
       </div>
 
       {/* Main Profile Card */}
@@ -57,18 +40,11 @@ export default function ProfilePage() {
                 </AvatarFallback>
               </Avatar>
               <div className="space-y-2">
-                <CardTitle className="text-2xl">
-                  {user?.nama || "User"}
-                </CardTitle>
-                <CardDescription className="text-base">
-                  {user?.email || "-"}
-                </CardDescription>
+                <CardTitle className="text-2xl">{user?.nama || "User"}</CardTitle>
+                <CardDescription className="text-base">{user?.email || "-"}</CardDescription>
                 <div className="flex gap-2">
                   {user?.role && (
-                    <Badge
-                      variant="secondary"
-                      className="bg-white border-2 border-black"
-                    >
+                    <Badge variant="secondary" className="bg-white border-2 border-black">
                       {user.role}
                     </Badge>
                   )}
@@ -110,9 +86,7 @@ export default function ProfilePage() {
                 <IdCard className="h-4 w-4" />
                 <span>NIM/NIP</span>
               </div>
-              <p className="text-base font-medium pl-6">
-                {user?.nim_nip || "-"}
-              </p>
+              <p className="text-base font-medium pl-6">{user?.nim_nip || "-"}</p>
             </div>
 
             <div className="space-y-1">
@@ -128,9 +102,7 @@ export default function ProfilePage() {
                 <Shield className="h-4 w-4" />
                 <span>Role</span>
               </div>
-              <p className="text-base font-medium pl-6">
-                {user?.role || "-"}
-              </p>
+              <p className="text-base font-medium pl-6">{user?.role || "-"}</p>
             </div>
           </div>
         </CardContent>

@@ -17,7 +17,6 @@ import TambahDokumen from "~/components/modal/TambahDokumen";
 import { useDebounce } from "~/hooks/use-debounce";
 import UpdateDokumen from "~/components/modal/UpdateDokumen";
 import type { TambahDokumenData } from "~/lib/schema";
-import { JENIS_DOKUMEN } from "~/lib/constants";
 import ConfirmDeleteModal from "~/components/modal/KonfirmasiDelete";
 import { useAuth } from "~/provider/auth-context";
 import { LogbookFilters } from "./logbook-filters";
@@ -173,7 +172,11 @@ const Logbook = () => {
 
   const toggleRow = (docId: number) => {
     const newExpanded = new Set(expandedRows);
-    newExpanded.has(docId) ? newExpanded.delete(docId) : newExpanded.add(docId);
+    if (newExpanded.has(docId)) {
+      newExpanded.delete(docId);
+    } else {
+      newExpanded.add(docId);
+    }
     setExpandedRows(newExpanded);
   };
 

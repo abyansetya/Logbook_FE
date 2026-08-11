@@ -12,7 +12,6 @@ import {
   DialogTitle,
 } from "../../components/ui/dialog";
 import { Label } from "../../components/ui/label";
-import { Input } from "../../components/ui/input";
 import { Textarea } from "../../components/ui/textarea";
 import { Button } from "../../components/ui/button";
 import { Calendar } from "../../components/ui/calendar";
@@ -56,6 +55,7 @@ const UpdateLog: React.FC<UpdateLogProps> = ({
 
   const { data: unitResponse } = useUnits();
   const units = unitResponse?.data || [];
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- deps sudah benar; React Compiler terlalu ketat untuk kasus ini
   const unitOptions = React.useMemo(() => {
     if (!logData?.unit_id || !logData.unit_name) {
       return units;
@@ -82,6 +82,7 @@ const UpdateLog: React.FC<UpdateLogProps> = ({
   // Inisialisasi data saat modal dibuka
   useEffect(() => {
     if (isOpen && logData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- inisialisasi form saat modal dibuka
       setKeterangan(logData.keterangan);
       setUserId(logData.admin.id);
       setUnitId(logData.unit_id ? logData.unit_id.toString() : "");

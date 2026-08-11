@@ -1,7 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { patchData, updateData } from "~/lib/fetch-util";
 import type { Profile, ChangePassword } from "types";
-import { useAddActivity } from "./use-helper";
 import { toast } from "sonner";
 
 // Response type for profile update
@@ -27,10 +26,9 @@ interface PasswordChangeResponse {
 
 // Mutation to update user profile
 export const useUpdateProfileMutation = () => {
-  const { logActivity } = useAddActivity();
   return useMutation<ProfileUpdateResponse, any, Partial<Profile>>({
     mutationFn: (payload) => patchData("/profile/update", payload),
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast.success("Profil berhasil diperbarui!");
     },
   });
@@ -38,7 +36,6 @@ export const useUpdateProfileMutation = () => {
 
 //Mutation to change user password
 export const useChangePasswordMutation = () => {
-  const { logActivity } = useAddActivity();
   return useMutation<PasswordChangeResponse, any, ChangePassword>({
     mutationFn: (payload) => updateData("/profile/changePassword", payload),
     onSuccess: () => {

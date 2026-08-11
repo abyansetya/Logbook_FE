@@ -111,7 +111,7 @@ export const useDeleteUnit = () => {
   const { logActivity } = useAddActivity();
 
   return useMutation({
-    mutationFn: ({ id, nama }: { id: number; nama: string }) =>
+    mutationFn: ({ id }: { id: number; nama: string }) =>
       deleteUnit({ id }),
     onMutate: async (variables) => {
       await queryClient.cancelQueries({ queryKey: ["units"] });

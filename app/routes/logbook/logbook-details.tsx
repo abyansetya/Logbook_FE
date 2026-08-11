@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  Calendar,
   User,
   FileText,
   Plus,
@@ -16,20 +15,17 @@ import { Button } from "../../components/ui/button";
 import { useDeleteLog, useLogbookDetail } from "../../hooks/use-logbook";
 import type { LogEntry } from "../../../types/logbook";
 import UpdateLog from "../../components/modal/UpdateLog";
-import { deleteLog } from "~/service/logbook-service";
 import ConfirmDeleteModal from "~/components/modal/KonfirmasiDelete";
 import { useAuth } from "~/provider/auth-context";
 
 interface DocumentLogDetailsProps {
   documentId: number;
   onAddLog: (docId: number) => void;
-  onDeleteLog?: (logId: number) => void;
 }
 
 const DocumentLogDetails: React.FC<DocumentLogDetailsProps> = ({
   documentId,
   onAddLog,
-  onDeleteLog,
 }) => {
   const { user } = useAuth();
   const isAdmin = user?.role === "Admin";
